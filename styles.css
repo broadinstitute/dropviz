@@ -1,0 +1,43 @@
+.scroll-area {
+  overflow-y:auto;
+  overflow-x:hidden;
+  position: relative; /* allows children to be positioned absolute relative to this div */
+}
+
+.table-area {
+  position: relative;
+}
+
+.top-right {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    height: 100px;
+}
+
+.xtooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.xtooltip .xtooltiptext {
+    visibility: hidden;
+    width: 300px;
+    background-color: white;
+    color: black;
+    text-align: center;
+    border-radius: 6px;
+    border-style: solid;
+    padding: 5px 0;
+    
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 99;
+    top: -5px;
+    right: 105%;
+}
+
+.xtooltip:hover .xtooltiptext {
+    visibility: visible;
+}
+

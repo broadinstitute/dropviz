@@ -1,0 +1,168 @@
+# Manages the choice of the current cluster and subcluster for analysis
+
+# There are two parts - 
+#  1. server side tracking of the selection ([sub]current.cluster.row)
+#  2. output UI elements current.[sub]cluster and comparison.[sub]cluster 
+
+
+######################################################################
+# Current cluster and subcluster (could be factored)
+
+# the index into the selection
+current.cluster.i <- reactive({
+log.reactive("fn: current.cluster.i")
+  as.numeric(input$current.cluster)
+})
+
+# the row corresponding to the selection
+current.cluster <- reactive({
+log.reactive("fn: current.cluster")
+  clusters.selected()[current.cluster.i(),]
+})
+
+output$current.cluster <- renderUI({
+  choices <- setNames(1:nrow(clusters.selected()), glue("{clusters.selected()$region.disp} {clusters.selected()$cluster.disp}"))
+  
+  if (length(choices)==1) {
+    selected <- choices
+  } else {
+    selected <- NULL
+  }
+  
+  selectizeInput("current.cluster", "Target cluster", choices=c("Select target cluster"="",choices), selected=selected, multiple=FALSE)
+})
+
+current.subcluster.i <- reactive({
+log.reactive("fn: current.subcluster.i")
+  as.numeric(input$current.subcluster)
+})
+
+current.subcluster <- reactive({
+log.reactive("fn: current.subcluster") 
+  subclusters.selected_()[current.subcluster.i(),]  
+})
+
+output$current.subcluster <- renderUI({
+  choices <- setNames(1:nrow(subclusters.selected_()), glue("{subclusters.selected_()$region.disp} {subclusters.selected_()$subcluster.disp}"))
+  
+  if (length(choices)==1) {
+    selected <- choices
+  } else {
+    selected <- NULL
+  }
+
+  selectizeInput("current.subcluster", "Target Subcluster", choices=c("Select target subcluster"="",choices), selected=selected, multiple=FALSE)
+})
+
+######################################################################
+# Comparison cluster and subcluster (could be factored)
+
+# Comparison info is the choice of comparison with the current.cluster.
+# Options are either "Rest of region" or any of the other selected clusters
+output$comparison.cluster <- renderUI({
+  req(current.cluster.i())
+  ct <- current.cluster()
+
+  choices <- setdiff(which(clusters.selected()$exp.label == ct$exp.label), current.cluster.i())
+  names(choices) <- glue("{clusters.selected()$region.disp[choices]} {clusters.selected()$cluster.disp[choices]}")
+  
+  # prepend the region comparison
+  choices <- c(0,choices) 
+  names(choices)[1] <- glue("Rest of {ct$region.disp}")
+  
+  selectizeInput("comparison.cluster", "Comparison", choices=choices, multiple=FALSE)
+})
+
+comparison.cluster <- reactive({
+log.reactive("fn: comparison.cluster")
+  req(input$comparison.cluster)
+  if (input$comparison.cluster==0) {
+    tibble(cluster='global')
+  } else {
+    clusters.selected()[as.numeric(input$comparison.cluster),]  
+  }
+})
+
+output$comparison.subcluster <- renderUI({
+  req(current.subcluster.i())
+  ct <- current.subcluster()
+  
+  choices <- setdiff(which(subclusters.selected()$exp.label == ct$exp.label & subclusters.selected()$cluster == ct$cluster), current.subcluster.i())
+  names(choices) <- glue("{subclusters.selected()$region.disp[choices]} {subclusters.selected()$subcluster.disp[choices]}")
+  
+  # prepend the region comparison
+  choices <- c(0,choices) 
+  names(choices)[1] <- glue("Rest of {ct$region.disp}")
+  
+  div(selectizeInput("comparison.subcluster", "Comparison", choices=choices, multiple=FALSE), style="z-index: 99;")
+})
+
+comparison.subcluster <- reactive({
+log.reactive("fn: comparison.subcluster")
+  req(input$comparison.subcluster)
+  if (input$comparison.subcluster==0) {
+    tibble(subcluster='global')
+  } else {
+    subclusters.selected()[as.numeric(input$comparison.subcluster),]  
+  }
+})
+
+#####################
+# Convenience buttons to cycle to next or previous subcluster or cluster
+# If the user changes the pull-down, then update the table selection accordingly
+observeEvent(input$current.cluster,{
+  req(input$current.cluster)
+  dt.clusters.proxy %>% DT::selectRows(current.cluster.i())
+})
+
+observeEvent(input$prev.cluster, {
+  if (!is.na(current.cluster.i())) {
+    if (current.cluster.i() == 1) {
+      new.c <- ""
+    } else {
+      new.c <- current.cluster.i() - 1
+    }
+    updateSelectizeInput(session, 'current.cluster', selected=new.c)
+  }
+})
+
+observeEvent(input$next.cluster, {
+  if (is.na(current.cluster.i())) {
+    new.c <- 1
+  } else if (nrow(clusters.selected())>0 && current.cluster.i() <= nrow(clusters.selected())) {
+    new.c <- current.cluster.i() + 1
+  } else {
+    new.c <- NULL
+  }
+  updateSelectizeInput(session, 'current.cluster', selected=new.c)
+})
+
+# If the user changes the pull-down, then update the table selection accordingly
+observeEvent(input$current.subcluster,{
+  req(input$current.subcluster)
+  dt.subclusters.proxy %>% DT::selectRows(current.subcluster.i())
+})
+
+observeEvent(input$prev.subcluster, {
+  if (!is.na(current.subcluster.i())) {
+    if (current.subcluster.i() == 1) {
+      new.c <- ""
+    } else {
+      new.c <- current.subcluster.i() - 1
+    }
+    updateSelectizeInput(session, 'current.subcluster', selected=new.c)
+  }
+})
+
+observeEvent(input$next.subcluster, {
+  if (is.na(current.subcluster.i())) {
+    new.c <- 1
+  } else if (nrow(subclusters.selected())>0 && current.subcluster.i() <= nrow(subclusters.selected())) {
+    new.c <- current.subcluster.i() + 1
+  } else {
+    new.c <- NULL
+  }
+  updateSelectizeInput(session, 'current.subcluster', selected=new.c)
+})
+
+

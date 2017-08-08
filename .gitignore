@@ -1,3 +1,6 @@
+# Created from .template to list the local data sources
+exp_sets.txt
+
 # History files
 .Rhistory
 .Rapp.history
