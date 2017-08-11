@@ -6,7 +6,7 @@ library(dplyr)
 library(glue)
 
 source("global.R")
-all.genes <- readRDS("markers/all.genes.RDS")
+all.genes <- readRDS(glue("{prep.dir}/markers/all.genes.RDS"))
 
 expr.dir <- paste0(prep.dir,'/expr')
 xy.dir <- paste0(prep.dir,'/tsne')
@@ -22,7 +22,7 @@ gene.map <-
     expr <- readRDS(expr.fn) # rows genes, cols cells in this major cluster
 
     genes.fn <- glue("{expr.exp.dir}/genes.RDS")
-    if (!file.exists(gene.fn))
+    if (!file.exists(genes.fn))
       saveRDS(rownames(expr), genes.fn)
     
     # split the matrix into chunks of N rows at a time, convert to dense, and then write to disk

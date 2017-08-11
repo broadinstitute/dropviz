@@ -1,12 +1,6 @@
 #############################################
 # tSNE plot related functions
 
-readRDS <- function(file, ...) {
-  # for performance tracking, log when going to disk
-  log("Reading ",file)
-  base::readRDS(file, ...)
-}
-
 downsample <- reactive({
   log.reactive("fn: downsample")
   if (input$opt.downsampling.method != 'none') {
@@ -21,13 +15,13 @@ downsample <- reactive({
 
 # returns all the bag data for all experiments. (generated in prep-tSNE.R)
 tsne.cluster.bag.data <- 
-  readRDS("www/global.clusters.bags.Rdata")
+  readRDS(glue("{prep.dir}/tsne/global.clusters.bags.Rdata"))
 
 tsne.subcluster.bag.data <- 
-  readRDS("www/global.subclusters.bags.Rdata")
+  readRDS(glue("{prep.dir}/tsne/global.subclusters.bags.Rdata"))
 
 tsne.local.bag.data <- 
-  readRDS("www/local.subclusters.bags.Rdata") 
+  readRDS(glue("{prep.dir}/tsne/local.subclusters.bags.Rdata")) 
 
 rm.zero <- function(df) {
   filter(df, !(x==0 & y==0))
@@ -128,7 +122,7 @@ log.reactive("fn: global.xy")
   ldply(regions.selected()$exp.label, function(region) {
     # read the global XYs 
     df.region <- 
-      ddply(readRDS(glue("www/{region}/global.xy.RDS")), .(cluster), function(df) {
+      ddply(readRDS(glue("{prep.dir}/tsne/{region}/global.xy.RDS")), .(cluster), function(df) {
         if (input$opt.downsampling.method=='cluster') {
           sample_n(df, min(nrow(df),downsample()))
         } else {
@@ -171,7 +165,7 @@ log.reactive("fn: global.xy.current.subcluster")
 # local XY of all selected clusters
 local.xy <- reactive ({
   ddply(clusters.selected(), .(exp.label,cluster), function(df) {
-    local.xy.fn <- glue("www/{first(df$exp.label)}/cluster{first(df$cluster)}.xy.RDS")
+    local.xy.fn <- glue("{prep.dir}/tsne/{first(df$exp.label)}/cluster{first(df$cluster)}.xy.RDS")
     if (file.exists(local.xy.fn)) {
       readRDS(local.xy.fn)
     } else {

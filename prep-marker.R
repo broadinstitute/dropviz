@@ -66,8 +66,6 @@ lapply(c('cluster','subcluster'), function(kind) {
   dlply(experiments, .(exp.label), function(exp) {
     log(glue("Reading {exp$exp.label} {kind} pairwise Markers"))
     markers <- read.pairwiseMarkers(exp,kind)
-    fn <- glue("{markers.dir}/{exp$exp.label}.{kind}.pairwise.markers.RDS")
-    log(glue("Writing {exp$exp.label} {kind} pairwise Markers"))
     all.genes <- unique(c(all.genes, markers$GENE))
     
     if (kind=='cluster') {
@@ -77,7 +75,15 @@ lapply(c('cluster','subcluster'), function(kind) {
       markers <- mutate(markers, cluster=factor(cluster,levels=levels(subcluster.names_$subcluster)),
                         other.cluster=factor(other.cluster,levels=levels(subcluster.names_$subcluster)))
     }
-    saveRDS(markers, fn)
+    
+    # save each comparison to a separate file
+    ddply(markers, .(cluster), function(df) {
+      fn.dir <- glue("{markers.dir}/{exp$exp.label}")
+      suppressWarnings(dir.create(fn.dir))
+      fn <- glue("{fn.dir}/{first(df$cluster)}.{kind}.pairwise.markers.RDS")
+      log(glue("Writing {fn}"))
+      saveRDS(df, fn)
+    })
   }) 
   NULL
 })
@@ -86,3 +92,4 @@ saveRDS(all.genes, glue("{markers.dir}/all.genes.RDS"))
 
 
 saveRDS(filter(subclusterMarkers, pval < 1e-200)$GENE %>% union(filter(clusterMarkers, pval < 1e-200)$GENE), glue("{markers.dir}/pval-200.genes.RDS"))
+

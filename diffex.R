@@ -7,7 +7,7 @@ expr.xy <- reactive({
 log.reactive("fn: expr.xy")
   ddply(cluster.markers.selected(), .(GENE), function(g) {
     ddply(regions.selected(), .(exp.label), function(r) {
-      expr.fn <- glue("expr/{first(r$exp.label)}/gene/{first(g$GENE)}.RDS")
+      expr.fn <- glue("{prep.dir}/expr/{first(r$exp.label)}/gene/{first(g$GENE)}.RDS")
       if (file.exists(expr.fn)) {
         readRDS(expr.fn) %>% mutate(exp.label=r$exp.label) %>% inner_join(region.names(), by='exp.label')
       } else {
@@ -23,7 +23,7 @@ expr.subcluster.xy <- reactive({
 log.reactive("fn: expr.subcluster.xy")
   ddply(subcluster.markers.selected(), .(GENE), function(g) {
     ddply(regions.selected(), .(exp.label), function(r) {
-      expr.fn <- glue("expr/{first(r$exp.label)}/gene/{first(g$GENE)}.RDS")
+      expr.fn <- glue("{prep.dir}/expr/{first(r$exp.label)}/gene/{first(g$GENE)}.RDS")
       if (file.exists(expr.fn)) {
         readRDS(expr.fn) %>% mutate(exp.label=r$exp.label) %>% inner_join(region.names(), by='exp.label')
       } else {

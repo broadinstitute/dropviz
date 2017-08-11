@@ -4,7 +4,7 @@ cluster.metacells.selected <- reactive({
 log.reactive("fn: cluster.metacells.selected")
   req(input$current.cluster)
   ddply(current.cluster(), .(exp.label), function(r) {
-    fn <- glue("www/metacells/{r$exp.label}.cluster.metacells.RDS")
+    fn <- glue("{prep.dir}/metacells/{r$exp.label}.cluster.metacells.RDS")
     readRDS(fn)
   }) %>% as_tibble
 })
@@ -13,7 +13,7 @@ subcluster.metacells.selected <- reactive({
 log.reactive("fn: subcluster.metacells.selected")
   req(input$current.subcluster)
   ddply(current.subcluster(), .(exp.label), function(r) {
-    fn <- glue("www/metacells/{r$exp.label}.subcluster.metacells.RDS")
+    fn <- glue("{prep.dir}/metacells/{r$exp.label}.subcluster.metacells.RDS")
     readRDS(fn)
   }) %>% as_tibble
 })

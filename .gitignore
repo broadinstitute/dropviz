@@ -1,6 +1,9 @@
 # Created from .template to list the local data sources
 exp_sets.txt
 
+# runtime cacheing is stored in www
+/www/
+
 # History files
 .Rhistory
 .Rapp.history
@@ -34,3 +37,4 @@ vignettes/*.pdf
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
+.Rproj.user

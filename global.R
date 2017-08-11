@@ -142,7 +142,10 @@ cell.types <- select(cell.types_, -region, -full_name, -common_name, -class_mark
 # for testing, just sample a few or use the annotated markers
 #all.genes <- sample(readRDS("markers/all.genes.RDS"), 1000)
 #all.genes <- unique(unlist(strsplit(type.markers$type_marker,'\\.')))
-all.genes <- readRDS("markers/pval-200.genes.RDS")
+markers.fn <- glue("{prep.dir}/markers/pval-200.genes.RDS")
+if (file.exists(markers.fn)) {
+  all.genes <- readRDS(markers.fn)
+}
 
 components <- as_tibble(ddply(experiments, .(exp.label), function(exp) {
   curation.sheets.dir <- sprintf("%s/curation_sheets",exp$exp.dir)
@@ -187,3 +190,10 @@ send.zip <- function(fn, fname, zipfile) {
   zip(zipfile, zip.files)
   setwd(cwd)
 }
+
+readRDS <- function(file, ...) {
+  # for performance tracking, log when going to disk
+  log("Reading ",file)
+  base::readRDS(file, ...)
+}
+

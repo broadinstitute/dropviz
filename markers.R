@@ -52,11 +52,11 @@ diff.exp.filter <- function(df) {
 # kind: cluster or subcluster
 # comp.type: global, pairwise
 # region: exp.label
-markers.fn <- function(kind, comp.type, region) {
+markers.fn <- function(kind, comp.type, region, cluster=NULL) {
   if (comp.type=='global') {
-    fn <- glue("markers/{kind}Markers.RDS")
+    fn <- glue("{prep.dir}/markers/{kind}Markers.RDS")
   } else {
-    fn <- glue("markers/{region}.{kind}.pairwise.markers.RDS")
+    fn <- glue("{prep.dir}/markers/{region}/{cluster}.{kind}.pairwise.markers.RDS")
   }
   fn
 }
@@ -71,7 +71,7 @@ all.markers <- function(target, comparison, kind) {
   if (comparison[[kind]]=='global') {
     filter(readRDS(markers.fn(kind,'global',target$exp.label)), cluster==target[[kind]] & exp.label==target$exp.label)
   } else {
-    filter(readRDS(markers.fn(kind,'pairwise',target$exp.label)), cluster==target[[kind]] & other.cluster==comparison[[kind]])
+    filter(readRDS(markers.fn(kind,'pairwise',target$exp.label, target[[kind]])), cluster==target[[kind]] & other.cluster==comparison[[kind]])
   }
 }
 
