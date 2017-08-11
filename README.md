@@ -5,11 +5,12 @@ Data Prep
 =========
   
 - Create exp_sets.txt from exp_sets.txt.template to identify the names and paths of the experiments to load
+- global.R is sourced by the prep- files and also used by shiny. It does a lot of consolidation that could also be cached and loaded.
 - run prep-marker.R to generate combined marker data (fold change, etc.) in marker/ directory
 - run prep-tSNE.R to generate tables of XY coordinates
 - run prep-expr.R to generate cached, easily loadable expression data. This takes a long time to run because the DGE matrix is first broken into smaller chunks, then converted into a dense matrix, then converted into a table and then the rows per gene are written to separate files in expr/[exp.label]/gene/[name].RDS. (About 7000 genes (files) per experiment)
 XY global coordinates are also stored here because the global coordinates are typically missing or downsampled in plots
-- global.R is sourced by the prep- files and also used by shiny. It does a lot of consolidation that could also be cached and loaded.
+- run prep-metacells.R to generate transcript counts for each metacell and to create "N" metacells that are counts without each cluster or subcluster in a region (for scatterplots when comparing against rest of region). 
 
 App Logic
 =========
