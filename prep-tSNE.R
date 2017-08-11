@@ -1,7 +1,7 @@
 # pre-generate tSNEs data for each cluster, sub-cluster
 
 source("global.R")
-tsne.dir <- glue("{pre.dir}/tsne")
+tsne.dir <- glue("{prep.dir}/tsne")
 
 # reads the XY tSNE coordinates for each cell. Returns as a tibble.
 read.tSNE.xy <- function(fname) {
@@ -13,19 +13,18 @@ read.tSNE.xy <- function(fname) {
 
 # print the plot p to the file fn at different sizes and resolutions
 #plot.dims <- c(500, 1500)
-plot.dims <- c(500)
-plot.multisize <- function(fn, p) {
-  sapply(plot.dims, function(sz) {
-    fn <- paste0(fn,"_",sz,".png")
-    log("Plotting: ", fn)
-    png(fn, width=sz,height=sz,units="px",res=sz*.15)
-    print(p)
-    dev.off()
-  })
-  
-}
+# plot.multisize <- function(fn, p) {
+#   sapply(plot.dims, function(sz) {
+#     fn <- paste0(fn,"_",sz,".png")
+#     log("Plotting: ", fn)
+#     png(fn, width=sz,height=sz,units="px",res=sz*.15)
+#     print(p)
+#     dev.off()
+#   })
+#   
+# }
 
-ddply(experiments, .(exp.label), function(exp) {
+dlply(experiments, .(exp.label), function(exp) {
   log("Generating tSNE data for  ",exp$exp.label)
   out.dir <- sprintf("%s/%s",tsne.dir, exp$exp.label)
   dir.create(out.dir, recursive = TRUE, showWarnings=FALSE)
@@ -196,7 +195,7 @@ mk.bag.xy <- function(xy, grouping, this.exp.label) {
 
 mk.subc.bag.data <- function() {
   bag.data <-
-    dlply(cluster.names(), .(exp.label, cluster), function(df) {
+    dlply(cluster.names_, .(exp.label, cluster), function(df) {
       fn <- glue("{tsne.dir}/{df$exp.label}/cluster{df$cluster}.xy.RDS")
       if (file.exists(fn)) {
         xy <- readRDS(fn)
@@ -227,24 +226,28 @@ mk.bag.data <- function(kind) {
 }  
   
 bagdata <- mk.bag.data('cluster')
-saveRDS(bagdata, file="{tsne.dir}/global.clusters.bags.Rdata")
+saveRDS(bagdata, file=glue("{tsne.dir}/global.clusters.bags.Rdata"))
 
-# bagdata <- readRDS("www/global.clusters.bags.Rdata")  
-# ggplot() +
-#   geom_polygon(data=bagdata$loops, mapping=aes(x=x,y=y, fill=cluster), alpha=0.2) +
-#   geom_polygon(data=bagdata$bags, mapping=aes(x=x,y=y, fill=cluster), alpha=0.3) +
-#   geom_point(data=bagdata$centers, mapping=aes(x=x,y=y, color=cluster), size=3) +
-#   facet_wrap(~exp.label) + scale_fill_discrete(guide="none") + scale_color_discrete(guide="none")
+if (FALSE) {
+  bagdata <- readRDS(glue("{tsne.dir}/global.clusters.bags.Rdata"))
+  ggplot() +
+    geom_polygon(data=bagdata$loops, mapping=aes(x=x,y=y, fill=cluster), alpha=0.2) +
+    geom_polygon(data=bagdata$bags, mapping=aes(x=x,y=y, fill=cluster), alpha=0.3) +
+    geom_point(data=bagdata$centers, mapping=aes(x=x,y=y, color=cluster), size=3) +
+    facet_wrap(~exp.label) + scale_fill_discrete(guide="none") + scale_color_discrete(guide="none")
+}
 
 bagdata <- mk.bag.data('subcluster')
-saveRDS(bagdata, file="{tsne.dir}/global.subclusters.bags.Rdata")
+saveRDS(bagdata, file=glue("{tsne.dir}/global.subclusters.bags.Rdata"))
 
-# bagdata <- readRDS("www/global.subclusters.bags.Rdata")
-# ggplot() +
-#   geom_polygon(data=bagdata$loops, mapping=aes(x=x,y=y, fill=subcluster), alpha=0.2) +
-#   geom_polygon(data=bagdata$bags, mapping=aes(x=x,y=y, fill=subcluster), alpha=0.3) +
-#   geom_point(data=bagdata$centers, mapping=aes(x=x,y=y, color=subcluster)) +
-#   facet_wrap(~exp.label) + scale_fill_discrete(guide="none") + scale_color_discrete(guide="none")
+if (FALSE) {
+  bagdata <- readRDS(glue("{tsne.dir}/global.subclusters.bags.Rdata"))
+  ggplot() +
+    geom_polygon(data=bagdata$loops, mapping=aes(x=x,y=y, fill=subcluster), alpha=0.2) +
+    geom_polygon(data=bagdata$bags, mapping=aes(x=x,y=y, fill=subcluster), alpha=0.3) +
+    geom_point(data=bagdata$centers, mapping=aes(x=x,y=y, color=subcluster)) +
+    facet_wrap(~exp.label) + scale_fill_discrete(guide="none") + scale_color_discrete(guide="none")
+}
 
 
 bagdata <- mk.subc.bag.data()
@@ -261,12 +264,14 @@ bagdata$centers <- add.zero(bagdata$centers)
 bagdata$loops <- add.zero(bagdata$loops)
 bagdata$bags <- add.zero(bagdata$bags)
 
-saveRDS(bagdata, file="{tsne.dir}/local.subclusters.bags.Rdata")
+saveRDS(bagdata, file=glue("{tsne.dir}/local.subclusters.bags.Rdata"))
 
-# bagdata <- readRDS("www/local.subclusters.bags.Rdata")
-# ggplot() +
-#   geom_polygon(data=bagdata$loops, mapping=aes(x=x,y=y, fill=subcluster), alpha=0.2) +
-#   geom_polygon(data=bagdata$bags, mapping=aes(x=x,y=y, fill=subcluster), alpha=0.3) +
-#   geom_point(data=bagdata$centers, mapping=aes(x=x,y=y, color=subcluster)) +
-#   facet_wrap(~exp.label+cluster) + scale_fill_discrete(guide="none") + scale_color_discrete(guide="none")
+if (FALSE) {
+  bagdata <- readRDS(glue("{tsne.dir}/local.subclusters.bags.Rdata"))
+  ggplot() +
+    geom_polygon(data=bagdata$loops, mapping=aes(x=x,y=y, fill=subcluster), alpha=0.2) +
+    geom_polygon(data=bagdata$bags, mapping=aes(x=x,y=y, fill=subcluster), alpha=0.3) +
+    geom_point(data=bagdata$centers, mapping=aes(x=x,y=y, color=subcluster)) +
+    facet_wrap(~exp.label+cluster) + scale_fill_discrete(guide="none") + scale_color_discrete(guide="none")
+}
 
