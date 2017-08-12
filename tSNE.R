@@ -401,9 +401,6 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       }
       
-      if (interactive()) {
-        print(plot.gg)
-      }
     }
 
     if (return.closure) {

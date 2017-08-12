@@ -65,9 +65,6 @@ scatter.plot <- function(target, comparison, cx.metacells, cx.markers, cx.select
         scale_x_log10() + scale_y_log10() + scale_color_manual(guide="none",values=c('Other'='grey','Pass FC'='lightgreen','Pass Criteria'='blue','Selected'='purple','User Set'='black')) +
         scale_size_manual(guide="none",values=c('Other'=1,'Filtered'=opt.expr.size)) + facet_wrap(~region.disp) + xlab(target.label) + ylab(compare.label)
 
-      if (interactive()) {
-        print(plot.gg)
-      } 
     }
     
     if (return.closure) {
