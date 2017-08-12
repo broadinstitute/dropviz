@@ -22,11 +22,7 @@ shinyServer(function(input, output, session) {
   # create a plot from plot.func, save it as a PNG using the size of the output region, cache it using key,
   # and return image info, setting the class to the output.id and its id to key.
   renderCacheImage <- function(plot.func, key, width, height=width, opt.use.cache=input$opt.use.cache) {
-    # width <- clientData[[glue("output_{output.id}_width")]]
-    # height <- clientData[[glue("output_{output.id}_height")]]
-    # log(glue("clientData: WxH = {width}x{height}"))
-    # width <- 1000
-    # height <- 500 * height.hint
+
     log(glue("WxH = {width}x{height}"))
     
     if (is.null(width) | is.null(height)) {
@@ -37,7 +33,6 @@ shinyServer(function(input, output, session) {
     if (!file.exists(fn) || !opt.use.cache) {
       log(glue("Generating plot {fn}"))
       a.plot <- plot.func()
-      # log(glue("Printing plot to {fn}"))
       png(fn, width=width, height=height)
       print(a.plot)
       dev.off()
