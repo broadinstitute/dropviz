@@ -4,10 +4,10 @@ library(shinyjs)
 library(shinyjqui)
 library(plyr)
 library(dplyr)
-library(tibble)
 library(glue)
 
 options(stringsAsFactors=FALSE) # plyr methods return data.frame
+options(bitmapType = 'cairo') # https://stackoverflow.com/a/17955000/86228
 
 MAX_REGIONS <- 4
 
