@@ -5,50 +5,17 @@ library(shiny)
 # uncomment to debug within RStudio
 #reactive <- function(expr, env=parent.frame()) exprToFunction(expr, env=env)
 
-# On error, return a plot with txt in the center
-plot.text <- function(txt) {
-  ggplot(data.frame(x=0,y=0,label=txt)) + geom_text(aes(x=x,y=y,label=label)) + theme_void()
-}
-
-# adjust to nearest 100. This is to avoid flickering when size of region changes by small amounts in browser
-img.size.round <- function(x) {
-  (x %/% 100) * 100
-}
-
-
-# Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
   
-  # create a plot from plot.func, save it as a PNG using the size of the output region, cache it using key,
-  # and return image info, setting the class to the output.id and its id to key.
-  renderCacheImage <- function(plot.func, key, width, height=width, opt.use.cache=input$opt.use.cache) {
-
-    log(glue("WxH = {width}x{height}"))
-    
-    if (is.null(width) | is.null(height)) {
-      stop("Missing width or height}")
-    }
-    fn <- glue("{cache.dir}/{key}_{width}_{height}.png")
-    
-    if (!file.exists(fn) || !opt.use.cache) {
-      log(glue("Generating plot {fn}"))
-      a.plot <- plot.func()
-      png(fn, width=width, height=height)
-      print(a.plot)
-      dev.off()
-    } else {
-      log(glue("Retrieving cached {fn}"))
-    }
-    
-    list(src=fn, width=width, height=height, id=key)
-  }
+  # general plot utility functions
+  source("plot.R", local=TRUE)
   
   # display labels for regions, clusters, subclusters
   source("display_labels.R", local=TRUE)
   
   # filtering on [sub]clusters
   source("cell_types.R", local=TRUE)
-  
+
   # choosing a current [sub]cluster selection among the filtered options
   # for marker filtering and plotting
   source("user_cluster_selection.R", local=TRUE)  
@@ -68,6 +35,9 @@ shinyServer(function(input, output, session) {
   # independent components
   source("components.R", local=TRUE)
 
+  # proxy objects for shiny
+  source("proxy.R", local=TRUE)
+
   #####################################################################################################
   # save the latest input for interactive debug
   # load with input <- readRDS("dump.RDS")
@@ -78,6 +48,8 @@ shinyServer(function(input, output, session) {
   observeEvent(input$clear.cache, {
     unlink("www/cache/*.png")
   })
+
+  # dropped this idea of expanding and collapsing the sidebar, but this might be an approach
   # observe({
   #   if (input$wideside1) {
   #     jqui_switch_class("#sidebar", 'col-sm-4', 'col-sm-6',1000)
