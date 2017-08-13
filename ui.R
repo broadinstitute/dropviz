@@ -5,14 +5,34 @@
 # shinyjs.init = function() { $('#sidebarform').parent().attr('id', 'sidebar') }
 # "
 
-help.doc <- list(tsne.local.label.dl='Help for tSNE plot of subclusters in local tSNE space', 
-                 tsne.global.subcluster.label.dl='Help for tSNE plot of subclusters in global tSNE space', 
-                 tsne.global.cluster.label.dl='Help for tSNE plot of clusters in global tSNE space',
-                 gene.expr.scatter.subcluster.dl='Subcluster scatter plot help goes here!',
-                 gene.expr.scatter.cluster.dl='Help for cluster scatter plot',
-                 dt.cluster.markers.dl='This is the help text for differentially expressed genes among clusters',
-                 dt.subcluster.markers.dl='This is the help text for differentially expressed genes among SUBclusters',
-                 config='Help for the left configuration panel'
+help.doc <- list(tsne.local.label.dl=withTags(span(h4("Help for t-SNE plot of subclusters in local cluster space."),
+                                                   p("Each point represents a single cell. All points are displayed. Each cell is associated with a gene expression vector. This high-dimensional data within a cluster is reduced using a set of curated independent components and projected onto two dimensions using t-SNE ('local cluster space'). The subcluster classifications are derived from Louvain clustering using a subset of the ICs. (See paper...)"),
+                                                   p('Subcluster regions are highlighted in different colors based on the filtering choices in the',b('Highlight'),'section in the left panel.'),
+                                                   p('If differentially expressed genes are displayed in the bottom table, then selecting rows in the table will overlay the selected genes\' expression levels with larger size points representing higher transcript count.'),
+                                                   p('If independent components are displayed in the bottom table, then selecting rows will overlay the selected ICs with weights displayed in a gradient color (blue: negative, red: positive).'),
+                                                   p('If ICs are selected, then any colored subcluster selection is disabled because it is not possible to display both a categorical color (subclusters) and a gradient (IC weight) on the same plot.'))), 
+                 tsne.global.subcluster.label.dl=withTags(span(h4("Help for t-SNE plot of subclusters in global region space."),
+                                                               p("This plot is similar to the t-SNE plot of clusters in global region space, but displays the subcluster labels for each cell.")
+                 )),  
+                 tsne.global.cluster.label.dl=withTags(span(h4("Help for t-SNE plot of clusters in global region space."),
+                                                            p("Each point represents a single cell. Each cell is associated with a gene expression vector. This high-dimensional data is reduced using a set of automated independent components and projected onto two dimensions using t-SNE ('global space', i.e. representing all cells from a brain region). The cluster classifications are derived from Louvain clustering of the ICs. (See paper...)"),
+                                                            p("Points are generally sub-sampled to improve display and speed rendering. Sampling can be controlled using the ",b('Display'),"panel on the left. 'Bag' plots show the distribution of all points (no sampling). The darker region represents 50% of cells. The lighter region represents all points except outliers."),
+                                                            p('Clusters are highlighted in different colors based on the filtering choices in the',b('Highlight'),'section in the left panel. Text, numeric or no labels can be set in the ',b('Display'),'panel'),
+                                                            p('If differentially expressed genes are displayed in the bottom table, then selecting rows in the table will overlay the selected genes\' expression levels with larger size points representing higher transcript count.')
+                 )), 
+                 gene.expr.scatter.subcluster.dl=withTags(span(h4('Subcluster scatter plot'),p("TBD. Need to fix fold-change calculation"),
+                                                               p('Each point is the cumulative transcript count among all cells in the target and comparison subclusters (or region). Green points exceed the fold-change criteria in the ',b('Genes'),'panel. Blue dots correspond to genes displayed in the differential expression table, below, which meet all criteria. Selected rows in the table are displayed in purple with a label.'))),
+                 gene.expr.scatter.cluster.dl=withTags(span(h4('Cluster scatter plot'),p("TBD. Need to fix fold-change calculation"),
+                                                            p('Each point is the cumulative transcript count among all cells in the target and comparison clusters (or region). Green points exceed the fold-change criteria in the ',b('Genes'),'panel. Blue dots correspond to genes displayed in the differential expression table, below, which meet all criteria. Selected rows in the table are displayed in purple with a label.'))),
+                 dt.cluster.markers.dl=withTags(span(h4("Differentially over-expressed genes in clusters."),
+                                                     p("Select a 'target' cluster in the left ",b('Cells'),"panel to display those genes that are over-expressed in that cluster with respect to the remaining cells in the region or a chosen comparison cluster. Adjust filter criteria using the ",b("Genes"),"panel on the left."),
+                                                     p("Any manually added genes are always displayed in the table and colored green if the expression criteria is met and red otherwise."),
+                                                     p("One or more rows can be selected to display gene expression in the t-SNE and scatter plots, above."))),
+                 dt.subcluster.markers.dl=withTags(span(h4("Differentially over-expressed genes in subclusters."),
+                                                        p("Select a 'target' subcluster in the left ",b('Cells'),"panel to display those genes that are over-expressed in that subcluster with respect to the remaining cells in the region or a chosen comparison subcluster. Adjust filter criteria using the ",b("Genes"),"panel on the left."),
+                                                        p("Any manually added genes are always displayed in the table and colored green if the expression criteria is met and red otherwise."),
+                                                        p("One or more rows can be selected to display gene expression in the t-SNE and scatter plots, above."))),
+                 config='TBD. Help for the left configuration panel'
                  )
 
 # draw download icon

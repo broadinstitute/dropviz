@@ -25,10 +25,10 @@
     width: 300px;
     background-color: white;
     color: black;
-    text-align: center;
+    text-align: left;
     border-radius: 6px;
     border-style: solid;
-    padding: 5px 0;
+    padding: 5px 5px;
     
     /* Position the tooltip */
     position: absolute;
