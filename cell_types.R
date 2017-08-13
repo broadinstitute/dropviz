@@ -200,7 +200,6 @@ output$dt.clusters <- DT::renderDataTable({
                 colnames=c('Region','Class','Cluster'),
                 options=list(dom='t', paging=FALSE)    )
 })
-dt.clusters.proxy = DT::dataTableProxy('dt.clusters')
 
 observeEvent(input$dt.clusters_rows_selected, {
   updateSelectInput(session, 'current.cluster', selected=input$dt.clusters_rows_selected)
@@ -216,7 +215,6 @@ output$dt.subclusters <- DT::renderDataTable({
                 colnames=c('Region','Class','Cluster','SubCluster'),
                 options=list(dom='t', paging=FALSE)    )
 })
-dt.subclusters.proxy = DT::dataTableProxy('dt.subclusters')
 
 observeEvent(input$dt.subclusters_rows_selected, {
   updateSelectInput(session, 'current.subcluster', selected=input$dt.subclusters_rows_selected)
