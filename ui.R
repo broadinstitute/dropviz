@@ -69,11 +69,29 @@ shinyUI(
                                        div(helpIcon("config"), class='top-right'),
                                        tabsetPanel(type="tabs",
                                                    tabPanel("Cells",
-                                                            tags$table(tags$tr(uiOutput("region", container=tags$td, width='50%'),
-                                                                               uiOutput("cell.class", container=tags$td, width='50%')),
-                                                                       tags$tr(uiOutput("cell.cluster", container=tags$td, colspan="2")),
-                                                                       tags$tr(uiOutput("cell.type", container=tags$td, colspan="2")),
-                                                                       width="100%")
+                                                            h4("Highlight"),
+                                                            fluidRow(
+                                                              column(6, uiOutput("region")), column(6, uiOutput("cell.class"))
+                                                            ),
+                                                            fluidRow(
+                                                              column(6, uiOutput("cell.cluster")), column(6, uiOutput("cell.type"))
+                                                            ),
+                                                            tags$hr(),
+                                                            h4("Compare"),
+                                                            conditionalPanel('input.mainpanel=="clusters"',
+                                                                             fluidRow(
+                                                                               # column(2,p(style='height:1em'),actionButton("prev.cluster","<<<"), actionButton("next.cluster",">>>")),
+                                                                               uiOutput("current.cluster"),
+                                                                               uiOutput("comparison.cluster")
+                                                                             )
+                                                            ),
+                                                            conditionalPanel('input.mainpanel=="subclusters"',
+                                                                             fluidRow(
+                                                                               # column(2,p(style='height:1em'),actionButton("prev.subcluster","<<<"), actionButton("next.subcluster",">>>")),
+                                                                               uiOutput("current.subcluster"),
+                                                                               uiOutput("comparison.subcluster")
+                                                                             )
+                                                            )
                                                    ),
                                                    tabPanel("Genes",
                                                             h4("Differential Expression Criteria"),
@@ -119,9 +137,9 @@ shinyUI(
                           ),
                           
                           # Show a plot of the generated distribution
-                          mainPanel(width=9, id="mainpanel",
-                                    tabsetPanel(type="tabs",  
-                                                tabPanel(span("Global Clusters"),
+                          mainPanel(width=9, 
+                                    tabsetPanel(type="tabs", id="mainpanel",
+                                                tabPanel(span("Global Clusters"), value = "clusters",
                                                          tabsetPanel(type="pills",
                                                                      tabPanel("tSNE",
                                                                               fluidRow(div(id="global-expression", class="scroll-area", 
@@ -132,19 +150,16 @@ shinyUI(
                                                                                            plotDownload("gene.expr.scatter.cluster.dl"),
                                                                                            imageOutput("gene.expr.scatter.cluster", height=500)))),
                                                                      tabPanel("Table",
-                                                                              p("For clarity/debug. Probably not in final product."),
+                                                                              p("Redundant. For Debug. Probably not in final product."),
                                                                               fluidRow(div(id="dt-clusters", class="scroll-area", 
                                                                                            DT::dataTableOutput("dt.clusters"))))),
                                                          hr(),
-                                                         tabsetPanel(type="pills",
-                                                                     tabPanel("Differentially Over-Expressed Genes",
-                                                                              fluidRow(class="table-area",
-                                                                                       tableDownload("dt.cluster.markers.dl"),
-                                                                                       column(2,p(style='height:1em'),actionButton("prev.cluster","<<<"), actionButton("next.cluster",">>>")),
-                                                                                       column(4,uiOutput("current.cluster")),
-                                                                                       column(4,offset=1, uiOutput("comparison.cluster"))),
-                                                                              fluidRow(column(11,DT::dataTableOutput("dt.cluster.markers")))))),
-                                                tabPanel("Subclusters",
+                                                         uiOutput("dt.cluster.markers.heading"),
+                                                         fluidRow(class="table-area",
+                                                                  tableDownload("dt.cluster.markers.dl"),
+                                                                  column(11,DT::dataTableOutput("dt.cluster.markers")))
+                                                ),
+                                                tabPanel("Subclusters", value = "subclusters",
                                                          tabsetPanel(type="pills",
                                                                      tabPanel("tSNE",
                                                                               fluidRow(div(id="local-expression", class="scroll-area",
@@ -156,21 +171,25 @@ shinyUI(
                                                                                                             imageOutput("tsne.local.label", height=500)),
                                                                                            checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE)))),
                                                                      tabPanel("Scatter",
-                                                                              fluidRow(div(id="global-scatter", class="scroll-area",
+                                                                              fluidRow(div(id="local-scatter", class="scroll-area",
                                                                                            plotDownload("gene.expr.scatter.subcluster.dl"),
                                                                                            plotOutput("gene.expr.scatter.subcluster", height=500)))),
+                                                                     tabPanel("Independent Components",
+                                                                              fluidRow(div(id="ic-grid", class="scroll-area",
+#                                                                                           plotDownload("ic.grid.dl"),
+                                                                                           plotOutput("ic.grid", height=500)))),
                                                                      tabPanel("Table",  
+                                                                              p("Redundant. For Debug. Probably not in final product."),
                                                                               fluidRow(div(id="dt-subclusters", class="scroll-area", DT::dataTableOutput("dt.subclusters"))))),
                                                          hr(),
                                                          tabsetPanel(type="pills",
-                                                                     tabPanel("Differentially Over-Expressed Genes",
+                                                                     tabPanel("Differential Expression",
+                                                                              uiOutput("dt.subcluster.markers.heading"),
                                                                               fluidRow(class="table-area",
                                                                                        tableDownload("dt.subcluster.markers.dl"),
-                                                                                       column(2,p(style='height:1em'),actionButton("prev.subcluster","<<<"), actionButton("next.subcluster",">>>")),
-                                                                                       column(4,uiOutput("current.subcluster")),
-                                                                                       column(4,offset=1, uiOutput("comparison.subcluster"))),
-                                                                              fluidRow(column(11,DT::dataTableOutput("dt.subcluster.markers")))),
+                                                                                       column(11,DT::dataTableOutput("dt.subcluster.markers")))),
                                                                      tabPanel("Independent Components",
+                                                                              uiOutput("dt.components.heading"),
                                                                               fluidRow(DT::dataTableOutput("dt.components")))))
                                                 # ,
                                                 # tabPanel("Metacells")
