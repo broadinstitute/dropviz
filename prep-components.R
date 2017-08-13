@@ -3,15 +3,19 @@
 # cluster's independent components. This means choosing a subcluster from each cluster and
 # then selecting all the IC rows.
 
+library(ggplot2)
+
 # create an environment similar to running a shiny app
 output <- list()
-source("global.R")
+source("global.R", local=TRUE)
 reactive <- function(expr, env=parent.frame()) exprToFunction(expr, env=env)
+source("plot.R", local=TRUE)
 source("display_labels.R", local=TRUE)
 source("cell_types.R", local=TRUE)
 source("user_cluster_selection.R", local=TRUE)  
 source("tSNE.R", local=TRUE)  
 source("components.R", local=TRUE)
+log("Sources loaded")
 
 dir.create(glue("{cache.dir}/ic"), recursive = TRUE, showWarnings=FALSE)
 
@@ -78,4 +82,3 @@ dlply(experiments, .(exp.label), function(exp) {
     })
   })
 })
-
