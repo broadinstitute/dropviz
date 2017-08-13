@@ -3,13 +3,14 @@
 #####################################################################################################
 # OUTPUT - Components tables
 
-# returns the major cluster associated with either the target subcluster, or if there is only one
-# cluster selected, then use that
+# returns the major cluster associated with the target subcluster
 component.cluster <- reactive({
   log.reactive("fn: component.cluster")
   
   if (isTruthy(input$current.subcluster)) {
     na.omit(current.subcluster())
+  } else if (length(unique(subclusters.selected_()$cluster))==1) {
+    subclusters.selected_()[1,]
   } else {
     tibble()
   }
@@ -45,11 +46,11 @@ selected.components <- reactive({
 # returns a matrix the weights ("rotations") on cells for the clusters.selected.components
 component.cell.weights <- reactive({
   log.reactive("fn: component.cell.weights")
-  if (is.null(component.cluster()))
+  if (nrow(component.cluster())==0)
     return(matrix())
   
   exp <- filter(experiments, exp.label==component.cluster()$exp.label)
-  fn <- list.files(glue("{exp$exp.dir}/components"), glue("{exp$base}.cluster{component.cluster()$cluster}.*.ICA.RDS"))
+  fn <- list.files(glue("{exp$exp.dir}/components"), glue("{exp$base}.cluster{component.cluster()$cluster}\\..*.ICA.RDS"))
   stopifnot(length(fn)==1)
   readRDS(glue("{exp$exp.dir}/components/{fn}"))$cell_rotations
 })
@@ -86,11 +87,37 @@ selected.component.cell.weights.xy <- reactive({
 #     DT::formatSignif('FOLDch', 3) %>% DT::formatPercentage('pct.1', 1) %>% DT::formatPercentage('pct.2', 1)
 # }
 
+output$ic.grid <- renderImage({
+  fn <- character(0)
+  if (nrow(component.cluster())>0) {
+    fn <- list.files(glue("{cache.dir}/ic"), glue("{component.cluster()$exp.label}_{component.cluster()$cluster}_{input$opt.components}_[0-9]+_[0-9]+.png"))
+  }
+  
+  if (length(fn)>0) {
+    list(src=glue("{cache.dir}/ic/{fn[1]}"))
+  } else {
+    renderCacheImage(function() plot.text("To Display ICs, Choose a Target Subcluster in the Left Bottom Panel or\nNarrow Highlight Filtering in the Left Top Panel to a Single Cluster"),
+                     "no-ICs", width = 500, height=500)
+  }
+}, deleteFile = FALSE)
+
 output$dt.components <- DT::renderDataTable( {
   req(nrow(clusters.selected.components())>0)
-  DT::datatable(clusters.selected.components() %>% dplyr::select(IC=ic.number, Class=cell_class, Status=status, Name=hypothesized_common_name, Region=anatomical_region, Clustering=use_for_clustering),
-                rownames=FALSE,
+  components.tbl <- clusters.selected.components() %>% 
+    mutate(Loadings=glue("<img height='75' width='250' src='cache/ic/ic_{exp.label}_{cluster}_IC{ic.number}_250_75.png'/>")) %>%
+    dplyr::select(IC=ic.number, Class=cell_class, Status=status, Name=hypothesized_common_name, Loadings, Region=anatomical_region, Clustering=use_for_clustering)
+  
+  DT::datatable(components.tbl,
+                rownames=FALSE, escape=FALSE,
                 selection="multiple",
                 options=list(dom="tp", pageLength=50))
+})
+
+output$dt.components.heading <- renderUI({
+  if (nrow(component.cluster())==1) {
+    tags$h4(glue("ICs for {component.cluster()$cluster.disp}"))
+  } else {
+    tags$p(align="center","Choose a Target Subcluster in the Left Bottom Panel or Narrow Highlight Filtering in the Left Top Panel to a Single Cluster")
+  }
 })
 
