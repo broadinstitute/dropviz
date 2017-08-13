@@ -10,7 +10,8 @@ Data Prep
 - run prep-tSNE.R to generate tables of XY coordinates
 - run prep-expr.R to generate cached, easily loadable expression data. This takes a long time to run because the DGE matrix is first broken into smaller chunks, then converted into a dense matrix, then converted into a table and then the rows per gene are written to separate files in expr/[exp.label]/gene/[name].RDS. (About 7000 genes (files) per experiment)
 XY global coordinates are also stored here because the global coordinates are typically missing or downsampled in plots. Only genes in all.genes are cached at this time, but it can easily be expanded to store all genes.
-- run prep-metacells.R to generate transcript counts for each metacell and to create "N" metacells that are counts without each cluster or subcluster in a region (for scatterplots when comparing against rest of region). 
+- run prep-metacells.R to generate transcript counts for each metacell and to create "N" metacells that are counts without each cluster or subcluster in a region (for scatterplots when comparing against rest of region).
+- run prep-components.R to generate pre-computed PNGs of components. This is a hack for static images only.
 
 App Logic
 =========
