@@ -400,7 +400,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           plot.gg <- p + facet_wrap(~region.disp+facet.gg, ncol=4)
         }
       }
-      
+      plot.gg
     }
 
     if (return.closure) {
