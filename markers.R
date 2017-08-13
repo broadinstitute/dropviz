@@ -168,6 +168,13 @@ output$dt.cluster.markers.dl <- downloadHandler(filename="cluster-markers.csv",
                                                   write.csv(cluster.markers(), file=file)
                                                 })
 
+output$dt.cluster.markers.heading <- renderUI({
+  if (isTruthy(current.cluster.i())) {
+    tags$h4(glue("Differentially Over-Expressed: {current.cluster()$cluster.disp} vs {comparison.cluster()$cluster.disp}"))
+  } else {
+    tags$p(align="center","Choose a Target Cluster in the Left Bottom Panel to Compare Differentially Expressed Genes")
+  }
+})
 
 output$dt.subcluster.markers <- DT::renderDataTable( {
   mrkrs <- mutate(subcluster.markers(), row.highlight=ifelse(user.selected,ifelse(expr.pass,1,0),2))
@@ -178,3 +185,12 @@ output$dt.subcluster.markers.dl <- downloadHandler(filename="subcluster-markers.
                                                    content= function(file) {
                                                      write.csv(subcluster.markers(), file=file)
                                                    })
+
+output$dt.subcluster.markers.heading <- renderUI({
+  if (isTruthy(current.subcluster.i())) {
+    tags$h4(glue("Differentially Over-Expressed: {current.subcluster()$subcluster.disp} vs {comparison.cluster()$subcluster.disp}"))
+  } else {
+    tags$p(align="center","Choose a Target Subcluster in the Left Bottom Panel to Compare Differentially Expressed Genes")
+  }
+})
+
