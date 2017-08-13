@@ -20,7 +20,7 @@ log.reactive("fn: cluster.names")
   } else { # annotated or all
     df <- tibble(exp.label=cluster.names_$exp.label, cluster=cluster.names_$cluster, cluster.disp=cluster.names_$cluster_name)
     if (input$opt.cluster.disp=='all') {
-      mutate(df, cluster.disp=glue("{cluster.disp} [#{cluster}]"))
+      mutate(df, cluster.disp=sprintf("%s [#%s]", cluster.disp, cluster))
     } else
       df
   }
@@ -55,7 +55,7 @@ log.reactive("fn: subcluster.names")
       df <- tibble(exp.label=subcluster.names_$exp.label, subcluster=subcluster.names_$subcluster, subcluster.disp=subcluster.names_$full_name)
     
     if (input$opt.cluster.disp=='all') {
-      mutate(df, subcluster.disp=glue("{subcluster.disp} [#{subcluster}]"))
+      mutate(df, subcluster.disp=sprintf("%s [#%s]", subcluster.disp, subcluster))
     } else
       df
   }
