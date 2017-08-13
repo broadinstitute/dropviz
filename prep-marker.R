@@ -37,7 +37,7 @@ readall.clusterMarkers <- function(kind) {
 
 clusterMarkers <- readall.clusterMarkers('cluster') %>% mutate(cluster=factor(cluster,levels=levels(cluster.names_$cluster)))
 subclusterMarkers <- readall.clusterMarkers('subcluster') %>% mutate(cluster=factor(cluster,levels=levels(subcluster.names_$subcluster)))
-dir.create(markers.dir, recursive = TRUE)
+dir.create(markers.dir, recursive = TRUE, showWarnings=FALSE)
 saveRDS(clusterMarkers, file=glue("{markers.dir}/clusterMarkers.RDS"))
 saveRDS(subclusterMarkers, file=glue("{markers.dir}/subclusterMarkers.RDS"))
 all.genes <- unique(c(clusterMarkers$GENE, subclusterMarkers$GENE))
