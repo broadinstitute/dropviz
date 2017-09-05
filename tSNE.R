@@ -239,7 +239,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     
     # for both global.xy (the positions of each cell) and global.[sub]cluster.avg.xy (the center position of each [sub]cluster),
     # limit to selected [sub]clusters and add pretty region name
-    log(glue("Building tsne.label - is.global={is.global} show.subclusters={show.subclusters} show.bags={show.bags} show.cells={show.cells} diff.genes={nrow(diff.genes)} comps={nrow(comps)}"))
+    write.log(glue("Building tsne.label - is.global={is.global} show.subclusters={show.subclusters} show.bags={show.bags} show.cells={show.cells} diff.genes={nrow(diff.genes)} comps={nrow(comps)}"))
     xy.data <-
       (if (show.cells) {
         if (show.subclusters) {
@@ -414,13 +414,16 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
 #########################################################
 # show global tSNE with just the filtered clusters 
 output$tsne.global.cluster.label <- renderImage({
+  progress <- shiny::Progress$new()
+  on.exit(progress$close())
+  
   tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=FALSE, show.cells=(downsample()>0 & nrow(regions.selected()) <= MAX_REGIONS), show.bags = TRUE, diff.genes=expr.xy())
   
   width <- img.size.round(session$clientData[[glue("output_tsne.global.cluster.label_width")]])
   height <- width/2 * (nrow(regions.selected())%/%4+1)
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,cluster.markers.selected()$GENE))
-  
-  renderCacheImage(tsne.plot, glue("tsne_global_cluster_label_{key.str}"), width, height)
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,cluster.markers.selected()$gene))
+
+  renderCacheImage(tsne.plot, glue("tsne_global_cluster_label_{key.str}"), width, height, progress=progress)
 }, deleteFile = FALSE)
 
 
@@ -437,7 +440,7 @@ output$tsne.global.subcluster.label <- renderImage({
   
   width <- img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_width")]])
   height <- width/2 * (nrow(regions.selected())%/%4+1)
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,subcluster.markers.selected()$GENE))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,subcluster.markers.selected()$gene))
   
   renderCacheImage(tsne.plot, glue("tsne_global_subcluster_label_{key.str}"), width, height)
 }, deleteFile = FALSE)
@@ -452,7 +455,7 @@ output$tsne.local.label <- renderImage({
   tsne.plot <- tsne.label(is.global=FALSE, show.subclusters = TRUE, show.cells=(nrow(clusters.selected()) <= MAX_REGIONS), show.bags=TRUE, diff.genes = expr.subcluster.local.xy(), comps=selected.component.cell.weights.xy())
   
   # hint height: if selected genes or components, then count them. Otherwise, count clusters.
-  facet.count <- length(na.omit(c(subcluster.markers.selected()$GENE, selected.components()$ic.number)))
+  facet.count <- length(na.omit(c(subcluster.markers.selected()$gene, selected.components()$ic.number)))
   if (facet.count > 0) {
     height.mult <- facet.count %/% 3 + 1   
   } else {
@@ -461,7 +464,7 @@ output$tsne.local.label <- renderImage({
   
   width <- img.size.round(session$clientData[[glue("output_tsne.local.label_width")]])
   height <- width/2 * height.mult
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, subcluster.markers.selected()$GENE, selected.components()$ic.number))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, subcluster.markers.selected()$gene, selected.components()$ic.number))
   
   renderCacheImage(tsne.plot, glue("tsne_local_label_{key.str}"), width, height)
 }, deleteFile = FALSE)

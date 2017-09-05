@@ -14,12 +14,12 @@ N <- 500 # chunk size
 
 gene.map <-
   ddply(experiments, .(exp.label), function(exp) {
-    log(exp$exp.label)
+    write.log(exp$exp.label)
     expr.exp.dir <- glue("{expr.dir}/{exp$exp.label}")
     suppressWarnings(dir.create(expr.exp.dir, recursive = TRUE))
     
     expr.fn <- with(exp, glue("{exp.dir}/dge/{base}.filtered.scaled.dge.RDS"))
-    expr <- readRDS(expr.fn) # rows genes, cols cells in this major cluster
+    expr <- readRDS(expr.fn) # rows genes, cols cells
 
     genes.fn <- glue("{expr.exp.dir}/genes.RDS")
     if (!file.exists(genes.fn))
@@ -29,10 +29,10 @@ gene.map <-
     ldply(seq(1, nrow(expr), by=N), function(i) {
       fn <- glue("{expr.exp.dir}/{i}.RDS")
       if (!file.exists(fn)) {
-        log(glue("Extracting {N} rows starting at {i}"))
+        write.log(glue("Extracting {N} rows starting at {i}"))
         sub.expr <- expr[i:min(nrow(expr),(i+N-1)),]
         
-        log(glue("Converting and writing {fn}"))
+        write.log(glue("Converting and writing {fn}"))
         saveRDS(as.matrix(sub.expr), fn)
         
       }
@@ -52,7 +52,7 @@ expr.chunks <-
     
     genes.expr <-  
       ddply(exp, .(start.gene), function(chunk) {
-        log(glue("Processing {chunk$file}"))  
+        write.log(glue("Processing {chunk$file}"))  
         out.fn <- glue("{expr.exp.dir}/{chunk$start.gene}_df.RDS")
         
         if (!file.exists(out.fn)) {
@@ -74,7 +74,7 @@ expr.chunks <-
 #     df <- data.frame()
 #     lapply(1:nrow(chunks), function(i) {
 #       chunk.df <- readRDS(chunks$file[i])
-#       log(glue("Adding {i}: {chunks$file[i]}"))
+#       write.log(glue("Adding {i}: {chunks$file[i]}"))
 #       df <<- rbind(df, chunk.df)
 #     })
 #     df
@@ -84,13 +84,13 @@ expr.chunks <-
 #   ddply(expr.chunks, .(exp.label), function(exp) {
 #     tcounts <- 
 #       ddply(exp, .(file), function(chunks) {
-#         log(chunks$file)
+#         write.log(chunks$file)
 #         readRDS(chunks$file)
 #       })
 #     tcounts$file <- NULL
 #     fn <- glue("expr/{first(exp$exp.label)}.RDS")
 #     saveRDS(tcounts, fn)
-#     log(glue("Wrote {fn}"))
+#     write.log(glue("Wrote {fn}"))
 #     data.frame(file=fn)
 #   })
 
@@ -102,14 +102,14 @@ ddply(expr.chunks, .(exp.label), function(exp) {
   ddply(exp, .(file), function(chunk) {
     chunk.expr <- readRDS(chunk$file)
     chunk.expr <- filter(chunk.expr, gene %in% all.genes)
-    log(glue("{chunk$file} has {length(unique(chunk.expr$gene))} filtered genes"))
+    write.log(glue("{chunk$file} has {length(unique(chunk.expr$gene))} filtered genes"))
     ddply(chunk.expr, .(gene), function(g) {
       # replace factors with char. Later we will load and join by character or coerce this to
       # a factor representation using ordinals established elsewhere. Saving the factor with 10,000s of possible values 
       # here wastes a lot of space.
       g <- mutate(g, gene=as.character(gene), cell=as.character(cell)) %>% inner_join(xy, by='cell')
       fn <- glue("{out.dir}/{first(g$gene)}.RDS")
-      log("Saving ", fn)
+      write.log("Saving ", fn)
       saveRDS(as_tibble(g), fn)
     })
     
