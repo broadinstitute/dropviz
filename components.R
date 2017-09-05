@@ -76,17 +76,6 @@ selected.component.cell.weights.xy <- reactive({
 })
 
 
-#   
-#   DT::datatable(select(mrkrs, GENE, FOLDch, pct.1, pct.2, row.highlight),
-#                 rownames = FALSE,
-#                 selection="multiple",
-#                 colnames = c('Gene','Fold Change','Target Present','Other Present','row.highlight'),
-#                 options=list(dom="tp", pageLength=50, columnDefs = list(list(visible=FALSE, targets=4)))) %>% 
-#     DT::formatStyle('row.highlight', target='row', 
-#                     backgroundColor = DT::styleEqual(c(0,1,2), c('pink','lightgreen','white'))) %>%
-#     DT::formatSignif('FOLDch', 3) %>% DT::formatPercentage('pct.1', 1) %>% DT::formatPercentage('pct.2', 1)
-# }
-
 output$ic.grid <- renderImage({
   fn <- character(0)
   if (nrow(component.cluster())>0) {

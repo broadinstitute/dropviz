@@ -80,7 +80,7 @@ dt.markers <- function(mrkrs) {
   DT::datatable(select(mrkrs, gene, log.target.u, log.comparison.u, fc.disp, pval, row.highlight),
                 rownames = FALSE,
                 selection="multiple",
-                colnames = c('Gene','Target\n(normalized mean log)', 'Comparison\n(normalized mean log)', 'Fold Change', 'P-Value', 'row.highlight'),
+                colnames = c('Gene','Target\n(normalized mean log)', 'Comparison\n(normalized mean log)', 'Fold Ratio', 'P-Value', 'row.highlight'),
                 options=list(dom="tp", pageLength=50, columnDefs = list(list(visible=FALSE, targets=5)))) %>% 
     DT::formatStyle('row.highlight', target='row', 
                     backgroundColor = DT::styleEqual(c(0,1,2), c('pink','lightgreen','white'))) %>%
