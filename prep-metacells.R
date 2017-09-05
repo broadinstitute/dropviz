@@ -53,7 +53,7 @@ compute.dge.stat <- function(group.assignment, mtx, func) {
 
 
 
-ddply(experiments[2,], .(exp.label), function(exp) {
+ddply(experiments, .(exp.label), function(exp) {
   write.log("Generating cluster metacell data for  ",exp$exp.label)
   # convert factor to table
   cluster.cell.assign <- readRDS(sprintf("%s/assign/%s.cluster.assign.RDS", exp$exp.dir, exp$base))
