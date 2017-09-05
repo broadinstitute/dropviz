@@ -5,9 +5,9 @@
 # return the cells, expression levels, global X, Y coordinates in the comparison region
 expr.xy <- reactive({
 log.reactive("fn: expr.xy")
-  ddply(cluster.markers.selected(), .(GENE), function(g) {
+  ddply(cluster.markers.selected(), .(gene), function(g) {
     ddply(regions.selected(), .(exp.label), function(r) {
-      expr.fn <- glue("{prep.dir}/expr/{first(r$exp.label)}/gene/{first(g$GENE)}.RDS")
+      expr.fn <- glue("{prep.dir}/expr/{first(r$exp.label)}/gene/{first(g$gene)}.RDS")
       if (file.exists(expr.fn)) {
         readRDS(expr.fn) %>% mutate(exp.label=r$exp.label) %>% inner_join(region.names(), by='exp.label')
       } else {
@@ -21,9 +21,9 @@ log.reactive("fn: expr.xy")
 # return the cells, expression levels, global X, Y limited to selected subclusters
 expr.subcluster.xy <- reactive({
 log.reactive("fn: expr.subcluster.xy")
-  ddply(subcluster.markers.selected(), .(GENE), function(g) {
+  ddply(subcluster.markers.selected(), .(gene), function(g) {
     ddply(regions.selected(), .(exp.label), function(r) {
-      expr.fn <- glue("{prep.dir}/expr/{first(r$exp.label)}/gene/{first(g$GENE)}.RDS")
+      expr.fn <- glue("{prep.dir}/expr/{first(r$exp.label)}/gene/{first(g$gene)}.RDS")
       if (file.exists(expr.fn)) {
         readRDS(expr.fn) %>% mutate(exp.label=r$exp.label) %>% inner_join(region.names(), by='exp.label')
       } else {
@@ -38,7 +38,7 @@ log.reactive("fn: expr.subcluster.xy")
 expr.subcluster.local.xy <- reactive({
 log.reactive("fn: expr.subcluster.local.xy")
   if (nrow(clusters.selected()) > MAX_REGIONS) {
-    log("Error: Too many facets to display. Not including individual cells")
+    write.log("Error: Too many facets to display. Not including individual cells")
     tibble()
   } else {
     xy <- expr.subcluster.xy()

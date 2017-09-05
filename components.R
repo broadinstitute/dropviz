@@ -43,7 +43,7 @@ selected.components <- reactive({
   }
 })
 
-# returns a matrix the weights ("rotations") on cells for the clusters.selected.components
+# returns a matrix the weights ("rotations") of clusters (columns) on cells (rows) for the clusters.selected.components
 component.cell.weights <- reactive({
   log.reactive("fn: component.cell.weights")
   if (nrow(component.cluster())==0)
@@ -75,17 +75,6 @@ selected.component.cell.weights.xy <- reactive({
   inner_join(selected.component.cell.weights(), local.xy.selected(), by='cell')
 })
 
-
-#   
-#   DT::datatable(select(mrkrs, GENE, FOLDch, pct.1, pct.2, row.highlight),
-#                 rownames = FALSE,
-#                 selection="multiple",
-#                 colnames = c('Gene','Fold Change','Target Present','Other Present','row.highlight'),
-#                 options=list(dom="tp", pageLength=50, columnDefs = list(list(visible=FALSE, targets=4)))) %>% 
-#     DT::formatStyle('row.highlight', target='row', 
-#                     backgroundColor = DT::styleEqual(c(0,1,2), c('pink','lightgreen','white'))) %>%
-#     DT::formatSignif('FOLDch', 3) %>% DT::formatPercentage('pct.1', 1) %>% DT::formatPercentage('pct.2', 1)
-# }
 
 output$ic.grid <- renderImage({
   fn <- character(0)

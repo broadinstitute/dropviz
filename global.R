@@ -9,6 +9,47 @@ library(glue)
 options(stringsAsFactors=FALSE) # plyr methods return data.frame
 options(bitmapType = 'cairo') # https://stackoverflow.com/a/17955000/86228
 
+# write either warning or message to console with a time stamp
+write.log <- function(..., warn=FALSE) {
+  level.func <- ifelse(warn, warning, message)
+  #  level.func(Sys.time(),": ",glue(.envir=parent.frame(2), ...))  # FIXME
+  level.func(Sys.time(),": ", ...)
+}
+
+log.reactive <- function(...) {
+  if (getOption("log.reactive", default=FALSE)) write.log(...)
+}
+
+write.func.body <- function(fn, file) {
+  fn.lines <- capture.output(print(fn))
+  # skip anonymous function def (first line), environment label (last line) and closing brace (penultimate line)
+  writeLines(fn.lines[2:(length(fn.lines)-2)], file)
+}
+
+send.zip <- function(fn, fname, zipfile) {
+  require(utils)
+  zip.dir <- tempdir()
+  fn.env <- environment(fn)
+  vars <- ls(environment(fn))
+  cwd <- getwd()
+  setwd(zip.dir)
+  zip.files <- paste0(fname, c(".Rdata", ".R"))
+  attach(fn.env)
+  save(list=vars, file=zip.files[1])
+  detach()
+  write.func.body(fn, file=zip.files[2])
+  zip(zipfile, zip.files)
+  setwd(cwd)
+}
+
+readRDS <- function(file, ...) {
+  # for performance tracking, log when going to disk
+  write.log("Reading ",file)
+  base::readRDS(file, ...)
+}
+
+
+
 MAX_REGIONS <- 4
 
 prep.dir <- 'cache'               # destination for all prepared data
@@ -58,7 +99,7 @@ mk.cluster.names <- function(ct) {
         if (all(df$class==first.class)) {
           cluster_name <- first(df$class)
         } else {
-          log("Stuck in mk.cluster.names on ", first(df$exp.label),' ',first(df$cluster))
+          write.log("Stuck in mk.cluster.names on ", first(df$exp.label),' ',first(df$cluster))
         }
       }
     }
@@ -157,43 +198,4 @@ components <- as_tibble(ddply(experiments, .(exp.label), function(exp) {
     cbind(data.frame(cluster=factor(cluster,levels=levels(cluster.names_$cluster))), csv)
   })
 }))
-
-# write either warning or message to console with a time stamp
-log <- function(..., warn=FALSE) {
-  level.func <- ifelse(warn, warning, message)
-#  level.func(Sys.time(),": ",glue(.envir=parent.frame(2), ...))  # FIXME
-  level.func(Sys.time(),": ", ...)
-}
-
-log.reactive <- function(...) {
-  if (getOption("log.reactive", default=FALSE)) log(...)
-}
-
-write.func.body <- function(fn, file) {
-  fn.lines <- capture.output(print(fn))
-  # skip anonymous function def (first line), environment label (last line) and closing brace (penultimate line)
-  writeLines(fn.lines[2:(length(fn.lines)-2)], file)
-}
-
-send.zip <- function(fn, fname, zipfile) {
-  require(utils)
-  zip.dir <- tempdir()
-  fn.env <- environment(fn)
-  vars <- ls(environment(fn))
-  cwd <- getwd()
-  setwd(zip.dir)
-  zip.files <- paste0(fname, c(".Rdata", ".R"))
-  attach(fn.env)
-  save(list=vars, file=zip.files[1])
-  detach()
-  write.func.body(fn, file=zip.files[2])
-  zip(zipfile, zip.files)
-  setwd(cwd)
-}
-
-readRDS <- function(file, ...) {
-  # for performance tracking, log when going to disk
-  log("Reading ",file)
-  base::readRDS(file, ...)
-}
 
