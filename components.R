@@ -43,7 +43,7 @@ selected.components <- reactive({
   }
 })
 
-# returns a matrix the weights ("rotations") on cells for the clusters.selected.components
+# returns a matrix the weights ("rotations") of clusters (columns) on cells (rows) for the clusters.selected.components
 component.cell.weights <- reactive({
   log.reactive("fn: component.cell.weights")
   if (nrow(component.cluster())==0)

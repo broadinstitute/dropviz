@@ -15,7 +15,7 @@ source("cell_types.R", local=TRUE)
 source("user_cluster_selection.R", local=TRUE)  
 source("tSNE.R", local=TRUE)  
 source("components.R", local=TRUE)
-log("Sources loaded")
+write.log("Sources loaded")
 
 dir.create(glue("{cache.dir}/ic"), recursive = TRUE, showWarnings=FALSE)
 
@@ -60,7 +60,7 @@ dlply(experiments, .(exp.label), function(exp) {
       } else {
         ic.plot <- function() plot.text("No Data")
         width <- height <- 500
-        log(glue("No data for {component.cluster()$cluster}"))
+        write.log(glue("No data for {component.cluster()$cluster}"))
       }
       
       renderCacheImage(ic.plot, glue("ic/ic_{exp$exp.label}_{component.cluster()$cluster}_{ic.kind}"), width, height, opt.use.cache = FALSE)

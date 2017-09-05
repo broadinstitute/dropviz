@@ -16,7 +16,7 @@ read.tSNE.xy <- function(fname) {
 # plot.multisize <- function(fn, p) {
 #   sapply(plot.dims, function(sz) {
 #     fn <- paste0(fn,"_",sz,".png")
-#     log("Plotting: ", fn)
+#     write.log("Plotting: ", fn)
 #     png(fn, width=sz,height=sz,units="px",res=sz*.15)
 #     print(p)
 #     dev.off()
@@ -25,7 +25,7 @@ read.tSNE.xy <- function(fname) {
 # }
 
 dlply(experiments, .(exp.label), function(exp) {
-  log("Generating tSNE data for  ",exp$exp.label)
+  write.log("Generating tSNE data for  ",exp$exp.label)
   out.dir <- sprintf("%s/%s",tsne.dir, exp$exp.label)
   dir.create(out.dir, recursive = TRUE, showWarnings=FALSE)
   
@@ -51,12 +51,12 @@ dlply(experiments, .(exp.label), function(exp) {
   tSNE <- inner_join(tSNE.xy, cell.assign, by='cell')
   
   global.xy.fn <- sprintf("%s/global.xy.RDS", out.dir)
-  log("Writing ", global.xy.fn)
+  write.log("Writing ", global.xy.fn)
   saveRDS(tSNE, global.xy.fn)
 
   # # generate different size images
   # lapply(c(500, 1500), function(sz) {
-  #   log("Creating ", sz, "x", sz, " images")
+  #   write.log("Creating ", sz, "x", sz, " images")
   #   
   #   # global tSNE of major cluster labels
   #   plot.multisize(sprintf("%s/%s_class", out.dir, exp$exp.label), 
@@ -68,7 +68,7 @@ dlply(experiments, .(exp.label), function(exp) {
 
   # for each major cluster, generate tSNE with subcluster labels
   lapply(unique(filter(cell.types, exp.label==exp$exp.label)$cluster), function(cn) {
-    log("Processing cluster ",cn)
+    write.log("Processing cluster ",cn)
     c.dir <- glue("{exp$exp.dir}/cluster{cn}")
     fn <- paste0(c.dir,'/',list.files(c.dir,glue("{exp$base}.cluster{cn}\\..*.tSNExy.RDS")))
     if (length(fn)==1) {
@@ -85,7 +85,7 @@ dlply(experiments, .(exp.label), function(exp) {
       tSNE.local <- inner_join(tSNE.xy, filter(cell.assign, cluster==cn & !is.na(subcluster)), by='cell')
       
       local.xy.fn <- sprintf("%s/cluster%s.xy.RDS", out.dir, cn)
-      log("Writing ", local.xy.fn)
+      write.log("Writing ", local.xy.fn)
       saveRDS(tSNE.local, local.xy.fn)
       
       ## if (nrow(tSNE.local) > 0) {
@@ -124,19 +124,19 @@ dlply(experiments, .(exp.label), function(exp) {
       ##                        ggplot(tSNE.local.expr, aes(x=V1, y=V2, size=transcript.count, color=subcluster, shape=is_expressed)) + geom_point() + ggtitle(sprintf("Cluster %s / Gene %s", cn, gene.name))
       ##         )
       ##       } else {
-      ##         log(gene.name," is missing from ", expr.fn, warn = TRUE)
+      ##         write.log(gene.name," is missing from ", expr.fn, warn = TRUE)
       ##       }
       ##       gene.name
       ##     })
       ##   } else {
-      ##     log(expr.fn," not found", warn=TRUE)
+      ##     write.log(expr.fn," not found", warn=TRUE)
       ##   }
       ## } else {
-      ##   log("No subcluster cell assignments for cluster ", cn, warn=TRUE)
+      ##   write.log("No subcluster cell assignments for cluster ", cn, warn=TRUE)
       ## }
       
     } else {
-      log(fn," not found", warn=TRUE)
+      write.log(fn," not found", warn=TRUE)
     }
     
   })

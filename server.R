@@ -42,7 +42,7 @@ shinyServer(function(input, output, session) {
   # save the latest input for interactive debug
   # load with input <- readRDS("dump.RDS")
   observeEvent(input$dump, {
-    log("Dump"); saveRDS(reactiveValuesToList(input), file="dump.RDS")
+    write.log("Dump"); saveRDS(reactiveValuesToList(input), file="dump.RDS")
   })
   
   observeEvent(input$clear.cache, {

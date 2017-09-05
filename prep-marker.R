@@ -64,7 +64,7 @@ read.pairwiseMarkers <- function(exp, kind="cluster") {
 
 lapply(c('cluster','subcluster'), function(kind) {
   dlply(experiments, .(exp.label), function(exp) {
-    log(glue("Reading {exp$exp.label} {kind} pairwise Markers"))
+    write.log(glue("Reading {exp$exp.label} {kind} pairwise Markers"))
     markers <- read.pairwiseMarkers(exp,kind)
     all.genes <- unique(c(all.genes, markers$GENE))
     
@@ -81,7 +81,7 @@ lapply(c('cluster','subcluster'), function(kind) {
       fn.dir <- glue("{markers.dir}/{exp$exp.label}")
       suppressWarnings(dir.create(fn.dir))
       fn <- glue("{fn.dir}/{first(df$cluster)}.{kind}.pairwise.markers.RDS")
-      log(glue("Writing {fn}"))
+      write.log(glue("Writing {fn}"))
       saveRDS(df, fn)
     })
   }) 
