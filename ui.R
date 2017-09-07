@@ -88,7 +88,7 @@ shinyUI(
                           sidebarPanel(width=3, id="sidebarform",
                                        div(helpIcon("config"), class='top-right'),
                                        tabsetPanel(type="tabs",
-                                                   tabPanel("Cells",
+                                                   tabPanel("Filter Cells",
                                                             h4("Highlight"),
                                                             fluidRow(
                                                               column(6, uiOutput("region")), column(6, uiOutput("cell.class"))
@@ -96,6 +96,10 @@ shinyUI(
                                                             fluidRow(
                                                               column(6, uiOutput("cell.cluster")), column(6, uiOutput("cell.type"))
                                                             ),
+                                                            tags$hr(),
+                                                            h4("Search By Gene"),
+                                                            selectizeInput("user.genes", "", choices=c("Choose Genes Of Interest"="",all.genes),
+                                                                           multiple=TRUE, width='100%'),
                                                             tags$hr(),
                                                             h4("Compare"),
                                                             conditionalPanel('input.mainpanel=="clusters"',
@@ -113,7 +117,7 @@ shinyUI(
                                                                              )
                                                             )
                                                    ),
-                                                   tabPanel("Genes",
+                                                   tabPanel("Diff Expr",
                                                             h4("Differential Expression Criteria"),
                                                             sliderInput("fold.change", "Minimum Fold Ratio", min=1, max=30, value=2, step=0.5),
                                                             sliderInput("pval.thresh", "Maximum P-Value Exponent", min=-300, max=0, value=-100, step=1),
@@ -124,10 +128,6 @@ shinyUI(
                                                                                tags$td(sliderInput("max.amt.without", "Max Mean Log Amount in Comp", min=0, max=6, value=0.5, step=0.25),
                                                                                        valign="top")),
                                                                        width='100%'),
-                                                            hr(),
-                                                            h4("Manual Gene Selection"),
-                                                            selectizeInput("user.genes", "", choices=c("Choose Additional Genes Of Interest"="",all.genes),
-                                                                           multiple=TRUE, width='100%'),
                                                             actionButton("upload.genes","Upload Gene List", width='100%', onclick="alert('Not Implemented')")
                                                    ),
                                                    tabPanel("Display",
@@ -170,6 +170,10 @@ shinyUI(
                                                                               fluidRow(div(id="global-scatter", class="scroll-area",
                                                                                            plotDownload("gene.expr.scatter.cluster.dl"),
                                                                                            imageOutput("gene.expr.scatter.cluster", height=500)))),
+                                                                     tabPanel("Rank", 
+                                                                              fluidRow(div(id="global-rank", class="scroll-area",
+                                                                                           plotDownload("gene.expr.rank.cluster.dl"),
+                                                                                           plotOutput("gene.expr.rank.cluster", height=500)))),
                                                                      tabPanel("Table",
                                                                               p("Redundant. For Debug. Probably not in final product."),
                                                                               fluidRow(div(id="dt-clusters", class="scroll-area", 
@@ -195,6 +199,10 @@ shinyUI(
                                                                               fluidRow(div(id="local-scatter", class="scroll-area",
                                                                                            plotDownload("gene.expr.scatter.subcluster.dl"),
                                                                                            plotOutput("gene.expr.scatter.subcluster", height=500)))),
+                                                                     tabPanel("Rank", 
+                                                                              fluidRow(div(id="local-rank", class="scroll-area",
+                                                                                           plotDownload("gene.expr.rank.subcluster.dl"),
+                                                                                           plotOutput("gene.expr.rank.subcluster", height=500)))),
                                                                      tabPanel("Independent Components",
                                                                               fluidRow(div(id="ic-grid", class="scroll-area",
 #                                                                                           plotDownload("ic.grid.dl"),

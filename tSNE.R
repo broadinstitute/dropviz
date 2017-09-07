@@ -414,8 +414,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
 #########################################################
 # show global tSNE with just the filtered clusters 
 output$tsne.global.cluster.label <- renderImage({
-  progress <- shiny::Progress$new()
-  on.exit(progress$close())
+  progress <- shiny.progress()
+  if (!is.null(progress)) on.exit(progress$close())
   
   tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=FALSE, show.cells=(downsample()>0 & nrow(regions.selected()) <= MAX_REGIONS), show.bags = TRUE, diff.genes=expr.xy())
   

@@ -148,23 +148,46 @@ limit.by.components <- function(df, comps) {
   }
 }
 
+# adds columns for each user gene containing 
+gene.cols <- function(df, kind) {
+  lapply(input$user.genes, function(g) {
+    g.fn <- glue("{prep.dir}/markers/genes/{kind}/{g}.diffexp.RDS")
+    if (file.exists(g.fn)) {
+      g.diffexp <- readRDS(g.fn) %>% select(exp.label, cx, log.target.u, pval)
+
+      names(g.diffexp)[3] <- paste0(g,'.',names(g.diffexp[3]))
+      names(g.diffexp)[4] <- paste0(g,'.',names(g.diffexp[4]))
+      
+      by.names <- c('exp.label','cx') %>% setNames(c('exp.label',kind))
+      df <<- left_join(df, g.diffexp, by=by.names)  
+    }
+  })
+  df
+}
+
 # returns a tibble of only the rows that match the user selection
 subclusters.selected_ <- reactive({
-  log.reactive("fn: subclusters.selected")
+  log.reactive("fn: subclusters.selected_")
   user.selection.changed()
   
-  filter.df(subclusters.labeled(), cell.types.filter.opts) 
+  filter.df(subclusters.labeled(), cell.types.filter.opts)
 })
 
-subclusters.selected <- reactive({
+subclusters.selected__ <- reactive({
   limit.by.components(subclusters.selected_(), selected.components())
+})
+
+
+subclusters.selected <- reactive({
+  gene.cols(subclusters.selected__(),'subcluster')
 })
 
 # returns a smaller tibble with a row per cluster from subclusters.selected()
 clusters.selected <- reactive({
 log.reactive("fn: clusters.selected")
   user.selection.changed()
-  select(subclusters.selected(), region.disp, class.disp, cluster.disp, exp.label, cluster) %>% unique
+  select(subclusters.selected__(), region.disp, class.disp, cluster.disp, exp.label, cluster) %>% unique %>%
+    gene.cols('cluster')
 })
 
 regions.selected <- reactive({
@@ -191,13 +214,20 @@ log.reactive("fn: regions.selected")
 #####################################################################################################
 # OUTPUT - Cluster/Subcluster Tables
 output$dt.clusters <- DT::renderDataTable({
+  ct <- clusters.selected()
+  col.idx <- c(
+    which(names(ct) %in% c('region.disp','class.disp','cluster.disp')),
+    lapply(input$user.genes, function(g) grep(paste0('^',g,'\\.'), names(ct))) %>% unlist
+  )
+  ct <- ct[,col.idx]
   
-  ct <- clusters.selected()[,c('region.disp','class.disp','cluster.disp')]
+  colnames <- c('Region','Class','Cluster',
+                 lapply(input$user.genes, function(g) paste(g,c('Amount','P-Val'))) %>% unlist)
   
   DT::datatable(ct, 
                 rownames=FALSE,
                 selection="single",
-                colnames=c('Region','Class','Cluster'),
+                colnames=colnames,
                 options=list(dom='t', paging=FALSE)    )
 })
 
@@ -207,12 +237,19 @@ observeEvent(input$dt.clusters_rows_selected, {
 
 output$dt.subclusters <- DT::renderDataTable({
   
-  ct <- subclusters.selected()[,c('region.disp','class.disp','cluster.disp','subcluster.disp')]
+  ct <- subclusters.selected()
+  col.idx <- c(
+    which(names(ct) %in% c('region.disp','class.disp','cluster.disp','subcluster.disp')),
+    lapply(input$user.genes, function(g) grep(paste0('^',g,'\\.'), names(ct))) %>% unlist
+  )
+  ct <- ct[,col.idx]
   
+  colnames <- c('Region','Class','Cluster','Sub-Cluster',
+                lapply(input$user.genes, function(g) paste(g,c('Amount','P-Val'))) %>% unlist)
   DT::datatable(ct, 
                 rownames=FALSE,
                 selection="single",
-                colnames=c('Region','Class','Cluster','SubCluster'),
+                colnames=colnames,
                 options=list(dom='t', paging=FALSE)    )
 })
 

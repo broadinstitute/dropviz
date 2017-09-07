@@ -4,7 +4,7 @@
 # should be removed first
 stopifnot(!file.exists("cache"))
 
-files <- c('marker','tSNE','expr','metacells','components')
+files <- c('tSNE','expr','metacells','components','marker')
 lapply(files, function(fn) {
   cat("Sourcing ", fn, "\n")
   source(paste0("prep-",fn,".R"))

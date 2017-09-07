@@ -1,25 +1,10 @@
-suppressWarnings(dir.create(glue("{cache.dir}/metacells"), recursive = TRUE))
+source("metacells-shared.R")
 
+# adds local attributes to results of compute.pair
+cx.pairwise <- function(exp.label, cx, cmp.cx, kind, progress=NULL) {
 
-means.and.sums <- function(fn.means, fn.sums, cx, cmp.cx, cache.file, progress) {
-  if (file.exists(cache.file)) {
-    x <- readRDS(cache.file)
-  } else {
-    write.log(glue("Computing pairwise {cx} vs {cmp.cx}"))
-    progress$set(value=0.3, message=glue("{cx} vs {cmp.cx}"), detail=glue("Reading means and sums from disk"))
-    x <- bind_cols(readRDS(fn.means)[,c('gene',cx,cmp.cx)] %>% setNames(c('gene','target.u','comparison.u')),
-                   readRDS(fn.sums)[,c(cx,cmp.cx)] %>% setNames(c('target.sum','comparison.sum')))
-    progress$set(value=0.6, detail=glue("Fold ratio and p-vals for {nrow(x)} genes"))
-    x <- mutate(x, log.target.u=log(10000*target.u+1), 
-                log.comparison.u=log(10000*comparison.u+1),
-                pval=edgeR::binomTest(target.sum, comparison.sum),
-                fc=log.target.u-log.comparison.u, 
-                fc.disp=exp(fc))
-    progress$set(value=0.8, detail=glue("Cacheing pairwise data"))
-    saveRDS(x, file=cache.file)
-  }
-
-  mutate(x, fc.thresh=( if (input$expr.filter.opt %in% 'fc') { (abs(fc) > log(input$fold.change)) } else { fc > log(input$fold.change) } ),
+  mutate(compute.pair(exp.label, cx, cmp.cx, kind, progress), 
+         fc.thresh=( if (input$expr.filter.opt %in% 'fc') { (abs(fc) > log(input$fold.change)) } else { fc > log(input$fold.change) } ),
          pval.thresh=pval < 10^input$pval.thresh,
          amt.thresh=( (log.target.u > input$min.amt.within) & (log.comparison.u < input$max.amt.without) ),
          user.selected=gene %in% input$user.genes,
@@ -38,18 +23,14 @@ cluster.metacells.selected <- reactive({
 log.reactive("fn: cluster.metacells.selected")
   req(input$current.cluster)
   
-  fn.means <- glue("{prep.dir}/metacells/{current.cluster()$exp.label}.cluster.means.RDS")
-  fn.sums <- glue("{prep.dir}/metacells/{current.cluster()$exp.label}.cluster.sums.RDS")
-
   cx <- as.character(current.cluster()$cluster)
   cmp.cx <- ifelse(comparison.cluster()$cluster == 'global', paste0('N', current.cluster()$cluster), as.character(comparison.cluster()$cluster))
-  cache.file <- glue("{cache.dir}/metacells/{current.cluster()$exp.label}.{cx}.{cmp.cx}.RDS")
-  region.disp <- current.cluster()$region.disp
 
-  progress <- shiny::Progress$new()
-  on.exit(progress$close())
+  progress <- shiny.progress()
+  if (!is.null(progress)) on.exit(progress$close())
   
-  means.and.sums(fn.means, fn.sums, cx, cmp.cx, cache.file, progress) %>% mutate(region.disp=region.disp)  
+  cx.pairwise(current.cluster()$exp.label, cx, cmp.cx, 'cluster', progress) %>% 
+    mutate(region.disp=current.cluster()$region.disp)  
 })
 
 # same as above, but for subclusters
@@ -57,18 +38,14 @@ subcluster.metacells.selected <- reactive({
 log.reactive("fn: subcluster.metacells.selected")
   req(input$current.subcluster)
 
-  fn.means <- glue("{prep.dir}/metacells/{current.subcluster()$exp.label}.subcluster.means.RDS")
-  fn.sums <- glue("{prep.dir}/metacells/{current.subcluster()$exp.label}.subcluster.sums.RDS")
-  
   cx <- as.character(current.subcluster()$subcluster)
   cmp.cx <- ifelse(comparison.subcluster()$subcluster == 'global', paste0('N', current.subcluster()$subcluster), as.character(comparison.subcluster()$subcluster))
-  cache.file <- glue("{cache.dir}/metacells/{current.subcluster()$exp.label}.{cx}.{cmp.cx}.RDS")
-  region.disp <- current.subcluster()$region.disp
+
+  progress <- shiny.progress()
+  if (!is.null(progress)) on.exit(progress$close())
   
-  progress <- shiny::Progress$new()
-  on.exit(progress$close())
-  
-  means.and.sums(fn.means, fn.sums, cx, cmp.cx, cache.file, progress) %>% mutate(region.disp=region.disp)
+  cx.pairwise(current.subcluster()$exp.label, cx, cmp.cx, 'subcluster', progress) %>% 
+    mutate(region.disp=current.subcluster()$region.disp)
 })
 
 # returns a closure of a scatter plot of target vs comparison
@@ -197,3 +174,35 @@ output$gene.expr.scatter.subcluster.dl <- downloadHandler(filename="scatter.zip"
                                                             subcluster.scatter.plot <- scatter.plot(current.subcluster(), comparison.subcluster(), subcluster.metacells.selected(), subcluster.markers(), subcluster.markers.selected(), 'subcluster', return.closure = TRUE)()
                                                             send.zip(subcluster.scatter.plot, 'scatter', file)
                                                           })
+
+output$gene.expr.rank.cluster <- renderPlot({
+  if (isTruthy(input$user.genes)) {
+    clusters <- select(clusters.selected(), -class.disp) %>% unique
+    clusters <- gather(clusters, gene, amount, ends_with('.log.target.u'))
+    clusters$gene <- sub('(.*).log.target.u',"\\1", clusters$gene)
+    clusters.top <- arrange(clusters, region.disp, desc(amount)) %>% 
+      mutate(cluster.disp=paste(region.disp,cluster.disp), cluster.disp=factor(cluster.disp, levels=rev(cluster.disp)))
+    ggplot(clusters.top, aes(x=amount, y=cluster.disp)) + geom_point() + 
+      ggtitle(glue("Ranked Clusters by Gene Expression")) + 
+      xlab("Normalized log mean") + ylab("") + facet_grid(region.disp~gene, scales = "free_y")
+  } else {
+    plot.text("Enter a Gene Name")    
+  }
+})
+
+output$gene.expr.rank.subcluster <- renderPlot({
+  if (isTruthy(input$user.genes)) {
+    clusters <- select(subclusters.selected(), -class.disp) %>% unique
+    clusters <- gather(clusters, gene, amount, ends_with('.log.target.u'))
+    clusters$gene <- sub('(.*).log.target.u',"\\1", clusters$gene)
+    clusters$subcluster.disp <- with(clusters, paste(region.disp,subcluster.disp))
+    clusters <- arrange(clusters, desc(amount))
+    clusters$subcluster.disp <- with(clusters, factor(subcluster.disp, levels=rev(unique(subcluster.disp))))
+    clusters.top <- group_by(clusters, region.disp) %>% arrange(desc(amount)) %>% do(head(.,10))
+    ggplot(clusters.top, aes(x=amount, y=subcluster.disp)) + geom_point() + 
+      ggtitle(glue("Ranked Sub-Clusters by Gene Expression")) + 
+      xlab("Normalized log mean") + ylab("") + facet_grid(region.disp~gene, scales = "free_y")
+  } else {
+    plot.text("Enter a Gene Name")    
+  }
+})
