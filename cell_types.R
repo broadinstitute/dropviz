@@ -164,7 +164,7 @@ gene.cols <- function(df, kind) {
   })
 
   if (!is.null(input$user.genes))
-    df <- df[order(df[[grep('.log.target.u',colnames(df))]], decreasing = TRUE),]  # sort by first gene's transcript amount
+    df <- df[order(df[[first(grep('.log.target.u',colnames(df)))]], decreasing = TRUE),]  # sort by first gene's transcript amount
   
   df
 }
