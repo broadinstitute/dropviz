@@ -54,12 +54,14 @@ current.subcluster.i <- reactive({
 
 current.subcluster <- reactive({
   log.reactive("fn: current.subcluster") 
-  subclusters.selected_()[current.subcluster.i(),]  
+  subc.s <- subclusters.selected_() %>% gene.cols('subcluster') # HACK: Fix Me
+  subc.s[current.subcluster.i(),]  
 })
 
 output$current.subcluster <- renderUI({
 
-  choices <- setNames(1:nrow(subclusters.selected_()), glue("{subclusters.selected_()$region.disp} {subclusters.selected_()$subcluster.disp}"))
+  subc.s <- subclusters.selected_() %>% gene.cols('subcluster') # HACK: Fix Me
+  choices <- setNames(1:nrow(subc.s), glue("{subc.s$region.disp} {subc.s$subcluster.disp}"))
   
   if (length(choices)==1) {
     selected <- choices

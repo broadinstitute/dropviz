@@ -164,12 +164,13 @@ gene.cols <- function(df, kind) {
   })
 
   if (!is.null(input$user.genes))
-    df <- df[rev(order(df[[grep('.log.target.u',colnames(df))]])),]  # sort by first gene's transcript amount
+    df <- df[order(df[[grep('.log.target.u',colnames(df))]], decreasing = TRUE),]  # sort by first gene's transcript amount
   
   df
 }
 
 # returns a tibble of only the rows that match the user selection
+# HACK: FIX ME. This is a mess because of limit.by.components. Get rid of limit.by.components and remove subclusters.selected_
 subclusters.selected_ <- reactive({
   log.reactive("fn: subclusters.selected_")
   user.selection.changed()
@@ -217,6 +218,17 @@ log.reactive("fn: regions.selected")
 
 #####################################################################################################
 # OUTPUT - Cluster/Subcluster Tables
+
+
+# set significant digits for Amount and PVal columns, if there are any
+setSig <- function(dt, ct.names, start.col, end.col, sig.digits) {
+  if (end.col >= start.col) {
+    DT::formatSignif(dt, ct.names[start.col:end.col], sig.digits)
+  } else {
+    dt
+  }
+}
+
 output$dt.clusters <- DT::renderDataTable({
   ct <- clusters.selected()
   col.idx <- c(
@@ -232,7 +244,7 @@ output$dt.clusters <- DT::renderDataTable({
                 rownames=FALSE,
                 selection="single",
                 colnames=colnames,
-                options=list(dom='t', paging=FALSE)    )
+                options=list(dom='t', paging=FALSE)) %>% setSig(names(ct), 4, ncol(ct), 3)
 })
 
 observeEvent(input$dt.clusters_rows_selected, {
@@ -241,10 +253,11 @@ observeEvent(input$dt.clusters_rows_selected, {
 
 output$dt.subclusters <- DT::renderDataTable({
   
-  ct <- subclusters.selected()
+  ct <- subclusters.selected_() %>% gene.cols('subcluster')  # HACK: fixme. The subclusters.selected routines is a mess due to filtering on selected component. Needs to be cleaned up.
+  
   col.idx <- c(
     which(names(ct) %in% c('region.disp','class.disp','cluster.disp','subcluster.disp')),
-    lapply(input$user.genes, function(g) grep(paste0('^',g,'\\.'), names(ct))) %>% unlist
+    lapply(input$user.genes, function(g) grep(paste0('^',g,'\\.'), names(ct))) %>% unlist 
   )
   ct <- ct[,col.idx]
   
@@ -254,7 +267,7 @@ output$dt.subclusters <- DT::renderDataTable({
                 rownames=FALSE,
                 selection="single",
                 colnames=colnames,
-                options=list(dom='t', paging=FALSE)    )
+                options=list(dom='t', paging=FALSE)) %>% setSig(names(ct), 4, ncol(ct), 3)
 })
 
 observeEvent(input$dt.subclusters_rows_selected, {
