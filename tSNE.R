@@ -1,3 +1,5 @@
+source("dv_label.R")
+
 #############################################
 # tSNE plot related functions
 
@@ -189,13 +191,27 @@ log.reactive("fn: local.xy.selected")
   x
 })
 
-# # the subset of local XY just for the current subcluster
-# local.xy.current.subcluster <- reactive({
-#   filter(local.xy.selected(), exp.label==current.subcluster()$exp.label & cluster==current.subcluster()$cluster)
-# })
+# returns the sum of all of the log normal transcript counts for all user.genes
+psum.amounts <- function(cx, amounts) {
+  amounts$total <- log(rowSums(as_tibble(lapply(as.list(amounts), function(a) exp(a)))))
+  cbind(cx, alpha=amounts$total)
+}
+cluster.transcript.amounts <- reactive({
+  cx <- select(clusters.selected(), exp.label, cx=cluster)
+  amounts <- select(clusters.selected(), ends_with('.log.target.u'))
+  psum.amounts(cx, amounts)
+})
+subcluster.transcript.amounts <- reactive({
+  cx <- select(subclusters.selected(), exp.label, cx=subcluster)
+  amounts <- select(subclusters.selected(), ends_with('.log.target.u'))
+  psum.amounts(cx, amounts)
+})
+
 
 ################################################################
 # Draw tSNE
+
+alpha.na2zero <- function(df) mutate(df, alpha=ifelse(is.na(alpha),0,alpha))
 
 # When comps are selected in plot, then data is automatically limited to corresponding cluster
 limit.cluster <- function(df, comps) {
@@ -288,6 +304,26 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       center.data <- global.selected.center() %>% limit.cluster(comps)
     }
     
+    # alpha is either fixed or set by transcript amounts.
+    # if fixed, then alpha range is set by scale further below.
+    # if user.genes are specified, then sum all of the amounts per cx and use that as the alpha for colors
+    if (!is.null(input$user.genes)) {
+      tx.alpha <- (
+        if (show.subclusters) {
+          subcluster.transcript.amounts() 
+        } else {
+          cluster.transcript.amounts()
+        }
+      ) %>% group_by(exp.label) %>% top_n(as.integer(input$top.N), alpha) 
+      
+      label.data <- left_join(label.data, tx.alpha, by=c('exp.label','cx')) %>% alpha.na2zero()
+      center.data <- left_join(center.data, tx.alpha, by=c('exp.label','cx')) %>% alpha.na2zero()
+      bag.data <- left_join(bag.data, tx.alpha, by=c('exp.label','cx')) %>% alpha.na2zero() %>% mutate(alpha=pmax(0,alpha-0.5))
+      loop.data <- left_join(loop.data, tx.alpha, by=c('exp.label','cx')) %>% alpha.na2zero() %>% mutate(alpha=pmax(0,alpha-1))
+      xy.data <- left_join(xy.data, tx.alpha, by=c('exp.label','cx'))  %>% alpha.na2zero() %>% mutate(alpha=pmax(0,alpha-1))
+    }
+    
+    
     # diff exp & components are row facets
     facet2.vals <- c()
     if (nrow(diff.genes)>0) {
@@ -318,6 +354,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     opt.global <- is.global
     opt.plot.label <- input$opt.plot.label
     opt.horiz.facet <- nrow(diff.data)>0 || nrow(comp.data)>0
+    opt.tx.alpha <- !is.null(input$user.genes)
+
     p.func <- function() {
       require(ggplot2);
       geom_blank_tsne <- geom_blank(data=data.frame(region.disp=character(),facet.gg=character(),facet2.gg=character()))
@@ -336,7 +374,11 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           if (nrow(comp.data)>0) {
             geom_point(data=xy.data, aes(x=V1,y=V2), color='grey', alpha=0.25, size=xy.cell.size()) 
           } else {
-            geom_point(data=xy.data, aes(x=V1,y=V2,color=cx), alpha=0.25, size=xy.cell.size()) 
+            if (opt.tx.alpha) {
+              geom_point(data=xy.data, aes(x=V1,y=V2,color=cx, alpha=alpha), size=xy.cell.size()) 
+            } else {
+              geom_point(data=xy.data, aes(x=V1,y=V2,color=cx), alpha=0.25, size=xy.cell.size()) 
+            }
           }
         } else {
           geom_blank_tsne
@@ -347,7 +389,11 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         if (nrow(comp.data)>0) {
           geom_label(data=label.data, aes(x=x,y=y,label=as.character(cx.disp)), color='grey')
         } else {
-          geom_label(data=label.data, aes(x=x,y=y,color=cx.gg,label=as.character(cx.disp)))
+          if (opt.tx.alpha) {
+            dv_label(data=label.data, aes(x=x,y=y,color=cx.gg,label=as.character(cx.disp),alpha=alpha))
+          } else {
+            dv_label(data=label.data, aes(x=x,y=y,color=cx.gg,label=as.character(cx.disp)))
+          }
         }
       )
       
@@ -368,13 +414,22 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       )      
       
       if (opt.show.bags & nrow(comp.data)==0) {
-        bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,fill=cx.gg,group=cx), alpha=0.4)
-        loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,fill=cx.gg,group=cx), alpha=0.2)
-        center.gg <- geom_point(data=center.data, aes(x=x,y=y,color=cx.gg, fill=cx.gg), size=3)
+        if (opt.tx.alpha) {
+          alpha.range <- scale_alpha_continuous(guide="none",range=c(0,1), trans=scales::trans_new("sqr", function(x) x^2, function(x) sqrt(x)))
+          bag.gg <- geom_polygon(data=filter(bag.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg,group=cx, alpha=alpha))
+          loop.gg <- geom_polygon(data=filter(loop.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg,group=cx, alpha=alpha))
+          center.gg <- geom_point(data=filter(center.data, !is.na(cx.gg)), aes(x=x,y=y,color=cx.gg, fill=cx.gg,alpha=alpha), size=3)
+        } else {
+          bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,fill=cx.gg,group=cx), alpha=0.4)
+          loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,fill=cx.gg,group=cx), alpha=0.2)
+          center.gg <- geom_point(data=center.data, aes(x=x,y=y,color=cx.gg, fill=cx.gg), size=3)
+          alpha.range <- scale_alpha()
+        }
       } else {
         bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,group=cx), fill='grey', alpha=0.2) 
         loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,group=cx), fill='grey', alpha=0.1) 
         center.gg <- geom_blank_tsne
+        alpha.range <- scale_alpha()
       }
       
       facet.label.gg <- (
@@ -385,8 +440,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       )
 
-      p <- tsne.gg + tsne.color.scale + xy.gg + loop.gg + bag.gg + center.gg + diff.gg + comp.gg + label.gg + facet.label.gg 
-
+      p <- tsne.gg + tsne.color.scale + xy.gg + loop.gg + bag.gg + alpha.range + center.gg + diff.gg + comp.gg + label.gg + facet.label.gg 
+      
       if (opt.global) {
         if (opt.horiz.facet) {
           plot.gg <- p + facet_grid(facet2.gg~region.disp)
@@ -421,7 +476,7 @@ output$tsne.global.cluster.label <- renderImage({
   
   width <- img.size.round(session$clientData[[glue("output_tsne.global.cluster.label_width")]])
   height <- width/2 * (nrow(regions.selected())%/%4+1)
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,cluster.markers.selected()$gene))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,cluster.markers.selected()$gene,input$user.genes))
 
   renderCacheImage(tsne.plot, glue("tsne_global_cluster_label_{key.str}"), width, height, progress=progress)
 }, deleteFile = FALSE)
@@ -440,7 +495,7 @@ output$tsne.global.subcluster.label <- renderImage({
   
   width <- img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_width")]])
   height <- width/2 * (nrow(regions.selected())%/%4+1)
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,subcluster.markers.selected()$gene))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,subcluster.markers.selected()$gene,input$user.genes))
   
   renderCacheImage(tsne.plot, glue("tsne_global_subcluster_label_{key.str}"), width, height)
 }, deleteFile = FALSE)
@@ -464,7 +519,7 @@ output$tsne.local.label <- renderImage({
   
   width <- img.size.round(session$clientData[[glue("output_tsne.local.label_width")]])
   height <- width/2 * height.mult
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, subcluster.markers.selected()$gene, selected.components()$ic.number))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, subcluster.markers.selected()$gene, selected.components()$ic.number,input$user.genes))
   
   renderCacheImage(tsne.plot, glue("tsne_local_label_{key.str}"), width, height)
 }, deleteFile = FALSE)

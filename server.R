@@ -10,7 +10,7 @@ shiny.progress <- function() {
 }
 
 # uncomment to debug within RStudio
-reactive <- function(expr, env=parent.frame(), ...) exprToFunction(expr, env=env)
+# reactive <- function(expr, env=parent.frame(), ...) exprToFunction(expr, env=env)
 
 shinyServer(function(input, output, session) {
   
