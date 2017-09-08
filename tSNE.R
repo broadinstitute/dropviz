@@ -213,6 +213,15 @@ subcluster.transcript.amounts <- reactive({
 
 alpha.na2zero <- function(df) mutate(df, alpha=ifelse(is.na(alpha),0,alpha))
 
+# just a short hand to join with alpha only if lhs has data and then replace all NA alphas with zero
+left_join_alpha <- function(lhs, rhs, by) {
+  if (nrow(lhs) > 0) {
+    left_join(lhs, rhs, by=by) %>% alpha.na2zero()
+  } else {
+    mutate(lhs, alpha=double())
+  }
+}
+
 # When comps are selected in plot, then data is automatically limited to corresponding cluster
 limit.cluster <- function(df, comps) {
   return(df)
@@ -316,11 +325,11 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       ) %>% group_by(exp.label) %>% top_n(as.integer(input$top.N), alpha) 
       
-      label.data <- left_join(label.data, tx.alpha, by=c('exp.label','cx')) %>% alpha.na2zero()
-      center.data <- left_join(center.data, tx.alpha, by=c('exp.label','cx')) %>% alpha.na2zero()
-      bag.data <- left_join(bag.data, tx.alpha, by=c('exp.label','cx')) %>% alpha.na2zero() %>% mutate(alpha=pmax(0,alpha-0.5))
-      loop.data <- left_join(loop.data, tx.alpha, by=c('exp.label','cx')) %>% alpha.na2zero() %>% mutate(alpha=pmax(0,alpha-1))
-      xy.data <- left_join(xy.data, tx.alpha, by=c('exp.label','cx'))  %>% alpha.na2zero() %>% mutate(alpha=pmax(0,alpha-1))
+      label.data <- left_join_alpha(label.data, tx.alpha, by=c('exp.label','cx')) 
+      center.data <- left_join_alpha(center.data, tx.alpha, by=c('exp.label','cx')) 
+      bag.data <- left_join_alpha(bag.data, tx.alpha, by=c('exp.label','cx'))  %>% mutate(alpha=pmax(0,alpha-0.5))
+      loop.data <- left_join_alpha(loop.data, tx.alpha, by=c('exp.label','cx'))  %>% mutate(alpha=pmax(0,alpha-1))
+      xy.data <- left_join_alpha(xy.data, tx.alpha, by=c('exp.label','cx'))   %>% mutate(alpha=pmax(0,alpha-1))
     }
     
     
