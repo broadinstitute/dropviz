@@ -182,7 +182,7 @@ output$gene.expr.scatter.subcluster.dl <- downloadHandler(filename="scatter.zip"
 # Doesn't work well for multiple genes, because the topN are different and the order also varies.
 rank.plot <- function(clusters, kind) {
   # TODO: clean up this ugliness
-  
+  require(tidyr)
   Kind <- paste0(toupper(substring(kind,1,1)),substring(kind,2))
   clusters <- gather(clusters, gene, amount, ends_with('.log.target.u'))
   clusters$gene <- sub('(.*).log.target.u',"\\1", clusters$gene)
