@@ -191,9 +191,9 @@ rank.plot <- function(clusters, kind) {
   clusters <- arrange(clusters, desc(amount))
   clusters$cx.disp <- with(clusters, factor(cx.disp, levels=rev(unique(cx.disp))))
   clusters.top <- group_by(clusters, region.disp) %>% top_n(as.integer(input$top.N), amount)
-  ggplot(clusters.top, aes(x=amount, y=cx.disp)) + geom_point() + 
+  ggplot(clusters.top, aes(x=amount, y=cx.disp)) + geom_point(size=3) + 
     ggtitle(glue("Ranked {Kind} by Gene Expression")) + 
-    xlab("Normalized log mean") + ylab("") + facet_grid(region.disp~gene, scales = "free_y")
+    xlab("Normalized log mean") + ylab("") + facet_grid(region.disp~gene, scales = "free_y") + coord_cartesian(xlim=c(0,6))
   
 }
 
