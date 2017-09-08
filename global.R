@@ -203,3 +203,6 @@ components <- as_tibble(ddply(experiments, .(exp.label), function(exp) {
 gene.descriptions <- read.delim("data/gene_descriptions.txt")
 gene.desc.list <- setNames(gene.descriptions$Description, gene.descriptions[['Associated Gene Name']])
 gene.desc.dict <- list2env(gene.desc.list)
+gene.desc <- function(name) {
+  lapply(name, function(x) gene.desc[[x]]) %>% unlist
+}
