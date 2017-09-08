@@ -2,8 +2,15 @@ library(digest)
 library(ggplot2)
 library(shiny)
 
+
+shiny.progress <- function() {
+  tryCatch({
+    shiny::Progress$new();
+  }, error=function(err) NULL)
+}
+
 # uncomment to debug within RStudio
-#reactive <- function(expr, env=parent.frame()) exprToFunction(expr, env=env)
+# reactive <- function(expr, env=parent.frame(), ...) exprToFunction(expr, env=env)
 
 shinyServer(function(input, output, session) {
   

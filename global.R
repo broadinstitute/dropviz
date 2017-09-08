@@ -185,7 +185,7 @@ cell.types <- select(cell.types_, -region, -full_name, -common_name, -class_mark
 #all.genes <- unique(unlist(strsplit(type.markers$type_marker,'\\.')))
 markers.fn <- glue("{prep.dir}/markers/pval-200.genes.RDS")
 if (file.exists(markers.fn)) {
-  all.genes <- readRDS(markers.fn)
+  all.genes <- sort(readRDS(markers.fn))
 }
 
 components <- as_tibble(ddply(experiments, .(exp.label), function(exp) {

@@ -11,6 +11,7 @@
 # metacell.means: mean of scaled (normalized) transcripts per cluster - Genes x Cluster - same as norm.row.means in compute_diffexp_mean_and_sum
 
 source("global.R")
+source("metacells-shared.R")
 
 meta.dir <- glue('{prep.dir}/metacells')
 suppressWarnings(dir.create(meta.dir, recursive = TRUE))
@@ -54,7 +55,7 @@ compute.dge.stat <- function(group.assignment, mtx, func) {
 
 
 ddply(experiments, .(exp.label), function(exp) {
-  write.log("Generating cluster metacell data for  ",exp$exp.label)
+  write.log("Generating cluster metacell data for ",exp$exp.label)
   # convert factor to table
   cluster.cell.assign <- readRDS(sprintf("%s/assign/%s.cluster.assign.RDS", exp$exp.dir, exp$base))
   cluster.cell.assign.tbl <- na.omit(tibble(cell=names(cluster.cell.assign), group=factor(cluster.cell.assign, levels=levels(cell.types$cluster))))
@@ -85,5 +86,18 @@ ddply(experiments, .(exp.label), function(exp) {
   rm(raw)
   
   gc()
-  
+
+})
+
+do.pairwise.Ncx <- function(exp.label, groups, kind) {
+  lapply(groups, function(cx) {
+    cmp.cx <- paste0('N',cx)
+    compute.pair(exp.label, as.character(cx), cmp.cx, kind)
+  })
+}
+
+ddply(experiments, .(exp.label), function(exp) {
+  do.pairwise.Ncx(exp$exp.label, unique(cell.types$cluster[cell.types$exp.label==exp$exp.label]),'cluster')
+  do.pairwise.Ncx(exp$exp.label, cell.types$subcluster[cell.types$exp.label==exp$exp.label],'subcluster')
+  exp
 })

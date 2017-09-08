@@ -21,7 +21,7 @@ renderCacheImage <- function(plot.func, key, width, height=width, opt.use.cache=
   
   if (!file.exists(fn) || !opt.use.cache) {
     write.log(glue("Generating plot {fn}"))
-    if (!is.null(progress)) progress$set(value=0.0,message="t-SNE", detail="Rendering")
+    if (!is.null(progress)) progress$set(value=0.5,message="t-SNE", detail="Rendering")
     a.plot <- plot.func()
     png(fn, width=width, height=height)
     print(a.plot)
