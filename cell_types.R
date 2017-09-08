@@ -220,6 +220,7 @@ output$dt.clusters <- DT::renderDataTable({
     lapply(input$user.genes, function(g) grep(paste0('^',g,'\\.'), names(ct))) %>% unlist
   )
   ct <- ct[,col.idx]
+  if (ncol(ct)>3) ct <- ct[rev(order(ct[[4]])),]  # sort by first gene's transcript amount
   
   colnames <- c('Region','Class','Cluster',
                  lapply(input$user.genes, function(g) paste(g,c('Amount','P-Val'))) %>% unlist)
@@ -243,6 +244,7 @@ output$dt.subclusters <- DT::renderDataTable({
     lapply(input$user.genes, function(g) grep(paste0('^',g,'\\.'), names(ct))) %>% unlist
   )
   ct <- ct[,col.idx]
+  if (ncol(ct)>4) ct <- ct[rev(order(ct[[5]])),]
   
   colnames <- c('Region','Class','Cluster','Sub-Cluster',
                 lapply(input$user.genes, function(g) paste(g,c('Amount','P-Val'))) %>% unlist)
