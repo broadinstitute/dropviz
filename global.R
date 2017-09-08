@@ -199,3 +199,7 @@ components <- as_tibble(ddply(experiments, .(exp.label), function(exp) {
   })
 }))
 
+# read gene descriptions
+gene.descriptions <- read.delim("data/gene_descriptions.txt")
+gene.desc.list <- setNames(gene.descriptions$Description, gene.descriptions[['Associated Gene Name']])
+gene.desc.dict <- list2env(gene.desc.list)
