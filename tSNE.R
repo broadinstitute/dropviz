@@ -481,11 +481,11 @@ output$tsne.global.cluster.label <- renderImage({
   progress <- shiny.progress()
   if (!is.null(progress)) on.exit(progress$close())
   
-  tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=FALSE, show.cells=(downsample()>0 & nrow(regions.selected()) <= MAX_REGIONS), show.bags = TRUE, diff.genes=expr.xy())
+  tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=FALSE, show.cells=(downsample()>0 & nrow(regions.selected()) <= MAX_REGIONS), show.bags = input$opt.show.bags, diff.genes=expr.xy())
   
   width <- img.size.round(session$clientData[[glue("output_tsne.global.cluster.label_width")]])
   height <- width/2 * (nrow(regions.selected())%/%4+1)
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,cluster.markers.selected()$gene,input$user.genes,input$top.N))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,cluster.markers.selected()$gene,input$user.genes,input$top.N,input$opt.show.bags))
 
   renderCacheImage(tsne.plot, glue("tsne_global_cluster_label_{key.str}"), width, height, progress=progress)
 }, deleteFile = FALSE)
@@ -493,30 +493,30 @@ output$tsne.global.cluster.label <- renderImage({
 
 output$tsne.global.cluster.label.dl <- downloadHandler(filename="tsne.zip", 
                                                        content= function(file) {
-                                                         tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=FALSE, show.cells=(downsample()>0 & nrow(regions.selected()) <= MAX_REGIONS), show.bags = TRUE, diff.genes=expr.xy(), return.closure = TRUE)()
+                                                         tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=FALSE, show.cells=(downsample()>0 & nrow(regions.selected()) <= MAX_REGIONS), show.bags = input$opt.show.bags, diff.genes=expr.xy(), return.closure = TRUE)()
                                                          send.zip(tsne.plot, 'tsne', file)
                                                        })
 
 #########################################################
 # show global tSNE with just the filtered subclusters 
 output$tsne.global.subcluster.label <- renderImage({
-  tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=TRUE, show.cells=(downsample()>0 & nrow(regions.selected()) <= MAX_REGIONS), show.bags = TRUE, diff.genes=expr.subcluster.xy())
+  tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=TRUE, show.cells=(downsample()>0 & nrow(regions.selected()) <= MAX_REGIONS), show.bags = input$opt.show.bags, diff.genes=expr.subcluster.xy())
   
   width <- img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_width")]])
   height <- width/2 * (nrow(regions.selected())%/%4+1)
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,subcluster.markers.selected()$gene,input$user.genes,input$top.N))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,subcluster.markers.selected()$gene,input$user.genes,input$top.N,input$opt.show.bags))
   
   renderCacheImage(tsne.plot, glue("tsne_global_subcluster_label_{key.str}"), width, height)
 }, deleteFile = FALSE)
 
 output$tsne.global.subcluster.label.dl <- downloadHandler(filename="tsne.zip", 
                                                           content= function(file) {
-                                                            tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=TRUE, show.cells=(downsample()>0 & nrow(regions.selected()) <= MAX_REGIONS), show.bags = TRUE, diff.genes=expr.subcluster.xy(), return.closure = TRUE)()
+                                                            tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=TRUE, show.cells=(downsample()>0 & nrow(regions.selected()) <= MAX_REGIONS), show.bags = input$opt.show.bags, diff.genes=expr.subcluster.xy(), return.closure = TRUE)()
                                                             send.zip(tsne.plot, 'tsne', file)
                                                           })
 #########################################################
 output$tsne.local.label <- renderImage({
-  tsne.plot <- tsne.label(is.global=FALSE, show.subclusters = TRUE, show.cells=(nrow(clusters.selected()) <= MAX_REGIONS), show.bags=TRUE, diff.genes = expr.subcluster.local.xy(), comps=selected.component.cell.weights.xy())
+  tsne.plot <- tsne.label(is.global=FALSE, show.subclusters = TRUE, show.cells=(nrow(clusters.selected()) <= MAX_REGIONS), show.bags=input$opt.show.bags, diff.genes = expr.subcluster.local.xy(), comps=selected.component.cell.weights.xy())
   
   # hint height: if selected genes or components, then count them. Otherwise, count clusters.
   facet.count <- length(na.omit(c(subcluster.markers.selected()$gene, selected.components()$ic.number)))
@@ -528,13 +528,13 @@ output$tsne.local.label <- renderImage({
   
   width <- img.size.round(session$clientData[[glue("output_tsne.local.label_width")]])
   height <- width/2 * height.mult
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, subcluster.markers.selected()$gene, selected.components()$ic.number,input$user.genes,input$top.N))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, subcluster.markers.selected()$gene, selected.components()$ic.number,input$user.genes,input$top.N,input$opt.show.bags))
   
   renderCacheImage(tsne.plot, glue("tsne_local_label_{key.str}"), width, height)
 }, deleteFile = FALSE)
 
 output$tsne.local.label.dl <- downloadHandler(filename="tsne.zip", 
                                               content= function(file) {
-                                                tsne.plot <- tsne.label(is.global=FALSE, show.subclusters = TRUE, show.cells=(downsample()>0 & nrow(clusters.selected()) <= MAX_REGIONS), show.bags=TRUE, diff.genes = expr.subcluster.local.xy(), comps=selected.component.cell.weights.xy(), return.closure = TRUE)()
+                                                tsne.plot <- tsne.label(is.global=FALSE, show.subclusters = TRUE, show.cells=(downsample()>0 & nrow(clusters.selected()) <= MAX_REGIONS), show.bags=input$opt.show.bags, diff.genes = expr.subcluster.local.xy(), comps=selected.component.cell.weights.xy(), return.closure = TRUE)()
                                                 send.zip(tsne.plot, 'tsne', file)
                                               })

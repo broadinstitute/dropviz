@@ -99,7 +99,7 @@ shinyUI(
                                                             tags$hr(),
                                                             # h4("Search By Gene"),
                                                             fluidRow(
-                                                              column(7, selectizeInput("user.genes", "Search By Gene", choices=c("Choose Genes Of Interest"="",all.genes),
+                                                              column(7, selectizeInput("user.genes", "Search By Gene", choices=c("Gene Symbol"="",all.genes),
                                                                                        multiple=TRUE, width='100%')),
                                                               column(5, selectInput("top.N","Top Matches", choices=c(1,2,3,4,5,10,20),selected=5))),
                                                             tags$hr(),
@@ -145,6 +145,7 @@ shinyUI(
                                                                 conditionalPanel("input['opt.cluster.disp']=='annotated' || input['opt.cluster.disp']=='all'",
                                                                                  checkboxInput("use.common.name", "Use Common Name for Subcluster, If Present", value = TRUE))),
                                                             selectInput("opt.plot.label", "Plot Labels for Clusters and Subclusters", choices=c("Names"='disp',"Numbers"='number',"None"='none')),
+                                                            checkboxInput("opt.show.bags","Display t-SNE using bag plots", value=TRUE),
                                                             selectInput("opt.downsampling.method","Down Sample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
                                                             conditionalPanel("input['opt.downsampling.method']!='none'",
                                                                              sliderInput("downsampling", span("Down-sample Count",helpText("No display if more than four facets.")), 0, 100000, value=2000, step=1000)),
