@@ -134,7 +134,7 @@ output$gene.expr.scatter.cluster <- renderImage({
                         cluster.markers.selected()$gene, input$expr.filter.opt, input$pval.thresh,
                         input$max.amt.without, input$min.amt.within))
   } else {
-    cluster.scatter.plot <- function() plot.text("Choose a Target Cluster and Comparison")    
+    cluster.scatter.plot <- function(progress) plot.text("Choose a Target Cluster and Comparison")    
     key.str <- 'missing_clusters'
   }
   
@@ -162,7 +162,7 @@ output$gene.expr.scatter.subcluster <- renderImage({
                         subcluster.markers.selected()$gene, input$expr.filter.opt, input$pval.thresh,
                         input$max.amt.without, input$min.amt.within))
   } else {
-    subcluster.scatter.plot <- function() plot.text("Choose a Target Subcluster and Comparison")    
+    subcluster.scatter.plot <- function(progress) plot.text("Choose a Target Subcluster and Comparison")    
     key.str <- 'missing_subclusters'
   }
   
