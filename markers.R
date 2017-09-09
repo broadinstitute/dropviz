@@ -77,18 +77,20 @@ log.reactive("fn: subcluster.markers.selected")
 # OUTPUT - Markers tables
 
 dt.markers <- function(mrkrs) {
-  DT::datatable(select(mrkrs, gene, log.target.u, log.comparison.u, fc.disp, pval, row.highlight),
+  DT::datatable(select(mrkrs, gene, description, log.target.u, log.comparison.u, fc.disp, pval, row.highlight),
                 rownames = FALSE,
                 selection="multiple",
-                colnames = c('Gene','Target\n(normalized mean log)', 'Comparison\n(normalized mean log)', 'Fold Ratio', 'P-Value', 'row.highlight'),
-                options=list(dom="tp", pageLength=50, columnDefs = list(list(visible=FALSE, targets=5)))) %>% 
+                colnames = c('Gene','Description', 'Target\n(normalized mean log)', 'Comparison\n(normalized mean log)', 'Fold Ratio', 'P-Value', 'row.highlight'),
+                options=list(dom="tp", pageLength=50,
+                             language=list(zeroRecords = "No results - adjust Diff Expr criteria with scatter plot"),
+                             columnDefs = list(list(visible=FALSE, targets=6)))) %>% 
     DT::formatStyle('row.highlight', target='row', 
                     backgroundColor = DT::styleEqual(c(0,1,2), c('pink','lightgreen','white'))) %>%
     DT::formatSignif(c('log.target.u','log.comparison.u','fc.disp','pval'), 3) 
 }
 
 output$dt.cluster.markers <- DT::renderDataTable( {
-  mrkrs <- mutate(cluster.markers(), row.highlight=ifelse(user.selected,ifelse(expr.pass,1,0),2)) 
+  mrkrs <- mutate(cluster.markers(), row.highlight=ifelse(user.selected,ifelse(expr.pass,1,0),2), description=gene.desc(gene)) 
   dt.markers(mrkrs)
 })
 
@@ -106,7 +108,7 @@ output$dt.cluster.markers.heading <- renderUI({
 })
 
 output$dt.subcluster.markers <- DT::renderDataTable( {
-  mrkrs <- mutate(subcluster.markers(), row.highlight=ifelse(user.selected,ifelse(expr.pass,1,0),2))
+  mrkrs <- mutate(subcluster.markers(), row.highlight=ifelse(user.selected,ifelse(expr.pass,1,0),2), description=gene.desc(gene))
   dt.markers(mrkrs)
 })
 

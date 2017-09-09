@@ -85,7 +85,7 @@ output$ic.grid <- renderImage({
   if (length(fn)>0) {
     list(src=glue("{cache.dir}/ic/{fn[1]}"))
   } else {
-    renderCacheImage(function() plot.text("To Display ICs, Choose a Target Subcluster in the Left Bottom Panel or\nNarrow Highlight Filtering in the Left Top Panel to a Single Cluster"),
+    renderCacheImage(function(progress) plot.text("To Display ICs, Choose a Target Subcluster in the Left Bottom Panel or\nNarrow Highlight Filtering in the Left Top Panel to a Single Cluster"),
                      "no-ICs", width = 500, height=500)
   }
 }, deleteFile = FALSE)
@@ -94,7 +94,7 @@ output$dt.components <- DT::renderDataTable( {
   req(nrow(clusters.selected.components())>0)
   components.tbl <- clusters.selected.components() %>% 
     mutate(Loadings=glue("<img height='75' width='250' src='cache/ic/ic_{exp.label}_{cluster}_IC{ic.number}_250_75.png'/>")) %>%
-    dplyr::select(IC=ic.number, Class=cell_class, Status=status, Name=hypothesized_common_name, Loadings, Region=anatomical_region, Clustering=use_for_clustering)
+    dplyr::select(IC=ic.number, Class=cell_class, Status=status, "Annotation Notes"=hypothesized_common_name, Loadings, Region=anatomical_region, Clustering=use_for_clustering)
   
   DT::datatable(components.tbl,
                 rownames=FALSE, escape=FALSE,

@@ -21,13 +21,14 @@ renderCacheImage <- function(plot.func, key, width, height=width, opt.use.cache=
   
   if (!file.exists(fn) || !opt.use.cache) {
     write.log(glue("Generating plot {fn}"))
-    if (!is.null(progress)) progress$set(value=0.5,message="t-SNE", detail="Rendering")
-    a.plot <- plot.func()
+    if (!is.null(progress)) progress$set(value=0.1)
+    a.plot <- plot.func(progress)
     png(fn, width=width, height=height)
     print(a.plot)
     dev.off()
     if (!is.null(progress)) progress$set(value=1)
   } else {
+    if (!is.null(progress)) progress$set(value=0.9, detail="Retrieved cached plot")
     write.log(glue("Retrieving cached {fn}"))
   }
   

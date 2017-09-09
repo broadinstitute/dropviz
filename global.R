@@ -199,3 +199,17 @@ components <- as_tibble(ddply(experiments, .(exp.label), function(exp) {
   })
 }))
 
+# read gene descriptions
+gene.desc.dict <- NULL
+gene.desc <- function(name) {
+  if (is.null(gene.desc.dict)) {
+    gene.descriptions <- read.delim("data/gene_descriptions.txt.gz") %>% mutate(Description=sub(' \\[.*','',Description))
+    gene.desc.list <- setNames(lapply(1:nrow(gene.descriptions), function(i) gene.descriptions$Description[i]), gene.descriptions[['Associated.Gene.Name']])
+    gene.desc.dict <<- list2env(gene.desc.list)
+  }
+  if (is.null(name) || length(name)==0) {
+    character(0)
+  } else {
+    lapply(lapply(name, function(x) gene.desc.dict[[x]]), function(n) if (is.null(n)) "" else n) %>% unlist
+  }
+}

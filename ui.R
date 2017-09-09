@@ -89,34 +89,39 @@ shinyUI(
                                        div(helpIcon("config"), class='top-right'),
                                        tabsetPanel(type="tabs",
                                                    tabPanel("Filter Cells",
-                                                            h4("Highlight"),
-                                                            fluidRow(
-                                                              column(6, uiOutput("region")), column(6, uiOutput("cell.class"))
+                                                            div(style="margin: 10px -10px 0px -10px; border: 2px solid #dddddd; border-radius: 5px; padding: 0px 10px",
+                                                                h4("Highlight"),
+                                                                fluidRow(
+                                                                  column(6, uiOutput("region")), column(6, uiOutput("cell.class"))
+                                                                ),
+                                                                fluidRow(
+                                                                  column(12, uiOutput("cell.cluster")), 
+                                                                  conditionalPanel("input.mainpanel=='subclusters'",
+                                                                                   column(12, uiOutput("cell.type")), "")
+                                                                ),
+                                                                fluidRow(
+                                                                  column(7, selectizeInput("user.genes", "Gene", choices=c("Gene Symbol"="",all.genes),
+                                                                                                                        multiple=TRUE, width='100%')),
+                                                                  column(5, selectInput("top.N","Top Matches", choices=c(1,2,3,4,5,10,20),selected=5))),
+                                                                conditionalPanel("input['user.genes'] && ((input.mainpanel=='clusters' && input.clusterpanel=='tSNE') || (input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'))",
+                                                                                 checkboxInput("opt.tx.alpha","Show Mean Expression in t-SNE Plot",value = TRUE),'')
                                                             ),
-                                                            fluidRow(
-                                                              column(6, uiOutput("cell.cluster")), column(6, uiOutput("cell.type"))
-                                                            ),
-                                                            tags$hr(),
-                                                            # h4("Search By Gene"),
-                                                            fluidRow(
-                                                              column(7, selectizeInput("user.genes", "Search By Gene", choices=c("Choose Genes Of Interest"="",all.genes),
-                                                                                       multiple=TRUE, width='100%')),
-                                                              column(5, selectInput("top.N","Top Matches", choices=c(1,2,3,4,5,10,20),selected=5))),
-                                                            tags$hr(),
-                                                            h4("Compare"),
-                                                            conditionalPanel('input.mainpanel=="clusters"',
-                                                                             fluidRow(
-                                                                               # column(2,p(style='height:1em'),actionButton("prev.cluster","<<<"), actionButton("next.cluster",">>>")),
-                                                                               uiOutput("current.cluster"),
-                                                                               uiOutput("comparison.cluster")
-                                                                             )
-                                                            ),
-                                                            conditionalPanel('input.mainpanel=="subclusters"',
-                                                                             fluidRow(
-                                                                               # column(2,p(style='height:1em'),actionButton("prev.subcluster","<<<"), actionButton("next.subcluster",">>>")),
-                                                                               uiOutput("current.subcluster"),
-                                                                               uiOutput("comparison.subcluster")
-                                                                             )
+                                                            div(style="margin: 10px -10px 0px -10px; border: 2px solid #dddddd; border-radius: 5px; padding: 0px 10px",
+                                                                h4("Compare"),
+                                                                conditionalPanel('input.mainpanel=="clusters"',
+                                                                                 fluidRow(
+                                                                                   # column(2,p(style='height:1em'),actionButton("prev.cluster","<<<"), actionButton("next.cluster",">>>")),
+                                                                                   uiOutput("current.cluster"),
+                                                                                   uiOutput("comparison.cluster")
+                                                                                 )
+                                                                ),
+                                                                conditionalPanel('input.mainpanel=="subclusters"',
+                                                                                 fluidRow(
+                                                                                   # column(2,p(style='height:1em'),actionButton("prev.subcluster","<<<"), actionButton("next.subcluster",">>>")),
+                                                                                   uiOutput("current.subcluster"),
+                                                                                   uiOutput("comparison.subcluster")
+                                                                                 )
+                                                                )
                                                             )
                                                    ),
                                                    tabPanel("Diff Expr",
@@ -145,6 +150,7 @@ shinyUI(
                                                                 conditionalPanel("input['opt.cluster.disp']=='annotated' || input['opt.cluster.disp']=='all'",
                                                                                  checkboxInput("use.common.name", "Use Common Name for Subcluster, If Present", value = TRUE))),
                                                             selectInput("opt.plot.label", "Plot Labels for Clusters and Subclusters", choices=c("Names"='disp',"Numbers"='number',"None"='none')),
+                                                            checkboxInput("opt.show.bags","Display t-SNE using bag plots", value=TRUE),
                                                             selectInput("opt.downsampling.method","Down Sample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
                                                             conditionalPanel("input['opt.downsampling.method']!='none'",
                                                                              sliderInput("downsampling", span("Down-sample Count",helpText("No display if more than four facets.")), 0, 100000, value=2000, step=1000)),
@@ -163,7 +169,7 @@ shinyUI(
                           mainPanel(width=9, 
                                     tabsetPanel(type="tabs", id="mainpanel",
                                                 tabPanel(span("Global Clusters"), value = "clusters",
-                                                         tabsetPanel(type="pills",
+                                                         tabsetPanel(type="pills", id="clusterpanel",
                                                                      tabPanel("tSNE",
                                                                               fluidRow(div(id="global-expression", class="scroll-area", 
                                                                                            plotDownload("tsne.global.cluster.label.dl"),
@@ -186,7 +192,7 @@ shinyUI(
                                                                   column(11,DT::dataTableOutput("dt.cluster.markers")))
                                                 ),
                                                 tabPanel("Subclusters", value = "subclusters",
-                                                         tabsetPanel(type="pills",
+                                                         tabsetPanel(type="pills", id="subclusterpanel",
                                                                      tabPanel("tSNE",
                                                                               fluidRow(div(id="local-expression", class="scroll-area",
                                                                                            conditionalPanel("input.showSubclustersInGlobal",
