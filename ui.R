@@ -103,7 +103,7 @@ shinyUI(
                                                                   column(7, selectizeInput("user.genes", "Gene", choices=c("Gene Symbol"="",all.genes),
                                                                                                                         multiple=TRUE, width='100%')),
                                                                   column(5, selectInput("top.N","Top Matches", choices=c(1,2,3,4,5,10,20),selected=5))),
-                                                                conditionalPanel("input['user.genes'] && (input.mainpanel=='clusters' && input.clusterpanel=='tSNE') || (input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE')",
+                                                                conditionalPanel("input['user.genes'] && ((input.mainpanel=='clusters' && input.clusterpanel=='tSNE') || (input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'))",
                                                                                  checkboxInput("opt.tx.alpha","Show Mean Expression in t-SNE Plot",value = TRUE),'')
                                                             ),
                                                             div(style="margin: 10px -10px 0px -10px; border: 2px solid #dddddd; border-radius: 5px; padding: 0px 10px",
