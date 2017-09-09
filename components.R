@@ -85,7 +85,7 @@ output$ic.grid <- renderImage({
   if (length(fn)>0) {
     list(src=glue("{cache.dir}/ic/{fn[1]}"))
   } else {
-    renderCacheImage(function() plot.text("To Display ICs, Choose a Target Subcluster in the Left Bottom Panel or\nNarrow Highlight Filtering in the Left Top Panel to a Single Cluster"),
+    renderCacheImage(function(progress) plot.text("To Display ICs, Choose a Target Subcluster in the Left Bottom Panel or\nNarrow Highlight Filtering in the Left Top Panel to a Single Cluster"),
                      "no-ICs", width = 500, height=500)
   }
 }, deleteFile = FALSE)

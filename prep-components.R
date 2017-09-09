@@ -72,7 +72,7 @@ dlply(experiments, .(exp.label), function(exp) {
 
           red.blue.gradient <-  scale_color_gradient2(guide="none", low="blue", mid="lightgrey", high="red", midpoint=0, limits=c(-max(df$weight),max(df$weight)))
           
-          renderCacheImage(function() { ggplot(df, aes(x=cell, y=weight, color=weight)) + geom_point(size=1, alpha=0.7) + no.xy + red.blue.gradient},
+          renderCacheImage(function(progress) { ggplot(df, aes(x=cell, y=weight, color=weight)) + geom_point(size=1, alpha=0.7) + no.xy + red.blue.gradient},
                            glue("ic/ic_{exp$exp.label}_{component.cluster()$cluster}_{first(df$IC)}"),
                            width=250, height=75, opt.use.cache = FALSE)
           NULL
