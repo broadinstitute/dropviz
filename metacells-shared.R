@@ -4,7 +4,7 @@ suppressWarnings(dir.create(glue("{cache.dir}/metacells"), recursive = TRUE))
 
 
 
-compute.pair <- function(exp.label, cx, cmp.cx, kind, progress=NULL) {
+compute.pair <- function(exp.label, cx, cmp.cx, kind) {
   fn.means <- glue("{prep.dir}/metacells/{exp.label}.{kind}.means.RDS")
   fn.sums <- glue("{prep.dir}/metacells/{exp.label}.{kind}.sums.RDS")
   cache.file <- glue("{cache.dir}/metacells/{exp.label}.{cx}.{cmp.cx}.RDS")
@@ -12,11 +12,13 @@ compute.pair <- function(exp.label, cx, cmp.cx, kind, progress=NULL) {
   if (file.exists(cache.file)) {
     x <- readRDS(cache.file)
   } else {
+    progress <- shiny.progress(glue("{kind} pairwise - {cx} vs {cmp.cx}"))
+    if (!is.null(progress)) on.exit(progress$close())
+    
     write.log(glue("Computing pairwise {cx} vs {cmp.cx}"))
     
     if (!is.null(progress)) {
-      write.log("Set progress")
-      progress$set(value=0.3, message=glue("{cx} vs {cmp.cx}"), detail=glue("Reading means and sums from disk"))
+      progress$inc(0.3, detail=glue("Reading means and sums from disk"))
     }
 
     means <- readRDS(fn.means)
@@ -41,7 +43,7 @@ compute.pair <- function(exp.label, cx, cmp.cx, kind, progress=NULL) {
     }
     
     
-    if (!is.null(progress)) progress$set(value=0.8, detail=glue("Cacheing pairwise data"))
+    if (!is.null(progress)) progress$set(0.8, detail=glue("Cacheing pairwise data"))
     
     saveRDS(x, file=cache.file)
   }

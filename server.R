@@ -3,9 +3,11 @@ library(ggplot2)
 library(shiny)
 
 
-shiny.progress <- function() {
+shiny.progress <- function(message=NULL) {
   tryCatch({
-    shiny::Progress$new();
+    p <- shiny::Progress$new()
+    p$set(message=message)
+    p
   }, error=function(err) NULL)
 }
 

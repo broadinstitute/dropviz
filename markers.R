@@ -81,7 +81,9 @@ dt.markers <- function(mrkrs) {
                 rownames = FALSE,
                 selection="multiple",
                 colnames = c('Gene','Description', 'Target\n(normalized mean log)', 'Comparison\n(normalized mean log)', 'Fold Ratio', 'P-Value', 'row.highlight'),
-                options=list(dom="tp", pageLength=50, columnDefs = list(list(visible=FALSE, targets=6)))) %>% 
+                options=list(dom="tp", pageLength=50,
+                             language=list(zeroRecords = "No results - adjust Diff Expr criteria with scatter plot"),
+                             columnDefs = list(list(visible=FALSE, targets=6)))) %>% 
     DT::formatStyle('row.highlight', target='row', 
                     backgroundColor = DT::styleEqual(c(0,1,2), c('pink','lightgreen','white'))) %>%
     DT::formatSignif(c('log.target.u','log.comparison.u','fc.disp','pval'), 3) 
