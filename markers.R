@@ -57,7 +57,7 @@ log.reactive("fn: subcluster.markers")
 # Returns a subset of the cluster.markers for rows that user clicked in table
 cluster.markers.selected <- reactive({
 log.reactive("fn: cluster.markers.selected")
-  if (is.null(input$dt.cluster.markers_rows_selected)) {
+  if (is.null(input$dt.cluster.markers_rows_selected) || !isTruthy(current.cluster.i())) {
     tibble(gene=character(0))
   } else {
     cluster.markers()[input$dt.cluster.markers_rows_selected,]
@@ -66,7 +66,7 @@ log.reactive("fn: cluster.markers.selected")
 
 subcluster.markers.selected <- reactive({
 log.reactive("fn: subcluster.markers.selected")
-  if (is.null(input$dt.subcluster.markers_rows_selected)) {
+  if (is.null(input$dt.subcluster.markers_rows_selected) || !isTruthy(current.subcluster.i())) {
     tibble(gene=character(0))
   } else {
     subcluster.markers()[input$dt.subcluster.markers_rows_selected,]
@@ -82,7 +82,7 @@ dt.markers <- function(mrkrs) {
                 selection="multiple",
                 colnames = c('Gene','Description', 'Target\n(normalized mean log)', 'Comparison\n(normalized mean log)', 'Fold Ratio', 'P-Value', 'row.highlight'),
                 options=list(dom="tp", pageLength=50,
-                             language=list(zeroRecords = "No results - adjust Diff Expr criteria with scatter plot"),
+                             language=list(zeroRecords = "No results - adjust Diff Expr criteria using Scatter Plot as guide"),
                              columnDefs = list(list(visible=FALSE, targets=6)))) %>% 
     DT::formatStyle('row.highlight', target='row', 
                     backgroundColor = DT::styleEqual(c(0,1,2), c('pink','lightgreen','white'))) %>%

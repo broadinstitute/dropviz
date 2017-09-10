@@ -1,4 +1,5 @@
 .scroll-area {
+  text-align: center;
   overflow-y:auto;
   overflow-x:hidden;
   position: relative; /* allows children to be positioned absolute relative to this div */

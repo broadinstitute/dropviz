@@ -21,6 +21,7 @@ log.reactive("fn: expr.xy")
 # return the cells, expression levels, global X, Y limited to selected subclusters
 expr.subcluster.xy <- reactive({
 log.reactive("fn: expr.subcluster.xy")
+  
   ddply(subcluster.markers.selected(), .(gene), function(g) {
     ddply(regions.selected(), .(exp.label), function(r) {
       expr.fn <- glue("{prep.dir}/expr/{first(r$exp.label)}/gene/{first(g$gene)}.RDS")
@@ -36,8 +37,10 @@ log.reactive("fn: expr.subcluster.xy")
 # for the selected subcluster markers
 # return the cells, expression levels and local X, Y limited to selected subclusters
 expr.subcluster.local.xy <- reactive({
-log.reactive("fn: expr.subcluster.local.xy")
-  if (nrow(clusters.selected()) > MAX_REGIONS) {
+  log.reactive("fn: expr.subcluster.local.xy")
+  
+  if (nrow(subcluster.markers.selected()) > 0 && nrow(clusters.selected()) > MAX_REGIONS) {
+    showNotification("There are too many clusters to display gene expression. Use the Filter Cells panel on the left to highlight a smaller set", duration=60, type="error")
     write.log("Error: Too many facets to display. Not including individual cells")
     tibble()
   } else {

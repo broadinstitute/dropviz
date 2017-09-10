@@ -77,7 +77,7 @@ shinyUI(
     #    extendShinyjs(text = jsCode),
     includeCSS("styles.css"),
     tags$link(type="text/css", rel="stylesheet", href="http://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css"),
-    navbarPage(span("DropViz",br(),"Single Cell Sequencing"),
+    navbarPage("DropSeq - Single Cell Mouse Brain Gene Expression",
                # titlePanel("DropViz Prototype"),
                # h4("Cell Types Defined via Large Scale Single Cell Mouse Brain Gene Expression"),
                tabPanel("Clustering",
@@ -97,14 +97,16 @@ shinyUI(
                                                                 fluidRow(
                                                                   column(12, uiOutput("cell.cluster")), 
                                                                   conditionalPanel("input.mainpanel=='subclusters'",
-                                                                                   column(12, uiOutput("cell.type")), "")
+                                                                                   column(12, uiOutput("cell.type")))
                                                                 ),
                                                                 fluidRow(
                                                                   column(7, selectizeInput("user.genes", "Gene", choices=c("Gene Symbol"="",all.genes),
                                                                                                                         multiple=TRUE, width='100%')),
                                                                   column(5, selectInput("top.N","Top Matches", choices=c(1,2,3,4,5,10,20),selected=5))),
                                                                 conditionalPanel("input['user.genes'] && ((input.mainpanel=='clusters' && input.clusterpanel=='tSNE') || (input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'))",
-                                                                                 checkboxInput("opt.tx.alpha","Show Mean Expression in t-SNE Plot",value = TRUE),'')
+                                                                                 checkboxInput("opt.tx.alpha",span(style="font-size: small","Show Expression as Transparency in t-SNE"),value = TRUE)),
+                                                                conditionalPanel("input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'",
+                                                                                 checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE))
                                                             ),
                                                             div(style="margin: 10px -10px 0px -10px; border: 2px solid #dddddd; border-radius: 5px; padding: 0px 10px",
                                                                 h4("Compare"),
@@ -132,7 +134,7 @@ shinyUI(
                                                             tags$table(tags$tr(tags$td(sliderInput("min.amt.within", "Min Mean Log Amount in Target", min=0, max=6, value=2.5, step=0.25),
                                                                                        valign="top"),
                                                                                tags$td(width="5%"),
-                                                                               tags$td(sliderInput("max.amt.without", "Max Mean Log Amount in Comp", min=0, max=6, value=0.5, step=0.25),
+                                                                               tags$td(sliderInput("max.amt.without", "Max Mean Log Amount in Comp", min=0, max=6, value=1, step=0.25),
                                                                                        valign="top")),
                                                                        width='100%'),
                                                             actionButton("upload.genes","Upload Gene List", width='100%', onclick="alert('Not Implemented')")
@@ -153,7 +155,7 @@ shinyUI(
                                                             checkboxInput("opt.show.bags","Display t-SNE using bag plots", value=TRUE),
                                                             selectInput("opt.downsampling.method","Down Sample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
                                                             conditionalPanel("input['opt.downsampling.method']!='none'",
-                                                                             sliderInput("downsampling", span("Down-sample Count",helpText("No display if more than four facets.")), 0, 100000, value=2000, step=1000)),
+                                                                             sliderInput("downsampling", "Down-sample Count", 0, 100000, value=2000, step=1000)),
                                                             sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=3, step=0.5),
                                                             checkboxInput("opt.scatter.gene.labels","Show Gene Labels on Scatter Plots", value=TRUE),
                                                             selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all')),
@@ -161,8 +163,7 @@ shinyUI(
                                                                      column(2,actionButton("clear.cache","Clear Cache")))
                                                    )
                                        ),
-                                       hr(),
-                                       actionButton("dump","Save Debug State")
+                                       (if (getOption("dropviz.debug", default=FALSE)) actionButton("dump","Save Debug State") else "")
                           ),
                           
                           # Show a plot of the generated distribution
@@ -200,8 +201,7 @@ shinyUI(
                                                                                                             imageOutput("tsne.global.subcluster.label", height=500)),
                                                                                            conditionalPanel("!input.showSubclustersInGlobal",
                                                                                                             plotDownload("tsne.local.label.dl"),
-                                                                                                            imageOutput("tsne.local.label", height=500)),
-                                                                                           checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE)))),
+                                                                                                            imageOutput("tsne.local.label", height=500))))),
                                                                      tabPanel("Rank", 
                                                                               fluidRow(div(id="local-rank", class="scroll-area",
                                                                                            plotDownload("gene.expr.rank.subcluster.dl"),

@@ -50,7 +50,7 @@ readRDS <- function(file, ...) {
 
 
 
-MAX_REGIONS <- 4
+MAX_REGIONS <- 10
 
 prep.dir <- 'cache'               # destination for all prepared data
 cache.dir <- 'www/cache'  # destination for renderCacheImage()
