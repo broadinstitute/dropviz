@@ -77,11 +77,13 @@ all.genes <- ddply(experiments, .(exp.label), function(exp) {
 saveRDS(all.genes$gene, glue("{markers.dir}/all.genes.RDS"))
 
 top.genes <-
-  ddply(experiments, .(exp.label), function(exp) {
-    filter(bind_rows(readRDS(glue("{meta.dir}/{exp$exp.label}.gene.subclusters.RDS")),
-                     readRDS(glue("{meta.dir}/{exp$exp.label}.gene.subclusters.RDS"))), 
-           pval<1e-200 & fc.disp > 2 & !grepl('Rik\\d?$',gene,perl = TRUE))
+  ldply(c('clusters','subclusters'), function(kind) {
+    ddply(experiments, .(exp.label), function(exp) {
+      filter(readRDS(glue("{meta.dir}/{exp$exp.label}.gene.{kind}.RDS")),
+             pval<1e-200 & fc.disp > 2 & !grepl('Rik\\d?$',gene,perl = TRUE)) %>% select(gene)
+    })
   })
+
 top.genes.symbols <- unique(top.genes$gene)
 write.log(glue("Writing {length(top.genes.symbols)} most significantly differentially expressed to {markers.dir}/top_genes.RDS"))
 saveRDS(top.genes.symbols, file=glue("{markers.dir}/top_genes.RDS"))
