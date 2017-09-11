@@ -157,7 +157,7 @@ user.genes <- reactive({
       genes <- genes[genes!='']
       missing.txt <- glue("Ignoring unknown gene symbols {paste(missing,collapse=', ')}")
       if (!is.null(getDefaultReactiveDomain()))
-        showNotification(missing.txt, duration=30, type='warning')
+        showNotification(missing.txt, duration=15, type='warning')
       write.log(missing.txt)
     }
     genes
@@ -181,7 +181,7 @@ gene.cols <- function(df, kind) {
     }
   })
 
-  if (!is.null(user.genes()))
+  if (isTruthy(user.genes()))
     df <- df[order(df[[first(grep('.log.target.u',colnames(df)))]], decreasing = TRUE),]  # sort by first gene's transcript amount
   
   df
