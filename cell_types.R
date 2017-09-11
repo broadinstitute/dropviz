@@ -148,9 +148,27 @@ limit.by.components <- function(df, comps) {
   }
 }
 
+# returns a list of gene symbols from input$user.genes
+user.genes <- reactive({
+  if (isTruthy(input$user.genes)) {
+    genes <- gene.symbol(input$user.genes)
+    if (any(genes=='')) {
+      missing <- input$user.genes[genes=='']
+      genes <- genes[genes!='']
+      missing.txt <- glue("Ignoring unknown gene symbols {paste(missing,collapse=', ')}")
+      if (!is.null(getDefaultReactiveDomain()))
+        showNotification(missing.txt, duration=30, type='warning')
+      write.log(missing.txt)
+    }
+    genes
+  } else {
+    input$user.genes
+  }
+})
+
 # adds columns for each user gene and sorts on the first
 gene.cols <- function(df, kind) {
-  lapply(input$user.genes, function(g) {
+  lapply(user.genes(), function(g) {
     g.fn <- glue("{prep.dir}/markers/genes/{kind}/{g}.diffexp.RDS")
     if (file.exists(g.fn)) {
       g.diffexp <- readRDS(g.fn) %>% select(exp.label, cx, log.target.u, pval)
@@ -163,7 +181,7 @@ gene.cols <- function(df, kind) {
     }
   })
 
-  if (!is.null(input$user.genes))
+  if (!is.null(user.genes()))
     df <- df[order(df[[first(grep('.log.target.u',colnames(df)))]], decreasing = TRUE),]  # sort by first gene's transcript amount
   
   df
@@ -233,12 +251,12 @@ output$dt.clusters <- DT::renderDataTable({
   ct <- clusters.selected()
   col.idx <- c(
     which(names(ct) %in% c('region.disp','class.disp','cluster.disp')),
-    lapply(input$user.genes, function(g) grep(paste0('^',g,'\\.'), names(ct))) %>% unlist
+    lapply(user.genes(), function(g) grep(paste0('^',g,'\\.'), names(ct))) %>% unlist
   )
   ct <- ct[,col.idx]
   
   colnames <- c('Region','Class','Cluster',
-                 lapply(input$user.genes, function(g) paste(g,c('Amount','P-Val'))) %>% unlist)
+                 lapply(user.genes(), function(g) paste(g,c('Amount','P-Val'))) %>% unlist)
   
   DT::datatable(ct, 
                 rownames=FALSE,
@@ -257,12 +275,12 @@ output$dt.subclusters <- DT::renderDataTable({
   
   col.idx <- c(
     which(names(ct) %in% c('region.disp','class.disp','cluster.disp','subcluster.disp')),
-    lapply(input$user.genes, function(g) grep(paste0('^',g,'\\.'), names(ct))) %>% unlist 
+    lapply(user.genes(), function(g) grep(paste0('^',g,'\\.'), names(ct))) %>% unlist 
   )
   ct <- ct[,col.idx]
   
   colnames <- c('Region','Class','Cluster','Sub-Cluster',
-                lapply(input$user.genes, function(g) paste(g,c('Amount','P-Val'))) %>% unlist)
+                lapply(user.genes(), function(g) paste(g,c('Amount','P-Val'))) %>% unlist)
   DT::datatable(ct, 
                 rownames=FALSE,
                 selection="single",

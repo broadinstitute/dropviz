@@ -11,10 +11,21 @@ shiny.progress <- function(message=NULL) {
   }, error=function(err) NULL)
 }
 
-# uncomment to debug within RStudio
-# reactive <- function(expr, env=parent.frame(), ...) exprToFunction(expr, env=env)
+# allows interactive debugging within RStudio
+# reactive <- function(x, env=parent.frame(), ...) {
+#   if (is.null(getDefaultReactiveDomain())) {
+#     exprToFunction(x, env=env)
+#   } else {
+#     shiny::reactive(x, env, ...)
+#   }
+# }
 
 shinyServer(function(input, output, session) {
+  
+  if (file.exists("message.txt") && !is.null(getDefaultReactiveDomain())) {
+    msg <- readLines("message.txt")
+    showNotification(div(h4(msg[1]),msg[2]),duration=NULL,type="warning")
+  }
   
   # general plot utility functions
   source("plot.R", local=TRUE)

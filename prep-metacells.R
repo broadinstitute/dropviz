@@ -3,6 +3,10 @@
 # - the mean of normalized counts for all genes in group (where counts are normalized to sum to 1 within cell)  metacell.means
 # where group is each cluster and !cluster
 
+# Also pre-compute all pairwise stats for each cluster/subcluster vs region. This is used by prep-markers to generate
+# fast lookup of differentially expressed genes and also provides quick app response for diffex table because default
+# comparison is the region.
+
 # This is (hopefully) consistent with the statistics used in IcaCluster_Functions.R:diffexp
 
 # scaled DGE: total expression f each cell sum to 1.  Genes X Cells

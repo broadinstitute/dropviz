@@ -334,7 +334,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     # alpha is either fixed or set by transcript amounts.
     # if fixed, then alpha range is set by scale further below.
     # if user.genes are specified, then sum all of the amounts per cx and use that as the alpha for colors
-    opt.tx.alpha <- !is.null(input$user.genes) && !is.null(input$opt.tx.alpha) && input$opt.tx.alpha
+    opt.tx.alpha <- !is.null(user.genes()) && !is.null(input$opt.tx.alpha) && input$opt.tx.alpha
     if (opt.tx.alpha) {
       tx.alpha <- (
         if (show.subclusters) {
@@ -350,7 +350,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       loop.data <- left_join_alpha(loop.data, tx.alpha, by=c('exp.label','cx'))  %>% mutate(alpha=pmax(0,alpha-1))
       xy.data <- left_join_alpha(xy.data, tx.alpha, by=c('exp.label','cx'))   %>% mutate(alpha=pmax(0,alpha-1))
       
-      if (!is.null(progress)) progress$inc(0.2, detail=glue("Computing alpha for {input$user.genes}"))
+      if (!is.null(progress)) progress$inc(0.2, detail=glue("Computing alpha for {user.genes()}"))
     }
     
     
@@ -531,7 +531,7 @@ output$tsne.global.cluster.label <- renderImage({
 
   img.sz <- tsne.image.size(facet1=region.count, facet2=gene.count, display.width=img.size.round(session$clientData[[glue("output_tsne.global.cluster.label_width")]]))
 
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,cluster.markers.selected()$gene,input$user.genes,input$top.N,input$opt.show.bags,input$opt.tx.alpha))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,cluster.markers.selected()$gene,user.genes(),input$top.N,input$opt.show.bags,input$opt.tx.alpha))
 
   renderCacheImage(tsne.plot, glue("tsne_global_cluster_label_{key.str}"), img.sz$width, img.sz$height, progress=progress)
 }, deleteFile = FALSE)
@@ -562,7 +562,7 @@ output$tsne.global.subcluster.label <- renderImage({
     h <- img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_height")]])
     img.sz <- list(height=h,width=h)
   } 
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,subcluster.markers.selected()$gene,input$user.genes,input$top.N,input$opt.show.bags,input$opt.tx.alpha))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,subcluster.markers.selected()$gene,user.genes(),input$top.N,input$opt.show.bags,input$opt.tx.alpha))
   
   renderCacheImage(tsne.plot, glue("tsne_global_subcluster_label_{key.str}"), img.sz$width, img.sz$height, progress=progress)
 }, deleteFile = FALSE)
@@ -592,7 +592,7 @@ output$tsne.local.label <- renderImage({
     h <- img.size.round(session$clientData[[glue("output_tsne.local.label_height")]])
     img.sz <- list(height=h,width=h)
   }
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, subcluster.markers.selected()$gene, selected.components()$ic.number,input$user.genes,input$top.N,input$opt.show.bags,input$opt.tx.alpha))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, subcluster.markers.selected()$gene, selected.components()$ic.number,user.genes(),input$top.N,input$opt.show.bags,input$opt.tx.alpha))
   
   renderCacheImage(tsne.plot, glue("tsne_local_label_{key.str}"), img.sz$width, img.sz$height, progress=progress)
 }, deleteFile = FALSE)

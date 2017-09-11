@@ -177,17 +177,6 @@ cell.types <- select(cell.types_, -region, -full_name, -common_name, -class_mark
 #   }, .id=NULL) %>% unique
 # }
 
-# all genes that are differentially expressed according to the most liberal criteria
-# in all experiments and all comparison methods
-# there are too many (16,700) gene names to load them all in the client
-# for testing, just sample a few or use the annotated markers
-#all.genes <- sample(readRDS("markers/all.genes.RDS"), 1000)
-#all.genes <- unique(unlist(strsplit(type.markers$type_marker,'\\.')))
-markers.fn <- glue("{prep.dir}/markers/pval-200.genes.RDS")
-if (file.exists(markers.fn)) {
-  all.genes <- sort(readRDS(markers.fn))
-}
-
 components <- as_tibble(ddply(experiments, .(exp.label), function(exp) {
   curation.sheets.dir <- sprintf("%s/curation_sheets",exp$exp.dir)
   ldply(list.files(curation.sheets.dir, "AnnotationSheet_Subcluster_[0-9]+.*csv"), function(fn) {
@@ -199,17 +188,33 @@ components <- as_tibble(ddply(experiments, .(exp.label), function(exp) {
   })
 }))
 
-# read gene descriptions
-gene.desc.dict <- NULL
-gene.desc <- function(name) {
-  if (is.null(gene.desc.dict)) {
-    gene.descriptions <- read.delim("data/gene_descriptions.txt.gz") %>% mutate(Description=sub(' \\[.*','',Description))
-    gene.desc.list <- setNames(lapply(1:nrow(gene.descriptions), function(i) gene.descriptions$Description[i]), gene.descriptions[['Associated.Gene.Name']])
-    gene.desc.dict <<- list2env(gene.desc.list)
+
+if (file.exists(glue("{prep.dir}/markers/top_genes.RDS"))) {
+  top.genes <<- sort(readRDS(glue("{prep.dir}/markers/top_genes.RDS")))
+}
+
+## read gene symbols and descriptions
+if (file.exists(glue("{prep.dir}/markers/gene.dict.RDS"))) {
+  gene.dict <<- readRDS(glue("{prep.dir}/markers/gene.dict.RDS"))
+}
+
+# returns empty string for failed matches
+gene.lookup <- function(name, pos) {
+  if (is.null(gene.dict)) {
+    gene.dict <<- mk.gene.dict()
   }
   if (is.null(name) || length(name)==0) {
     character(0)
   } else {
-    lapply(lapply(name, function(x) gene.desc.dict[[x]]), function(n) if (is.null(n)) "" else n) %>% unlist
+    lapply(tolower(name), function(x) if (exists(x,envir=gene.dict)) gene.dict[[x]][pos] else "") %>% unlist
   }
 }
+
+gene.symbol <- function(name) {
+  gene.lookup(name, 1)
+}
+
+gene.desc <- function(name) {
+  gene.lookup(name, 2)
+}
+

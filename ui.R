@@ -100,8 +100,8 @@ shinyUI(
                                                                                    column(12, uiOutput("cell.type")))
                                                                 ),
                                                                 fluidRow(
-                                                                  column(7, selectizeInput("user.genes", "Gene", choices=c("Gene Symbol"="",all.genes),
-                                                                                                                        multiple=TRUE, width='100%')),
+                                                                  column(7, selectizeInput("user.genes", "Gene", choices=c("Gene Symbol"="",top.genes),
+                                                                                           multiple=TRUE, width='100%', options=list(create=TRUE))),
                                                                   column(5, selectInput("top.N","Top Matches", choices=c(1,2,3,4,5,10,20),selected=5))),
                                                                 conditionalPanel("input['user.genes'] && ((input.mainpanel=='clusters' && input.clusterpanel=='tSNE') || (input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'))",
                                                                                  checkboxInput("opt.tx.alpha",span(style="font-size: small","Show Expression as Transparency in t-SNE"),value = TRUE)),

@@ -7,7 +7,7 @@ cx.pairwise <- function(exp.label, cx, cmp.cx, kind) {
          fc.thresh=( if (input$expr.filter.opt %in% 'fc') { (abs(fc) > log(input$fold.change)) } else { fc > log(input$fold.change) } ),
          pval.thresh=pval < 10^input$pval.thresh,
          amt.thresh=( (log.target.u > input$min.amt.within) & (log.comparison.u < input$max.amt.without) ),
-         user.selected=gene %in% input$user.genes,
+         user.selected=gene %in% user.genes(),
          expr.pass = (if (input$expr.filter.opt == 'either') { (fc.thresh & pval.thresh) | amt.thresh } else {
            if (input$expr.filter.opt=='both') { fc.thresh & pval.thresh & amt.thresh } else {
              if (input$expr.filter.opt == 'fc') { fc.thresh & pval.thresh } else { amt.thresh } 
@@ -200,7 +200,7 @@ rank.plot <- function(clusters, kind) {
 }
 
 output$gene.expr.rank.cluster <- renderPlot({
-  if (isTruthy(input$user.genes)) {
+  if (isTruthy(user.genes())) {
     clusters <- select(clusters.selected(), -class.disp) %>% unique
     rank.plot(clusters,'cluster')
   } else {
@@ -209,7 +209,7 @@ output$gene.expr.rank.cluster <- renderPlot({
 })
 
 output$gene.expr.rank.subcluster <- renderPlot({
-  if (isTruthy(input$user.genes)) {
+  if (isTruthy(user.genes())) {
     subclusters <- select(subclusters.selected(), -class.disp) %>% unique
     rank.plot(subclusters, 'subcluster')
   } else {

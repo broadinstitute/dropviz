@@ -54,18 +54,6 @@ dlply(experiments, .(exp.label), function(exp) {
   write.log("Writing ", global.xy.fn)
   saveRDS(tSNE, global.xy.fn)
 
-  # # generate different size images
-  # lapply(c(500, 1500), function(sz) {
-  #   write.log("Creating ", sz, "x", sz, " images")
-  #   
-  #   # global tSNE of major cluster labels
-  #   plot.multisize(sprintf("%s/%s_class", out.dir, exp$exp.label), 
-  #                  ggplot(tSNE, aes(x=V1, y=V2, color=cluster)) + geom_point(alpha=0.25, size=0.5) + ggtitle(exp$exp.label))
-  # 
-  #   # global tSNE of subcluster labels
-  #   plot.multisize(sprintf("%s/%s_type", out.dir, exp$exp.label),
-  #                  ggplot(filter(tSNE,!is.na(subcluster)), aes(x=V1, y=V2, color=subcluster)) + geom_point(alpha=0.25, size=0.5))
-
   # for each major cluster, generate tSNE with subcluster labels
   lapply(unique(filter(cell.types, exp.label==exp$exp.label)$cluster), function(cn) {
     write.log("Processing cluster ",cn)
@@ -87,54 +75,7 @@ dlply(experiments, .(exp.label), function(exp) {
       local.xy.fn <- sprintf("%s/cluster%s.xy.RDS", out.dir, cn)
       write.log("Writing ", local.xy.fn)
       saveRDS(tSNE.local, local.xy.fn)
-      
-      ## if (nrow(tSNE.local) > 0) {
-      
-      ##   plot.multisize(sprintf("%s/%s_%s", out.dir, exp$exp.label, cn),
-      ##                  ggplot(tSNE.local, aes(x=V1, y=V2, color=subcluster)) + geom_point(size=1) + ggtitle(sprintf("Cluster %s",cn))
-      ##   ) # + theme(legend.position = 'bottom') # + facet_wrap(~cluster)
-      
-      ##   expr.fn <- sprintf("%s/cluster%s/%s_cluster%s.DGE.RDS", exp$exp.dir,cn,exp$base,cn)
-      
-      ##   if (file.exists(expr.fn)) {
-      ##     expr <- readRDS(expr.fn) # rows genes, cols cells in this major cluster
-      ##     lapply(all.genes, function(gene.name) {
-      
-      ##       if (gene.name %in% rownames(expr)) {
-      ##         gene.expr <- expr[gene.name,]
-      
-      ##         # #                         cell transcript.count
-      ##         # <chr>            <dbl>
-      ##         # 1  P60STRRep1P1_AGTGCAAACTGT                0
-      ##         # 2  P60STRRep1P1_AGTCATTTCATA                2
-      ##         # 3  P60STRRep1P1_GTCCTTCCTGGG                0
-      ##         # 4  P60STRRep1P1_GTGGATTTTCCT                0
-      ##         gene.expr.tbl <- tibble(cell=names(gene.expr), transcript.count=gene.expr)
-      
-      ##         # V1         V2                      cell subcluster cluster transcript.count
-      ##         # <dbl>      <dbl>                     <chr>     <fctr>  <fctr>            <dbl>
-      ##         # 1  -24.879830 -6.0923347 P60STRRep1P1_AGTGCAAACTGT         NA       8                0
-      ##         # 2   11.933133 -2.0367023 P60STRRep1P1_AGTCATTTCATA        8-1       8                2
-      ##         # 3    5.898253  0.4181663 P60STRRep1P1_GTCCTTCCTGGG        8-1       8                0
-      ##         # 4  -24.639872 -5.4817099 P60STRRep1P1_GTGGATTTTCCT         NA       8                0
-      ##         tSNE.local.expr <- left_join(filter(tSNE.local, !is.na(subcluster)), gene.expr.tbl, by='cell') %>%
-      ##           mutate(is_expressed=transcript.count>0)
-      
-      ##         plot.multisize(sprintf("%s/%s_%s_%s", out.dir, exp$exp.label, cn, gene.name),
-      ##                        ggplot(tSNE.local.expr, aes(x=V1, y=V2, size=transcript.count, color=subcluster, shape=is_expressed)) + geom_point() + ggtitle(sprintf("Cluster %s / Gene %s", cn, gene.name))
-      ##         )
-      ##       } else {
-      ##         write.log(gene.name," is missing from ", expr.fn, warn = TRUE)
-      ##       }
-      ##       gene.name
-      ##     })
-      ##   } else {
-      ##     write.log(expr.fn," not found", warn=TRUE)
-      ##   }
-      ## } else {
-      ##   write.log("No subcluster cell assignments for cluster ", cn, warn=TRUE)
-      ## }
-      
+
     } else {
       write.log(fn," not found", warn=TRUE)
     }
