@@ -39,3 +39,4 @@ vignettes/*.pdf
 *.knit.md
 .Rproj.user
 dump.RDS
+*.bak
