@@ -334,7 +334,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     # alpha is either fixed or set by transcript amounts.
     # if fixed, then alpha range is set by scale further below.
     # if user.genes are specified, then sum all of the amounts per cx and use that as the alpha for colors
-    opt.tx.alpha <- !is.null(user.genes()) && !is.null(input$opt.tx.alpha) && input$opt.tx.alpha
+    opt.tx.alpha <- isTruthy(user.genes()) && !is.null(input$opt.tx.alpha) && input$opt.tx.alpha
     if (opt.tx.alpha) {
       tx.alpha <- (
         if (show.subclusters) {

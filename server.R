@@ -12,6 +12,7 @@ shiny.progress <- function(message=NULL) {
 }
 
 # allows interactive debugging within RStudio
+# Why does this fail when running shiny?! For now, uncomment manually shorter form during debug. Grr.
 # reactive <- function(x, env=parent.frame(), ...) {
 #   if (is.null(getDefaultReactiveDomain())) {
 #     exprToFunction(x, env=env)
@@ -19,6 +20,7 @@ shiny.progress <- function(message=NULL) {
 #     shiny::reactive(x, env, ...)
 #   }
 # }
+# reactive <- function(x, env=parent.frame(), ...) exprToFunction(x, env=env)
 
 shinyServer(function(input, output, session) {
   
