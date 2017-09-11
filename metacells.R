@@ -134,7 +134,7 @@ output$gene.expr.scatter.cluster <- renderImage({
                         cluster.markers.selected()$gene, input$expr.filter.opt, input$pval.thresh,
                         input$max.amt.without, input$min.amt.within))
   } else {
-    cluster.scatter.plot <- function(progress) plot.text("Choose a Target Cluster and Comparison")    
+    cluster.scatter.plot <- function(progress) plot.text("Choose a target and comparison cluster in the 'Filter Cells' panel")    
     key.str <- 'missing_clusters'
   }
   
@@ -162,7 +162,7 @@ output$gene.expr.scatter.subcluster <- renderImage({
                         subcluster.markers.selected()$gene, input$expr.filter.opt, input$pval.thresh,
                         input$max.amt.without, input$min.amt.within))
   } else {
-    subcluster.scatter.plot <- function(progress) plot.text("Choose a Target Subcluster and Comparison")    
+    subcluster.scatter.plot <- function(progress) plot.text("Choose a target and comparison subcluster in the 'Filter Cells' panel")    
     key.str <- 'missing_subclusters'
   }
   
@@ -204,7 +204,7 @@ output$gene.expr.rank.cluster <- renderPlot({
     clusters <- select(clusters.selected(), -class.disp) %>% unique
     rank.plot(clusters,'cluster')
   } else {
-    plot.text("Enter a Gene Name")    
+    plot.text("Enter a gene symbol in the 'Filter Cells' panel\nto display a ranked order of clusters by transcript abundance")    
   }
 })
 
@@ -213,6 +213,6 @@ output$gene.expr.rank.subcluster <- renderPlot({
     subclusters <- select(subclusters.selected(), -class.disp) %>% unique
     rank.plot(subclusters, 'subcluster')
   } else {
-    plot.text("Enter a Gene Name")    
+    plot.text("Enter a gene symbol in the 'Filter Cells' panel\nto display a ranked order of subclusters by transcript abundance")    
   }
 })

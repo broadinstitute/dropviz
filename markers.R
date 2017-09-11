@@ -103,7 +103,7 @@ output$dt.cluster.markers.heading <- renderUI({
   if (isTruthy(current.cluster.i())) {
     tags$h4(glue("Differentially Over-Expressed: {current.cluster()$cluster.disp} vs {comparison.cluster()$cluster.disp}"))
   } else {
-    tags$p(align="center","Choose a Target Cluster in the Left Bottom Panel to Compare Differentially Expressed Genes")
+    tags$p(align="center","Choose a target and comparison cluster in the 'Filter Cells' panel to find differentially expressed genes")
   }
 })
 
@@ -121,7 +121,7 @@ output$dt.subcluster.markers.heading <- renderUI({
   if (isTruthy(current.subcluster.i())) {
     tags$h4(glue("Differentially Over-Expressed: {current.subcluster()$subcluster.disp} vs {comparison.cluster()$subcluster.disp}"))
   } else {
-    tags$p(align="center","Choose a Target Subcluster in the Left Bottom Panel to Compare Differentially Expressed Genes")
+    tags$p(align="center","Choose a target and comparison subcluster in the 'Filter Cells' panel to find differentially expressed genes")
   }
 })
 

@@ -211,7 +211,7 @@ shinyUI(
                                                                      tabPanel("Independent Components",
                                                                               fluidRow(div(id="ic-grid", class="scroll-area",
 #                                                                                           plotDownload("ic.grid.dl"),
-                                                                                           plotOutput("ic.grid", height=500)))),
+                                                                                           span(class="img-center",plotOutput("ic.grid", height=500))))),
                                                                      tabPanel("Table",  
                                                                               fluidRow(div(id="dt-subclusters", class="scroll-area", DT::dataTableOutput("dt.subclusters"))))),
                                                          hr(),
