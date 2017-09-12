@@ -66,7 +66,7 @@ saveRDS <- function(object, file, ...) {
 
 MAX_REGIONS <- 10
 
-prep.dir <- 'cache'               # destination for all prepared data
+prep.dir <- getOption('dropviz.prep.dir', default='cache')               # destination for all prepared data
 cache.dir <- 'www/cache'  # destination for renderCacheImage()
 suppressWarnings(dir.create(prep.dir, recursive = TRUE))
 suppressWarnings(dir.create(cache.dir, recursive = TRUE))
@@ -145,7 +145,8 @@ mk.subcluster.names <- function(ct) {
 # exp.label exp.title                                           exp.dir
 # 1 GRCm38.81.P60Striatum  Striatum /cygwin64/home/dkulp/data/F_GRCm38.81.P60Striatum
 # 2 GRCm38.81.P60Thalamus  Thalamus /cygwin64/home/dkulp/data/F_GRCm38.81.P60Thalamus
-experiments <- as_tibble(read.delim("exp_sets.txt", header = TRUE, stringsAsFactors = FALSE)) %>%
+experiments.fn <- getOption('dropviz.experiments', default='exp_sets.txt')
+experiments <- as_tibble(read.delim(experiments.fn, header = TRUE, stringsAsFactors = FALSE)) %>%
   mutate(exp.label=as.factor(exp.label))
 experiments$base <- basename(experiments$exp.dir)
 
@@ -164,6 +165,7 @@ cell.types_ <- as_tibble(ddply(experiments, .(exp.label), function(exp) {
   cluster.sheets.dir <- sprintf("%s/cluster_sheets",exp$exp.dir)
   ldply(list.files(cluster.sheets.dir, "Cluster_[0-9]+.csv"), function(fn) {
     # FIXME: warning suppressed because last line is missing CR
+    write.log(cluster.sheets.dir,'/',fn)
     csv <- suppressWarnings(read.csv(sprintf("%s/%s", cluster.sheets.dir, fn), fill=TRUE, stringsAsFactors=FALSE)) 
     
     # Add the experiment info and remove some unused columns

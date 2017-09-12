@@ -39,12 +39,14 @@ mk.neg.group <- function(group.assignment) {
 # returns table of rows are gene sums and columns are group (cluster, subcluster, !cluster, !subcluster)
 compute.dge.stat <- function(group.assignment, mtx, func) {
   
-  # due to RAM limits, write each to disk and then combine afterwards
   fns <- 
     dlply(group.assignment, .(group), function(df, func) {
-      write.log(as.character(substitute(func))," group ",first(df$group))
+      write.log(first(df$group))
       fn <- tempfile()
-      saveRDS(func(mtx[,df$cell, drop=FALSE]), file=fn)
+      x <- func(mtx[,df$cell, drop=FALSE])
+      saveRDS(x, file=fn)
+      rm(x)
+      gc()
       fn
     }, func=func)
   
@@ -80,19 +82,35 @@ ddply(experiments, .(exp.label), function(exp) {
   scaled.fn <- with(exp, glue("{exp.dir}/dge/{base}.filtered.scaled.dge.RDS"))
   scaled <- readRDS(scaled.fn) # rows genes, cols cells in this major cluster
 
-  cluster.means <- compute.dge.stat(cluster.cell.assign.tbl, scaled, rowMeans)
-  saveRDS(cluster.means, file=glue("{meta.dir}/{exp$exp.label}.cluster.means.RDS"))
-  subcluster.means <- compute.dge.stat(subcluster.cell.assign.tbl, scaled, rowMeans)
-  saveRDS(subcluster.means, file=glue("{meta.dir}/{exp$exp.label}.subcluster.means.RDS"))
+  cluster.means.fn <- glue("{meta.dir}/{exp$exp.label}.cluster.means.RDS")
+  if (!file.exists(cluster.means.fn) || !getOption("dropviz.prep.cache", default = TRUE)) {
+    cluster.means <- compute.dge.stat(cluster.cell.assign.tbl, scaled, rowMeans)
+    saveRDS(cluster.means, file=cluster.means.fn)
+    rm(cluster.means)
+  }
+  subcluster.means.fn <- glue("{meta.dir}/{exp$exp.label}.subcluster.means.RDS")
+  if (!file.exists(subcluster.means.fn) || !getOption("dropviz.prep.cache", default = TRUE)) {
+    subcluster.means <- compute.dge.stat(subcluster.cell.assign.tbl, scaled, rowMeans)
+    saveRDS(subcluster.means, file=subcluster.means.fn)
+    rm(subcluster.means)
+  }
   rm(scaled)
   
   raw.fn <- with(exp, glue("{exp.dir}/dge/{base}.filtered.raw.dge.RDS"))
   raw <- readRDS(raw.fn) # rows genes, cols cells in this major cluster
   
-  cluster.sums <- compute.dge.stat(cluster.cell.assign.tbl, raw, rowSums)
-  saveRDS(cluster.sums, file=glue("{meta.dir}/{exp$exp.label}.cluster.sums.RDS"))
-  subcluster.sums <- compute.dge.stat(subcluster.cell.assign.tbl, raw, rowSums)
-  saveRDS(subcluster.sums, file=glue("{meta.dir}/{exp$exp.label}.subcluster.sums.RDS"))
+  cluster.sums.fn <- glue("{meta.dir}/{exp$exp.label}.cluster.sums.RDS")
+  if (!file.exists(cluster.sums.fn) || !getOption("dropviz.prep.cache", default = TRUE)) {
+    cluster.sums <- compute.dge.stat(cluster.cell.assign.tbl, raw, rowSums)
+    saveRDS(cluster.sums, file=cluster.sums.fn)
+    rm(cluster.sums)
+  }
+  subcluster.sums.fn <- glue("{meta.dir}/{exp$exp.label}.subcluster.sums.RDS")
+  if (!file.exists(subcluster.sums.fn) || !getOption("dropviz.prep.cache", default = TRUE)) {
+    subcluster.sums <- compute.dge.stat(subcluster.cell.assign.tbl, raw, rowSums)
+    saveRDS(subcluster.sums, file=subcluster.sums.fn)
+    rm(subcluster.sums)
+  }
   rm(raw)
   
   gc()
