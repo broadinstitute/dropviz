@@ -3,14 +3,6 @@ library(ggplot2)
 library(shiny)
 
 
-shiny.progress <- function(message=NULL) {
-  tryCatch({
-    p <- shiny::Progress$new()
-    p$set(message=message)
-    p
-  }, error=function(err) NULL)
-}
-
 # allows interactive debugging within RStudio
 # Why does this fail when running shiny?! For now, uncomment manually shorter form during debug. Grr.
 # reactive <- function(x, env=parent.frame(), ...) {

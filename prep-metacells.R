@@ -63,11 +63,17 @@ ddply(experiments, .(exp.label), function(exp) {
   # convert factor to table
   cluster.cell.assign <- readRDS(sprintf("%s/assign/%s.cluster.assign.RDS", exp$exp.dir, exp$base))
   cluster.cell.assign.tbl <- na.omit(tibble(cell=names(cluster.cell.assign), group=factor(cluster.cell.assign, levels=levels(cell.types$cluster))))
+
+  saveRDS(group_by(cluster.cell.assign.tbl, group) %>% summarize(count=length(cell)), sprintf(glue("{meta.dir}/{exp$exp.label}.cluster.counts.RDS")))
+
   cluster.cell.assign.tbl <- rbind(cluster.cell.assign.tbl,
                                    mk.neg.group(cluster.cell.assign.tbl))
   
   subcluster.cell.assign <- readRDS(sprintf("%s/assign/%s.subcluster.assign.RDS", exp$exp.dir, exp$base))
   subcluster.cell.assign.tbl <- na.omit(tibble(cell=names(subcluster.cell.assign), group=factor(subcluster.cell.assign, levels=levels(cell.types$subcluster))))
+  
+  saveRDS(group_by(subcluster.cell.assign.tbl, group) %>% summarize(count=length(cell)), sprintf(glue("{meta.dir}/{exp$exp.label}.subcluster.counts.RDS")))
+
   subcluster.cell.assign.tbl <- rbind(subcluster.cell.assign.tbl,
                                       mk.neg.group(subcluster.cell.assign.tbl))
   
@@ -96,7 +102,7 @@ ddply(experiments, .(exp.label), function(exp) {
 do.pairwise.Ncx <- function(exp.label, groups, kind) {
   lapply(groups, function(cx) {
     cmp.cx <- paste0('N',cx)
-    compute.pair(exp.label, as.character(cx), cmp.cx, kind)
+    compute.pair(exp.label, as.character(cx), cmp.cx, kind, use.cached = getOption("dropviz.prep.cache", default = TRUE))
   })
 }
 

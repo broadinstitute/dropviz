@@ -1,4 +1,5 @@
 # combine all the pairwise cx-Ncx pair data 
+# must run prep-metacells.R before running this
 
 library(plyr)
 library(dplyr)

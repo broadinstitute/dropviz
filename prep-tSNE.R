@@ -11,19 +11,6 @@ read.tSNE.xy <- function(fname) {
   tSNE.xy
 }
 
-# print the plot p to the file fn at different sizes and resolutions
-#plot.dims <- c(500, 1500)
-# plot.multisize <- function(fn, p) {
-#   sapply(plot.dims, function(sz) {
-#     fn <- paste0(fn,"_",sz,".png")
-#     write.log("Plotting: ", fn)
-#     png(fn, width=sz,height=sz,units="px",res=sz*.15)
-#     print(p)
-#     dev.off()
-#   })
-#   
-# }
-
 dlply(experiments, .(exp.label), function(exp) {
   write.log("Generating tSNE data for  ",exp$exp.label)
   out.dir <- sprintf("%s/%s",tsne.dir, exp$exp.label)
@@ -60,7 +47,8 @@ dlply(experiments, .(exp.label), function(exp) {
     c.dir <- glue("{exp$exp.dir}/cluster{cn}")
     fn <- paste0(c.dir,'/',list.files(c.dir,glue("{exp$base}.cluster{cn}\\..*.tSNExy.RDS")))
     if (length(fn)==1) {
-      
+      local.xy.fn <- sprintf("%s/cluster%s.xy.RDS", out.dir, cn)
+
       # local coords of cell
       tSNE.xy <- read.tSNE.xy(fn)
       
@@ -72,10 +60,8 @@ dlply(experiments, .(exp.label), function(exp) {
       # 3    5.898253  0.4181663 P60STRRep1P1_GTCCTTCCTGGG        8-1       8
       tSNE.local <- inner_join(tSNE.xy, filter(cell.assign, cluster==cn & !is.na(subcluster)), by='cell')
       
-      local.xy.fn <- sprintf("%s/cluster%s.xy.RDS", out.dir, cn)
       write.log("Writing ", local.xy.fn)
       saveRDS(tSNE.local, local.xy.fn)
-
     } else {
       write.log(fn," not found", warn=TRUE)
     }
@@ -100,32 +86,39 @@ library(dplyr)
 library(ggplot2)
 source("utils/bag_functions.r")
 
-source("global.R")
-
 mk.bag.xy <- function(xy, grouping, this.exp.label) {
   dlply(xy, grouping, function(df) {
     this.group <- first(df[[grouping]])
     title <- paste(this.exp.label,this.group)
     cat(title,"\n")
     
+    
     ## for some reason, there are clusters referenced in the global coordinates that do not have
-    ## cluster subdirs - probably because most are too small.
+    ## cluster subdirs - probably because most are too small. And there are also clusters with too few points to make bags
     if ((grouping == 'cluster' && nrow(filter(cluster.names_, exp.label==this.exp.label & cluster==this.group))>0) ||
         (grouping == 'subcluster' && nrow(filter(subcluster.names_, exp.label==this.exp.label & subcluster==this.group))>0)) {
-      m <- data.matrix(df[,c('V1','V2')])
       
+      m <- data.matrix(df[,c('V1','V2')])
       hulls <- hulls_for_bag_and_loop(m)
       
-      # close the loop by repeating the first coord at the end
-      hulls_closed <- lapply(hulls[1:2], function(i) data.frame(rbind(i, i[1, ] ), row.names = NULL ))
+      if (is.null(hulls$hull.bag) || is.null(hulls$hull.loop)) {
+        warning("Skipping ",title,", hulls_for_bag_and_loop failed. points=",nrow(df))
+        list()
+                
+      } else {
+        # close the loop by repeating the first coord at the end
+        hulls_closed <- lapply(hulls[1:2], function(i) data.frame(rbind(i, i[1, ] ), row.names = NULL ))
+        
+        the_loop <-  setNames(data.frame(hulls_closed$hull.loop), nm = c("x", "y"))
+        the_bag <-   setNames(data.frame(plothulls_(m, fraction = 0.5)), nm = c("x", "y"))
+        
+        # get the center, which are new coords not in the original dataset
+        center <-  setNames(data.frame(matrix(hulls$center, nrow = 1)), nm = c("x", "y"))
+        
+        list(loop=the_loop, bag=the_bag, center=center)
+        
+      }
       
-      the_loop <-  setNames(data.frame(hulls_closed$hull.loop), nm = c("x", "y"))
-      the_bag <-   setNames(data.frame(plothulls_(m, fraction = 0.5)), nm = c("x", "y"))
-      
-      # get the center, which are new coords not in the original dataset
-      center <-  setNames(data.frame(matrix(hulls$center, nrow = 1)), nm = c("x", "y"))
-      
-      list(loop=the_loop, bag=the_bag, center=center)
     } else {
       warning("Skipping ",title,", points=",nrow(df))
       list()

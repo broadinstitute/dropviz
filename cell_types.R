@@ -171,10 +171,12 @@ gene.cols <- function(df, kind) {
   lapply(user.genes(), function(g) {
     g.fn <- glue("{prep.dir}/markers/genes/{kind}/{g}.diffexp.RDS")
     if (file.exists(g.fn)) {
-      g.diffexp <- readRDS(g.fn) %>% select(exp.label, cx, log.target.u, pval)
+      g.diffexp <- readRDS(g.fn) %>% select(exp.label, cx, log.target.u, pval, log.target.u.L, log.target.u.R)
 
-      names(g.diffexp)[3] <- paste0(g,'.',names(g.diffexp[3]))
-      names(g.diffexp)[4] <- paste0(g,'.',names(g.diffexp[4]))
+      names(g.diffexp)[3] <- paste0(g,'-',names(g.diffexp[3]))
+      names(g.diffexp)[4] <- paste0(g,'-',names(g.diffexp[4]))
+      names(g.diffexp)[5] <- paste0(g,'-',names(g.diffexp[5]))
+      names(g.diffexp)[6] <- paste0(g,'-',names(g.diffexp[6]))
       
       by.names <- c('exp.label','cx') %>% setNames(c('exp.label',kind))
       df <<- left_join(df, g.diffexp, by=by.names)  
@@ -251,7 +253,7 @@ output$dt.clusters <- DT::renderDataTable({
   ct <- clusters.selected()
   col.idx <- c(
     which(names(ct) %in% c('region.disp','class.disp','cluster.disp')),
-    lapply(user.genes(), function(g) grep(paste0('^',g,'\\.'), names(ct))) %>% unlist
+    lapply(user.genes(), function(g) grep('.[LR]$', grep(paste0('^',g,'-'), names(ct)), invert=TRUE)) %>% unlist
   )
   ct <- ct[,col.idx]
   
@@ -275,7 +277,7 @@ output$dt.subclusters <- DT::renderDataTable({
   
   col.idx <- c(
     which(names(ct) %in% c('region.disp','class.disp','cluster.disp','subcluster.disp')),
-    lapply(user.genes(), function(g) grep(paste0('^',g,'\\.'), names(ct))) %>% unlist 
+    lapply(user.genes(), function(g) grep('.[LR]$', grep(paste0('^',g,'-'), names(ct)), invert=TRUE)) %>% unlist 
   )
   ct <- ct[,col.idx]
   
