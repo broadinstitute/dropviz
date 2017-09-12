@@ -22,7 +22,7 @@ dir.create(glue("{cache.dir}/ic"), recursive = TRUE, showWarnings=FALSE)
 
 # populate input with the minimum values to generate a faceted tSNE of components
 
-input <- list(opt.components='real', opt.cluster.disp='all', opt.region.disp='region', use.common.name=TRUE)
+input <- list(opt.components='real', opt.cluster.disp='all', opt.region.disp='region', use.common.name=TRUE, opt.downsampling.method="none")
 ic.kinds <- c('real','clustering','all')
 
 no.xy <- theme(axis.title.x=element_blank(),
@@ -49,7 +49,7 @@ dlply(experiments, .(exp.label), function(exp) {
       }
         
       if (nrow(sc)>0) {
-        ic.plot <- function() {
+        ic.plot <- function(progress) {
           ggplot() + geom_point(data=sc, aes(x=V1, y=V2, color=weight), size=2, alpha=1) + 
             facet_wrap(~region.disp+facet.gg+IC, ncol=4) +
             scale_color_gradient2(low="blue", mid="lightgrey", high="red", midpoint=0, limits=c(-max(sc$weight),max(sc$weight)))
@@ -58,7 +58,7 @@ dlply(experiments, .(exp.label), function(exp) {
 #        height <- width/2 * ((nr-1)%/%4+1)
         height <- width/2 * (nr %/% 12 + 1)
       } else {
-        ic.plot <- function() plot.text("No Data")
+        ic.plot <- function(progress) plot.text("No Data")
         width <- height <- 500
         write.log(glue("No data for {component.cluster()$cluster}"))
       }
