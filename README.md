@@ -13,6 +13,16 @@ XY global coordinates are also stored here because the global coordinates are ty
 - run prep-marker.R to generate combined marker data (fold change, etc.) in marker/ directory. For all (sub)cluster vs region pairs, store all results per gene. Also the comprehensive gene lists and description, and the top genes. 
 - run prep-components.R to generate pre-computed PNGs of components. This is a hack for static images only.
 
+Data Files
+==========
+
+cache/
+	metacells/
+		<exp>.gene.(sub)clusters.RDS - key <gene, exp, (sub)cluster> expression in (sub)cluster and rest of region, pvalue, fold change, confidence intervals
+			intermediate file to create markers/genes/(sub)cluster/<gene>.diffexp.RDS  [prep-marker.R]
+    markers/
+		genes/(sub)cluster/<gene>.diffexp.RDS - key <exp, (sub)cluster> expression of gene in all (sub)clusters [prep-marker.R]
+		
 App Logic
 =========
 
