@@ -182,18 +182,21 @@ output$gene.expr.scatter.subcluster.dl <- downloadHandler(filename="scatter.zip"
 # Creates a dot plot showing the relative normalized expression for the top.N clusters or subclusters.
 # Doesn't work well for multiple genes, because the topN are different and the order also varies.
 rank.plot <- function(clusters, kind) {
-  # TODO: clean up this ugliness
   require(tidyr)
+  
   Kind <- paste0(toupper(substring(kind,1,1)),substring(kind,2))
-  clusters <- gather(clusters, gene, amount, ends_with('.log.target.u'))
-  clusters$gene <- sub('(.*).log.target.u',"\\1", clusters$gene)
-  cx.disp <- paste0(kind,'.disp')
-  clusters$cx.disp <- paste(clusters$region.disp,clusters[[cx.disp]])
+  clusters <- gather(clusters, gene, value, ends_with('-log.target.u'))
+  clusters <- separate(clusters, gene, c('gene.symbol','var'), sep='-')
+  clusters <- spread(clusters, var, value)
+  clusters$cx.disp <- paste(clusters$region.disp,clusters[[paste0(kind,'.disp')]])
+  
   clusters <- arrange(clusters, desc(amount))
   clusters$cx.disp <- with(clusters, factor(cx.disp, levels=rev(unique(cx.disp))))
+  
   clusters.top <- group_by(clusters, region.disp,gene) %>% top_n(as.integer(input$top.N), amount) %>%
     mutate(gene.description=paste(gene,"-",gene.desc(gene)))
-  ggplot(clusters.top, aes(x=amount, y=cx.disp)) + geom_point(size=3) + 
+
+    ggplot(clusters.top, aes(x=amount, y=cx.disp, xmin=amount.L, xmax=amount.R)) + geom_point(size=3) + 
     ggtitle(glue("Ranked {Kind} by Gene Expression")) + 
     xlab("Normalized log mean") + ylab("") + facet_grid(region.disp~gene.description, scales = "free_y") + coord_cartesian(xlim=c(0,6))
   

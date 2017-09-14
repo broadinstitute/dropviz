@@ -26,19 +26,24 @@ gene.map <-
       saveRDS(rownames(expr), genes.fn)
     
     # split the matrix into chunks of N rows at a time, convert to dense, and then write to disk
-    ldply(seq(1, nrow(expr), by=N), function(i) {
-      fn <- glue("{expr.exp.dir}/{i}.RDS")
-      if (!file.exists(fn)) {
-        write.log(glue("Extracting {N} rows starting at {i}"))
-        sub.expr <- expr[i:min(nrow(expr),(i+N-1)),]
+    x <-
+      ldply(seq(1, nrow(expr), by=N), function(i) {
+        fn <- glue("{expr.exp.dir}/{i}.RDS")
+        if (!file.exists(fn)) {
+          write.log(glue("Extracting {N} rows starting at {i}"))
+          sub.expr <- expr[i:min(nrow(expr),(i+N-1)),]
+          
+          write.log(glue("Converting and writing {fn}"))
+          saveRDS(as.matrix(sub.expr), fn)
+          rm(sub.expr)
+          gc()
+        }
         
-        write.log(glue("Converting and writing {fn}"))
-        saveRDS(as.matrix(sub.expr), fn)
-        
-      }
-      
-      data.frame(exp.label=exp$exp.label, start.gene=i, end.gene=i+N-1, file=fn)
-    })
+        data.frame(exp.label=exp$exp.label, start.gene=i, end.gene=i+N-1, file=fn)
+      })
+    rm(expr)
+    gc()
+    x
   })
 
 saveRDS(gene.map, glue("{expr.dir}/gene.map.RDS"))
@@ -68,31 +73,6 @@ expr.chunks <-
       })
   })
 
-# tcounts <-
-#   ddply(expr.chunks, .(exp.label), function(chunks) {
-#     df <- data.frame()
-#     lapply(1:nrow(chunks), function(i) {
-#       chunk.df <- readRDS(chunks$file[i])
-#       write.log(glue("Adding {i}: {chunks$file[i]}"))
-#       df <<- rbind(df, chunk.df)
-#     })
-#     df
-#   })
-# 
-# tcount.fns <-
-#   ddply(expr.chunks, .(exp.label), function(exp) {
-#     tcounts <- 
-#       ddply(exp, .(file), function(chunks) {
-#         write.log(chunks$file)
-#         readRDS(chunks$file)
-#       })
-#     tcounts$file <- NULL
-#     fn <- glue("expr/{first(exp$exp.label)}.RDS")
-#     saveRDS(tcounts, fn)
-#     write.log(glue("Wrote {fn}"))
-#     data.frame(file=fn)
-#   })
-
 ddply(expr.chunks, .(exp.label), function(exp) {
   out.dir <- glue("{expr.dir}/{first(exp$exp.label)}/gene")
   suppressWarnings(dir.create(out.dir, recursive = TRUE))
@@ -108,7 +88,6 @@ ddply(expr.chunks, .(exp.label), function(exp) {
       # here wastes a lot of space.
       g <- mutate(g, gene=as.character(gene), cell=as.character(cell)) %>% inner_join(xy, by='cell')
       fn <- glue("{out.dir}/{first(g$gene)}.RDS")
-      write.log("Saving ", fn)
       saveRDS(as_tibble(g), fn)
     })
     

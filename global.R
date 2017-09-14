@@ -20,6 +20,17 @@ log.reactive <- function(...) {
   if (getOption("log.reactive", default=FALSE)) write.log(...)
 }
 
+# gracefully fails returning a NULL if not in a reactive environment
+shiny.progress <- function(message=NULL) {
+  tryCatch({
+    p <- shiny::Progress$new()
+    p$set(message=message)
+    p
+  }, error=function(err) NULL)
+}
+
+
+
 write.func.body <- function(fn, file) {
   fn.lines <- capture.output(print(fn))
   # skip anonymous function def (first line), environment label (last line) and closing brace (penultimate line)
@@ -48,11 +59,14 @@ readRDS <- function(file, ...) {
   base::readRDS(file, ...)
 }
 
-
+saveRDS <- function(object, file, ...) {
+  write.log("Writing ", substitute(object), " to ", file)
+  base::saveRDS(object, file, ...)
+}
 
 MAX_REGIONS <- 10
 
-prep.dir <- 'cache'               # destination for all prepared data
+prep.dir <- getOption('dropviz.prep.dir', default='cache')               # destination for all prepared data
 cache.dir <- 'www/cache'  # destination for renderCacheImage()
 suppressWarnings(dir.create(prep.dir, recursive = TRUE))
 suppressWarnings(dir.create(cache.dir, recursive = TRUE))
@@ -94,12 +108,23 @@ mk.cluster.names <- function(ct) {
     } else {
       if (all(df$class_marker==first.class_marker)) {
         # The Macrophage/Microglia case
-        cluster_name <- glue("{paste0(df$class,collapse='/')}.{first.class_marker}")
+        cluster_name <- glue("{paste0(unique(df$class),collapse='/')}.{first.class_marker}")
       } else {
         if (all(df$class==first.class)) {
           cluster_name <- first(df$class)
         } else {
-          write.log("Stuck in mk.cluster.names on ", first(df$exp.label),' ',first(df$cluster))
+          # oh man, these are ugly clusters. Example is frontal cortex 11:
+          # A tibble: 4 x 8
+          # exp.label subcluster cluster         region      class class_marker                  full_name
+          # <fctr>     <fctr>  <fctr>          <chr>      <chr>        <chr>                      <chr>
+          # 1 F_GRCm38.81.P60Cortex_noRep5_FRONTALonly       11-1      11 Frontal Cortex  Microglia         C1qb     Microglia.C1qb.Tmem119
+          # 2 F_GRCm38.81.P60Cortex_noRep5_FRONTALonly       11-2      11 Frontal Cortex     Neuron      Slc17a6        Neuron.Slc17a6.Reln
+          # 3 F_GRCm38.81.P60Cortex_noRep5_FRONTALonly       11-3      11 Frontal Cortex Macrophage         C1qb       Macrophage.C1qb.Mrc1
+          # 4 F_GRCm38.81.P60Cortex_noRep5_FRONTALonly       11-4      11 Frontal Cortex  Microglia         C1qb Microglia.C1qb.Tmem119-Fos
+          #
+          # Use class.marker
+          cluster_name <- paste(unlist(dlply(df, .(class_marker), function(df2) paste0(paste(unique(df2$class),collapse='/'),'.',first(df2$class_marker)))),collapse='+')
+          write.log("Ugly: ",cluster_name)
         }
       }
     }
@@ -120,7 +145,8 @@ mk.subcluster.names <- function(ct) {
 # exp.label exp.title                                           exp.dir
 # 1 GRCm38.81.P60Striatum  Striatum /cygwin64/home/dkulp/data/F_GRCm38.81.P60Striatum
 # 2 GRCm38.81.P60Thalamus  Thalamus /cygwin64/home/dkulp/data/F_GRCm38.81.P60Thalamus
-experiments <- as_tibble(read.delim("exp_sets.txt", header = TRUE, stringsAsFactors = FALSE)) %>%
+experiments.fn <- getOption('dropviz.experiments', default='exp_sets.txt')
+experiments <- as_tibble(read.delim(experiments.fn, header = TRUE, stringsAsFactors = FALSE)) %>%
   mutate(exp.label=as.factor(exp.label))
 experiments$base <- basename(experiments$exp.dir)
 
@@ -139,6 +165,7 @@ cell.types_ <- as_tibble(ddply(experiments, .(exp.label), function(exp) {
   cluster.sheets.dir <- sprintf("%s/cluster_sheets",exp$exp.dir)
   ldply(list.files(cluster.sheets.dir, "Cluster_[0-9]+.csv"), function(fn) {
     # FIXME: warning suppressed because last line is missing CR
+    write.log(cluster.sheets.dir,'/',fn)
     csv <- suppressWarnings(read.csv(sprintf("%s/%s", cluster.sheets.dir, fn), fill=TRUE, stringsAsFactors=FALSE)) 
     
     # Add the experiment info and remove some unused columns

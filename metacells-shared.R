@@ -2,14 +2,15 @@
 
 suppressWarnings(dir.create(glue("{cache.dir}/metacells"), recursive = TRUE))
 
+per.10k <- function(x) 10000*x+1
+log.transform <- function(x) log(per.10k(x))
 
-
-compute.pair <- function(exp.label, cx, cmp.cx, kind) {
+compute.pair <- function(exp.label, cx, cmp.cx, kind, use.cached=TRUE) {
   fn.means <- glue("{prep.dir}/metacells/{exp.label}.{kind}.means.RDS")
   fn.sums <- glue("{prep.dir}/metacells/{exp.label}.{kind}.sums.RDS")
   cache.file <- glue("{cache.dir}/metacells/{exp.label}.{cx}.{cmp.cx}.RDS")
   
-  if (file.exists(cache.file)) {
+  if (use.cached && file.exists(cache.file)) {
     x <- readRDS(cache.file)
   } else {
     progress <- shiny.progress(glue("{kind} pairwise - {cx} vs {cmp.cx}"))
@@ -35,13 +36,17 @@ compute.pair <- function(exp.label, cx, cmp.cx, kind) {
       
       if (!is.null(progress)) progress$set(value=0.6, detail=glue("Fold ratio and p-vals for {nrow(x)} genes"))
       
-      x <- mutate(x, log.target.u=log(10000*target.u+1), 
-                  log.comparison.u=log(10000*comparison.u+1),
+      x <- mutate(x, 
+                  log.target.u=log.transform(target.u), 
+                  log.comparison.u=log.transform(comparison.u),
                   pval=edgeR::binomTest(target.sum, comparison.sum),
                   fc=log.target.u-log.comparison.u, 
-                  fc.disp=exp(fc))
+                  fc.disp=exp(fc),
+                  size=round(per.10k(target.u)+per.10k(comparison.u)),
+                  prob=per.10k(target.u)/size,
+                  log.target.u.L=log(qbinom(0.025, size, prob)),
+                  log.target.u.R=log(qbinom(0.975, size, prob)))
     }
-    
     
     if (!is.null(progress)) progress$set(0.8, detail=glue("Cacheing pairwise data"))
     
