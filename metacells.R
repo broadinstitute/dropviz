@@ -185,18 +185,18 @@ rank.plot <- function(clusters, kind) {
   require(tidyr)
   
   Kind <- paste0(toupper(substring(kind,1,1)),substring(kind,2))
-  clusters <- gather(clusters, gene, value, ends_with('-log.target.u'))
-  clusters <- separate(clusters, gene, c('gene.symbol','var'), sep='-')
+  clusters <- gather(clusters, gene.var, value, contains('-log.target.u'))
+  clusters <- separate(clusters, gene.var, c('gene','var'), sep='-')
   clusters <- spread(clusters, var, value)
   clusters$cx.disp <- paste(clusters$region.disp,clusters[[paste0(kind,'.disp')]])
   
-  clusters <- arrange(clusters, desc(amount))
+  clusters <- arrange(clusters, desc(log.target.u))
   clusters$cx.disp <- with(clusters, factor(cx.disp, levels=rev(unique(cx.disp))))
   
-  clusters.top <- group_by(clusters, region.disp,gene) %>% top_n(as.integer(input$top.N), amount) %>%
+  clusters.top <- group_by(clusters, region.disp,gene) %>% top_n(as.integer(input$top.N), log.target.u) %>%
     mutate(gene.description=paste(gene,"-",gene.desc(gene)))
 
-    ggplot(clusters.top, aes(x=amount, y=cx.disp, xmin=amount.L, xmax=amount.R)) + geom_point(size=3) + 
+  ggplot(clusters.top, aes(x=log.target.u, xmin=log.target.u.L, xmax=log.target.u.R, y=cx.disp, yend=cx.disp)) + geom_point(size=3) + geom_segment(aes(x=log.target.u.L,xend=log.target.u.R)) +
     ggtitle(glue("Ranked {Kind} by Gene Expression")) + 
     xlab("Normalized log mean") + ylab("") + facet_grid(region.disp~gene.description, scales = "free_y") + coord_cartesian(xlim=c(0,6))
   
