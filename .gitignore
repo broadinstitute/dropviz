@@ -2,7 +2,7 @@
 exp_sets.txt
 
 # runtime cacheing is stored in www
-/www/
+/www/cache
 
 # History files
 .Rhistory

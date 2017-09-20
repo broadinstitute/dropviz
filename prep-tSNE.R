@@ -44,8 +44,8 @@ dlply(experiments, .(exp.label), function(exp) {
   # for each major cluster, generate tSNE with subcluster labels
   lapply(unique(filter(cell.types, exp.label==exp$exp.label)$cluster), function(cn) {
     write.log("Processing cluster ",cn)
-    c.dir <- glue("{exp$exp.dir}/cluster{cn}")
-    fn <- paste0(c.dir,'/',list.files(c.dir,glue("{exp$base}.cluster{cn}\\..*.tSNExy.RDS")))
+    c.dir <- glue("{exp$exp.dir}/tSNE")
+    fn <- paste0(c.dir,'/',list.files(c.dir,glue("{exp$base}.cluster{cn}.CURATEDtSNE.RDS")))
     if (length(fn)==1) {
       local.xy.fn <- sprintf("%s/cluster%s.xy.RDS", out.dir, cn)
 

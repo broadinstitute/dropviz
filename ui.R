@@ -70,6 +70,15 @@ tableDownload <- function(label) {
   downloadAndHelp(label, "Download CSV Table")
 }
 
+# replaces <1> in markup with tag[1], <2> with tag[2], etc.
+embed.tags <- function(markup, tag) {
+  lapply(1:length(tag), function(i) {
+    tag.regex <- paste0('<',i,'>')
+    markup <<- sub(tag.regex, tag[[i]], markup)  
+  })
+  markup
+}
+
 # Define UI for application that draws a histogram
 shinyUI(
   fluidPage(
@@ -77,10 +86,11 @@ shinyUI(
     #    extendShinyjs(text = jsCode),
     includeCSS("styles.css"),
     tags$link(type="text/css", rel="stylesheet", href="http://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css"),
-    navbarPage("DropSeq - Single Cell Mouse Brain Gene Expression",
-               # titlePanel("DropViz Prototype"),
-               # h4("Cell Types Defined via Large Scale Single Cell Mouse Brain Gene Expression"),
-               tabPanel("Clustering",
+    navbarPage("DropViz", id="top-nav",
+               tabPanel("Home",div(column(2), column(8, embed.tags(HTML(readLines("html/landing.html")), 
+                                                                   list(actionButton("select.analysis.tab","Get Started", class="btn btn-lg btn-primary")))), column(2)),
+                        HTML(readLines("html/featurette.html"))),
+               tabPanel("Analysis",
                         
                         
                         # Sidebar with a slider input for number of bins 
@@ -232,11 +242,12 @@ shinyUI(
                         )
                ),
                tabPanel("Data",
-                        p("Links to data sets for downloading")),
-               tabPanel("Help",
-                        p("Explanations about using the app. We should also have some help info within the app panels.")),
-               tabPanel("About",
-                        p("Credits, manuscript, contact go here"))
+                        p("Data sets will be released concurrently with the publication of our manuscript. Please check back soon.")),
+               tabPanel("Credits",
+                        h3("Contributors"),
+                        p("A list of people and perhaps their roles"),
+                        h3("Contact"), p("Email address? Snail mail?"),
+                        h3("Funding"), p("A list of funding sources"))
     ),
     tags$script(src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"),
     tags$script("jQuery(function (){ $('.scroll-area').resizable(); });")

@@ -63,6 +63,10 @@ shinyServer(function(input, output, session) {
     unlink("www/cache/*.png")
   })
 
+  observeEvent(input$select.analysis.tab, {
+    updateNavbarPage(session, "top-nav", selected = "Analysis")
+  })  
+  
   # dropped this idea of expanding and collapsing the sidebar, but this might be an approach
   # observe({
   #   if (input$wideside1) {
