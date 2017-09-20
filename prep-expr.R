@@ -65,7 +65,11 @@ expr.chunks <-
           chunk.df <-       
             ldply(1:nrow(sub.expr), function(r) {
               non.zero <- sub.expr[r,]!=0
-              data.frame(gene=as.factor(rownames(sub.expr)[r]), cell=factor(names(sub.expr[r,non.zero])), transcripts=sub.expr[r,non.zero])
+              if (any(non.zero)) {
+                data.frame(gene=as.factor(rownames(sub.expr)[r]), cell=factor(colnames(sub.expr[r,non.zero,drop=FALSE])), transcripts=sub.expr[r,non.zero])
+              } else {
+                data.frame()
+              }
             }) %>% as_tibble
           saveRDS(chunk.df, out.fn)
         }
