@@ -51,7 +51,8 @@ component.cell.weights <- reactive({
   
   exp <- filter(experiments, exp.label==component.cluster()$exp.label)
   fn <- list.files(glue("{exp$exp.dir}/components"), glue("{exp$base}.cluster{component.cluster()$cluster}\\..*.ICA.RDS"))
-  stopifnot(length(fn)==1)
+  #  stopifnot(length(fn)==1)
+  fn <- fn[1]  # FIXME: multiple matches
   readRDS(glue("{exp$exp.dir}/components/{fn}"))$cell_rotations
 })
 
