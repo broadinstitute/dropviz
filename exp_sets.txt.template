@@ -1,3 +1,19 @@
-exp.label	exp.title	exp.dir
-GRCm38.81.P60Striatum	Striatum	/cygwin64/home/dkulp/data/F_GRCm38.81.P60Striatum
-GRCm38.81.P60Thalamus	Thalamus	/cygwin64/home/dkulp/data/F_GRCm38.81.P60Thalamus
+exp.label	exp.title	exp.abbrev	exp.dir
+GRCm38.81.P60Striatum	Striatum	STR	/broad/mccarroll/dropseq/data/clusters/atlas_ica/F_GRCm38.81.P60Striatum
+GRCm38.81.P60Thalamus	Thalamus	TH	/broad/mccarroll/dropseq/data/clusters/atlas_ica/F_GRCm38.81.P60Thalamus
+GRCm38.81.P60Cerebellum_ALT	Cerebellum	CB	/broad/mccarroll/dropseq/data/clusters/atlas_ica/F_GRCm38.81.P60Cerebellum_ALT
+GRCm38.81.P60Cortex_noRep5_FRONTALonly	Frontal Cortex	FC	/broad/mccarroll/dropseq/data/clusters/atlas_ica/F_GRCm38.81.P60Cortex_noRep5_FRONTALonly
+GRCm38.81.P60Cortex_noRep5_POSTERIORonly	Posterior Cortex	PC	/broad/mccarroll/dropseq/data/clusters/atlas_ica/F_GRCm38.81.P60Cortex_noRep5_POSTERIORonly
+GRCm38.81.P60EntoPeduncular	Ento Peduncular	ENT	/broad/mccarroll/dropseq/data/clusters/atlas_ica/F_GRCm38.81.P60EntoPeduncular
+GRCm38.81.P60GlobusPallidus	Globus Pallidus	GP	/broad/mccarroll/dropseq/data/clusters/atlas_ica/F_GRCm38.81.P60GlobusPallidus
+GRCm38.81.P60Hippocampus	Hippocampus	HC	/broad/mccarroll/dropseq/data/clusters/atlas_ica/F_GRCm38.81.P60Hippocampus
+GRCm38.81.P60SubstantiaNigra	Sustantia Nigra	SN	/broad/mccarroll/dropseq/data/clusters/atlas_ica/F_GRCm38.81.P60SubstantiaNigra
+
+
+
+
+
+
+
+
+
