@@ -1,7 +1,5 @@
 @import url('https://fonts.googleapis.com/css?family=Josefin+Slab|Oswald');
 
-body {padding-top: 70px;}
-
 .scroll-area {
   overflow-y:auto;
   overflow-x:hidden;
