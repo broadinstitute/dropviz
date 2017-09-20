@@ -86,7 +86,7 @@ shinyUI(
     #    extendShinyjs(text = jsCode),
     includeCSS("styles.css"),
     tags$link(type="text/css", rel="stylesheet", href="http://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css"),
-    navbarPage("DropViz",position="fixed-top", id="top-nav",
+    navbarPage("DropViz", id="top-nav",
                tabPanel("Home",div(column(2), column(8, embed.tags(HTML(readLines("html/landing.html")), 
                                                                    list(actionButton("select.analysis.tab","Get Started", class="btn btn-lg btn-primary")))), column(2)),
                         HTML(readLines("html/featurette.html"))),
