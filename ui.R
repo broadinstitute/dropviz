@@ -242,7 +242,7 @@ shinyUI(
                         )
                ),
                tabPanel("Data",
-                        p("Links to data sets for downloading")),
+                        p("Data sets will be released concurrently with the publication of our manuscript. Please check back soon.")),
                tabPanel("Credits",
                         h3("Contributors"),
                         p("A list of people and perhaps their roles"),
