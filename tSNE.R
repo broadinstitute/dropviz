@@ -212,12 +212,12 @@ psum.amounts <- function(cx, amounts) {
 }
 cluster.transcript.amounts <- reactive({
   cx <- select(clusters.selected(), exp.label, cx=cluster)
-  amounts <- select(clusters.selected(), ends_with('.log.target.u'))
+  amounts <- select(clusters.selected(), ends_with('-log.target.u'))
   psum.amounts(cx, amounts)
 })
 subcluster.transcript.amounts <- reactive({
   cx <- select(subclusters.selected(), exp.label, cx=subcluster)
-  amounts <- select(subclusters.selected(), ends_with('.log.target.u'))
+  amounts <- select(subclusters.selected(), ends_with('-log.target.u'))
   psum.amounts(cx, amounts)
 })
 
