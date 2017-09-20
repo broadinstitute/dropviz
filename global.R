@@ -74,4 +74,7 @@ gene.desc <- function(name) {
   gene.lookup(name, 2)
 }
 
+if (!file.exists(glue("{prep.dir}/globals.Rdata"))) {
+  source("prep-global.R")
+}
 load(glue("{prep.dir}/globals.Rdata"))
