@@ -6,7 +6,7 @@
 # should be removed first
 stopifnot(!file.exists(getOption('dropviz.prep.dir')))
 
-files <- c('global','tSNE','metacells','components','marker','expr')
+files <- c('tSNE','metacells','components','marker','expr')
 lapply(files, function(fn) {
   cat("Sourcing ", fn, "\n")
   source(paste0("prep-",fn,".R"))
