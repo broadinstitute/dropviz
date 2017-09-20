@@ -5,6 +5,7 @@ library(shinyjqui)
 library(plyr)
 library(dplyr)
 library(glue)
+library(ggthemes)
 
 source("shared.R")
 
