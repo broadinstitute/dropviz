@@ -28,24 +28,31 @@ for exp in ${EXPERIMENTS}; do
     rsync -rav ${REMOTE_STAGED}/metacells/${exp}\* ${LOCAL_STAGED}/metacells/
     rsync -rav ${REMOTE_STAGED}/tsne/${exp} ${LOCAL_STAGED}/tsne/
 
-    mkdir -p ${LOCAL_ATLAS}/${exp}
-    rsync -rav ${REMOTE_ATLAS}/${exp}/components ${LOCAL_ATLAS}/${exp}/
+    mkdir -p ${LOCAL_ATLAS}/F_${exp}
+    rsync -rav ${REMOTE_ATLAS}/F_${exp}/components ${LOCAL_ATLAS}/F_${exp}/
+    rsync -rav ${REMOTE_ATLAS}/F_${exp}/curation_sheets ${LOCAL_ATLAS}/F_${exp}/
+    rsync -rav ${REMOTE_ATLAS}/F_${exp}/cluster_sheets ${LOCAL_ATLAS}/F_${exp}/
 done
 
 # create exp_sets.txt
 cat > exp_sets.txt <<EOF
-exp.label	exp.title	exp.dir
+exp.label	exp.title	exp.abbrev	exp.dir
 EOF
 
-for exp in ${EXPERIMENTS}; do
+(for exp in ${EXPERIMENTS}; do
     short=`echo $exp | sed -e 's/GRCm38.81.P60//'`
-    echo "${exp}\t${short}\t${LOCAL_ATLAS}/F_${exp}\n"
-done
+    abbrev=`echo $short | cut -c1-3 | tr [:lower:] [:upper:]`
+    dir=`cygpath -w ${LOCAL_ATLAS}/F_${exp}`
+    echo "${exp}	${short}	${abbrev}	${dir}"
+done) >> exp_sets.txt
 
+LOCAL_STAGED_W=`cygpath -w ${LOCAL_STAGED}`
 cat >> options.R <<EOF
-options(dropviz.prep.dir='${LOCAL_STAGED}')
+options(dropviz.prep.dir='${LOCAL_STAGED_W}')
 options(dropviz.experiments='exp_sets.txt')
 EOF
 
 # generate a globals.RDS that only includes EXPERIMENTS
+# This probably needs to be run within RStudio
 R -e "source('prep-global.R')"
+

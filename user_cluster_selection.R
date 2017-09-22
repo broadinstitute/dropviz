@@ -22,7 +22,7 @@ log.reactive("fn: current.cluster")
 
 output$current.cluster <- renderUI({
   
-  choices <- setNames(1:nrow(clusters.selected()), glue("{clusters.selected()$region.disp} {clusters.selected()$cluster.disp}"))
+  choices <- setNames(1:nrow(clusters.selected()), glue("{clusters.selected()$region.abbrev} {clusters.selected()$cluster.disp}"))
   
   if (length(choices)==1) {
     selected <- choices
@@ -36,7 +36,7 @@ output$current.cluster <- renderUI({
 output$comparison.cluster <- renderUI({
   if (isTruthy(input$current.cluster)) {
     choices <- setdiff(which(clusters.selected()$exp.label == current.cluster()$exp.label), current.cluster.i())
-    names(choices) <- glue("{clusters.selected()$region.disp[choices]} {clusters.selected()$cluster.disp[choices]}")
+    names(choices) <- glue("{clusters.selected()$region.abbrev[choices]} {clusters.selected()$cluster.disp[choices]}")
     
     # prepend the region comparison
     choices <- c(0,choices) 
@@ -61,7 +61,7 @@ current.subcluster <- reactive({
 output$current.subcluster <- renderUI({
 
   subc.s <- subclusters.selected_() %>% gene.cols('subcluster') # HACK: Fix Me
-  choices <- setNames(1:nrow(subc.s), glue("{subc.s$region.disp} {subc.s$subcluster.disp}"))
+  choices <- setNames(1:nrow(subc.s), glue("{subc.s$region.abbrev} {subc.s$subcluster.disp}"))
   
   if (length(choices)==1) {
     selected <- choices
@@ -76,7 +76,7 @@ output$comparison.subcluster <- renderUI({
   if (isTruthy(input$current.subcluster)) {
     
     choices <- setdiff(which(subclusters.selected()$exp.label == current.subcluster()$exp.label & subclusters.selected()$cluster == current.subcluster()$cluster), current.subcluster.i())
-    names(choices) <- glue("{subclusters.selected()$region.disp[choices]} {subclusters.selected()$subcluster.disp[choices]}")
+    names(choices) <- glue("{subclusters.selected()$region.abbrev[choices]} {subclusters.selected()$subcluster.disp[choices]}")
     
     # prepend the region comparison
     choices <- c(0,choices) 

@@ -101,9 +101,9 @@ output$dt.cluster.markers.dl <- downloadHandler(filename="cluster-markers.csv",
 
 output$dt.cluster.markers.heading <- renderUI({
   if (isTruthy(current.cluster.i())) {
-    tags$h4(glue("Differentially Over-Expressed: {current.cluster()$cluster.disp} vs {comparison.cluster()$cluster.disp}"))
+    tags$h4(glue("Differentially Over-Expressed: {current.cluster()$region.abbrev} {current.cluster()$cluster.disp} vs {comparison.cluster()$region.abbrev} {comparison.cluster()$cluster.disp}"))
   } else {
-    tags$p(align="center","Choose a target and comparison cluster in the 'Filter Cells' panel to find differentially expressed genes")
+    tags$p(align="center","Choose a target and comparison cluster in the 'Compare' panel to find differentially expressed genes")
   }
 })
 
@@ -119,9 +119,9 @@ output$dt.subcluster.markers.dl <- downloadHandler(filename="subcluster-markers.
 
 output$dt.subcluster.markers.heading <- renderUI({
   if (isTruthy(current.subcluster.i())) {
-    tags$h4(glue("Differentially Over-Expressed: {current.subcluster()$subcluster.disp} vs {comparison.cluster()$subcluster.disp}"))
+    tags$h4(glue("Differentially Over-Expressed: {current.subcluster()$region.abbrev} {current.subcluster()$subcluster.disp} vs {comparison.subcluster()$region.abbrev} {comparison.subcluster()$subcluster.disp}"))
   } else {
-    tags$p(align="center","Choose a target and comparison subcluster in the 'Filter Cells' panel to find differentially expressed genes")
+    tags$p(align="center","Choose a target and comparison subcluster in the 'Compare' panel to find differentially expressed genes")
   }
 })
 

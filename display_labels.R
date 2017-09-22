@@ -5,9 +5,9 @@
 region.names <- reactive({
 log.reactive("fn: region.names")
   if (input$opt.region.disp=='region') {
-    tibble(exp.label=experiments$exp.label, region.disp=experiments$exp.title)
+    tibble(exp.label=experiments$exp.label, region.disp=experiments$exp.title, region.abbrev=experiments$exp.abbrev)
   } else {
-    tibble(exp.label=experiments$exp.label, region.disp=experiments$exp.label)
+    tibble(exp.label=experiments$exp.label, region.disp=experiments$exp.label, region.abbrev=experiments$exp.abbrev)
   }
 }) 
 
