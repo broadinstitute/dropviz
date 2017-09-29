@@ -34,7 +34,14 @@ cell.cluster.options <- reactive({
 log.reactive("fn: cell.cluster.options")
   user.selection.changed()
   cell.cluster.opt <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='cell.cluster')
-  return(sort(unique(cell.cluster.opt$cluster.disp)))
+  
+  # prefix region abbrev if more than one region to distinguish, e.g. "Neuron [#2]" => "STR Neuron [#2]"
+  if (nrow(regions.selected()) > 1) {
+    cco <- arrange(unique(select(cell.cluster.opt, region.abbrev, cluster.disp)), cluster.disp)
+    return(setNames(cco$cluster.disp, glue("{cco$region.abbrev} {cco$cluster.disp}")))
+  } else {
+    return(sort(unique(cell.cluster.opt$cluster.disp)))
+  }
   # cell.cluster.vals <- setNames(cell.cluster.opt$cluster, cell.cluster.opt$cluster.disp)
   # sort(cell.cluster.vals[!duplicated(cell.cluster.vals)])
 })
@@ -52,28 +59,21 @@ log.reactive("fn: cell.type.options")
 #####################################################################################################
 # OUTPUT - user filter selections on cell types
 output$region <- renderUI({
-  selectizeInput("tissue", "Region", choices=tissue.options(), selected=input$tissue, multiple=TRUE)
+  selectizeInput("tissue", "Choose Region", choices=c("Tissue / Region"="",tissue.options()), selected=input$tissue, multiple=TRUE)
 })
 
 output$cell.class <- renderUI({
-  selectizeInput("cell.class", "Cell Class", choices=cell.class.options(), selected=input$cell.class, multiple=TRUE)
+  selectizeInput("cell.class", "Limit By Class", choices=c("Cell Class"="",cell.class.options()), selected=input$cell.class, multiple=TRUE)
 })
 
 output$cell.cluster <- renderUI({
-  selectizeInput("cell.cluster", "Cell Cluster", choices=cell.cluster.options(), selected=input$cell.cluster, multiple=TRUE)
+  selectizeInput("cell.cluster", "Limit By Cluster", choices=c("Cell Cluster"="",cell.cluster.options()), selected=input$cell.cluster, multiple=TRUE)
 })
 
 output$cell.type <- renderUI({
-  selectizeInput("cell.type", "Cell Type", choices=cell.type.options(), selected=input$cell.type, multiple=TRUE)
+  selectizeInput("cell.type", "Limit By Cell Type", choices=c("Cell Type / Subcluster"="",cell.type.options()), selected=input$cell.type, multiple=TRUE)
 })
 
-# output$class.marker <- renderUI({
-#   selectizeInput("class.marker", "Curated Class Markers", choices=class.marker.options(), selected=input$class.marker, multiple=TRUE)
-# })
-# 
-# output$type.marker <- renderUI({
-#   selectizeInput("type.marker", "Curated Type Markers", choices=type.marker.options(), selected=input$type.marker, multiple=TRUE)
-# })
 
 #####################################################################################################
 #
@@ -211,7 +211,7 @@ subclusters.selected <- reactive({
 clusters.selected <- reactive({
 log.reactive("fn: clusters.selected")
   user.selection.changed()
-  select(subclusters.selected__(), region.disp, class.disp, cluster.disp, exp.label, cluster) %>% unique %>%
+  select(subclusters.selected__(), region.disp, region.abbrev, class.disp, cluster.disp, exp.label, cluster) %>% unique %>%
     gene.cols('cluster')
 })
 

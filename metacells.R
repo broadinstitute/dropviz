@@ -81,18 +81,18 @@ scatter.plot <- function(target, comparison, cx.metacells, cx.markers, cx.select
       
       if (input$expr.filter.opt %in% c('both','fc','either')) {
         if (input$expr.filter.opt == 'fc') {
-          fc.line1 <- geom_abline(intercept=log(input$fold.change), slope=1) 
+          fc.line1 <- geom_abline(intercept=log(input$fold.change), slope=1, alpha=0.5, color='grey') 
         } else {
           fc.line1 <- geom_blank()
         }
-        fc.line2 <- geom_abline(intercept=-log(input$fold.change), slope=1)
+        fc.line2 <- geom_abline(intercept=-log(input$fold.change), slope=1, alpha=0.5, color='grey')
       } else {
         fc.line1 <- fc.line2 <- geom_blank()
       }
       
       if (input$expr.filter.opt %in% c('both','amt','either')) {
-        amt.line1 <- geom_hline(yintercept = input$max.amt.without) 
-        amt.line2 <- geom_vline(xintercept = input$min.amt.within)
+        amt.line1 <- geom_hline(yintercept = input$max.amt.without, color='grey') 
+        amt.line2 <- geom_vline(xintercept = input$min.amt.within, color='grey')
       } else {
         amt.line1 <- amt.line2 <- geom_blank()
       }
@@ -134,7 +134,7 @@ output$gene.expr.scatter.cluster <- renderImage({
                         cluster.markers.selected()$gene, input$expr.filter.opt, input$pval.thresh,
                         input$max.amt.without, input$min.amt.within))
   } else {
-    cluster.scatter.plot <- function(progress) plot.text("Choose a target and comparison cluster in the 'Filter Cells' panel")    
+    cluster.scatter.plot <- function(progress) plot.text("Choose a target and comparison cluster in the 'Compare' panel")    
     key.str <- 'missing_clusters'
   }
   
@@ -162,7 +162,7 @@ output$gene.expr.scatter.subcluster <- renderImage({
                         subcluster.markers.selected()$gene, input$expr.filter.opt, input$pval.thresh,
                         input$max.amt.without, input$min.amt.within))
   } else {
-    subcluster.scatter.plot <- function(progress) plot.text("Choose a target and comparison subcluster in the 'Filter Cells' panel")    
+    subcluster.scatter.plot <- function(progress) plot.text("Choose a target and comparison subcluster in the 'Compare' panel")    
     key.str <- 'missing_subclusters'
   }
   
@@ -207,7 +207,7 @@ output$gene.expr.rank.cluster <- renderPlot({
     clusters <- select(clusters.selected(), -class.disp) %>% unique
     rank.plot(clusters,'cluster')
   } else {
-    plot.text("Enter a gene symbol in the 'Filter Cells' panel\nto display a ranked order of clusters by transcript abundance")    
+    plot.text("Enter a gene symbol in the 'Compare' panel\nto display a ranked order of clusters by transcript abundance")    
   }
 })
 
@@ -216,6 +216,6 @@ output$gene.expr.rank.subcluster <- renderPlot({
     subclusters <- select(subclusters.selected(), -class.disp) %>% unique
     rank.plot(subclusters, 'subcluster')
   } else {
-    plot.text("Enter a gene symbol in the 'Filter Cells' panel\nto display a ranked order of subclusters by transcript abundance")    
+    plot.text("Enter a gene symbol in the 'Compare' panel\nto display a ranked order of subclusters by transcript abundance")    
   }
 })

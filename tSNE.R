@@ -388,13 +388,13 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     p.func <- function() {
       require(ggplot2);
       geom_blank_tsne <- geom_blank(data=data.frame(region.disp=character(),facet.gg=character(),facet2.gg=character()))
-      tsne.gg <- ggplot() + scale_fill_discrete(guide="none", na.value='lightgray') + scale_size(guide="none", range=c(0.1,opt.expr.size))
+      tsne.gg <- ggplot() + scale_fill_gdocs(guide="none", na.value='lightgray') + scale_size(guide="none", range=c(0.1,opt.expr.size)) + theme_few() + theme(strip.text=element_text(size=20))
       
       tsne.color.scale <- (
         if (nrow(comp.data)>0) {
           scale_color_gradient2(low="blue", mid="lightgrey", high="red", midpoint=0, limits=c(-max(comp.data$weight),max(comp.data$weight)))
         } else {
-          scale_color_discrete(guide="none", na.value='lightgray') 
+          scale_color_gdocs(guide="none", na.value='lightgray') 
         }
       )
 

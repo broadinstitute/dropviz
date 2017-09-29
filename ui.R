@@ -70,6 +70,15 @@ tableDownload <- function(label) {
   downloadAndHelp(label, "Download CSV Table")
 }
 
+# replaces <1> in markup with tag[1], <2> with tag[2], etc.
+embed.tags <- function(markup, tag) {
+  lapply(1:length(tag), function(i) {
+    tag.regex <- paste0('<',i,'>')
+    markup <<- sub(tag.regex, tag[[i]], markup)  
+  })
+  markup
+}
+
 # Define UI for application that draws a histogram
 shinyUI(
   fluidPage(
@@ -77,65 +86,67 @@ shinyUI(
     #    extendShinyjs(text = jsCode),
     includeCSS("styles.css"),
     tags$link(type="text/css", rel="stylesheet", href="http://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css"),
-    navbarPage("DropSeq - Single Cell Mouse Brain Gene Expression",
-               # titlePanel("DropViz Prototype"),
-               # h4("Cell Types Defined via Large Scale Single Cell Mouse Brain Gene Expression"),
-               tabPanel("Clustering",
+    navbarPage("DropViz", id="top-nav",
+               tabPanel("Home",div(column(2), column(8, embed.tags(HTML(readLines("html/landing.html")), 
+                                                                   list(actionButton("select.analysis.tab","Get Started", class="btn btn-lg btn-primary")))), column(2)),
+                        HTML(readLines("html/featurette.html"))),
+               tabPanel("Analysis",
                         
                         
                         # Sidebar with a slider input for number of bins 
                         sidebarLayout(
-                          sidebarPanel(width=3, id="sidebarform",
+                          sidebarPanel(width=3, id="controlpanel",
                                        div(helpIcon("config"), class='top-right'),
                                        tabsetPanel(type="tabs",
-                                                   tabPanel("Filter Cells",
+                                                   tabPanel("Query",
                                                             div(style="margin: 10px -10px 0px -10px; border: 2px solid #dddddd; border-radius: 5px; padding: 0px 10px",
-                                                                h4("Highlight"),
+                                                                h4("Filter"),
                                                                 fluidRow(
-                                                                  column(6, uiOutput("region")), column(6, uiOutput("cell.class"))
-                                                                ),
-                                                                fluidRow(
-                                                                  column(12, uiOutput("cell.cluster")), 
-                                                                  conditionalPanel("input.mainpanel=='subclusters'",
-                                                                                   column(12, uiOutput("cell.type")))
-                                                                ),
-                                                                fluidRow(
-                                                                  column(7, selectizeInput("user.genes", "Gene", choices=c("Gene Symbol"="",top.genes),
+                                                                  column(6, selectizeInput("user.genes", "Gene", choices=c("Symbol"="",top.genes),
                                                                                            multiple=TRUE, width='100%', options=list(create=TRUE,persist=FALSE))),
-                                                                  column(5, selectInput("top.N","Top Matches", choices=c(1,2,3,4,5,10,20),selected=5))),
-                                                                conditionalPanel("input['user.genes'] && ((input.mainpanel=='clusters' && input.clusterpanel=='tSNE') || (input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'))",
+                                                                  column(6, uiOutput("region"))),
+                                                                conditionalPanel("input['user.genes'] && input['opt.show.bags'] && ((input.mainpanel=='clusters' && input.clusterpanel=='tSNE') || (input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'))",
                                                                                  checkboxInput("opt.tx.alpha",span(style="font-size: small","Show Expression as Transparency in t-SNE"),value = TRUE)),
                                                                 conditionalPanel("input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'",
-                                                                                 checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE))
-                                                            ),
-                                                            div(style="margin: 10px -10px 0px -10px; border: 2px solid #dddddd; border-radius: 5px; padding: 0px 10px",
-                                                                h4("Compare"),
+                                                                                 checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE)),
+                                                                fluidRow(
+                                                                  column(6, uiOutput("cell.class")),
+                                                                  column(6, uiOutput("cell.cluster")), 
+                                                                  conditionalPanel("input.mainpanel=='subclusters'",
+                                                                                   column(12, uiOutput("cell.type")))
+                                                                )
+                                                            )
+                                                   ),
+                                                   tabPanel("Compare",
+                                                            div(style="margin: 10px -10px 10px -10px; border: 2px solid #dddddd; border-radius: 5px; padding: 0px 10px",
                                                                 conditionalPanel('input.mainpanel=="clusters"',
+                                                                                 h4("Compare Clusters"),
                                                                                  fluidRow(
                                                                                    uiOutput("current.cluster"),
                                                                                    uiOutput("comparison.cluster")
                                                                                  )
                                                                 ),
                                                                 conditionalPanel('input.mainpanel=="subclusters"',
+                                                                                 h4("Compare Subclusters"),
                                                                                  fluidRow(
                                                                                    uiOutput("current.subcluster"),
                                                                                    uiOutput("comparison.subcluster")
                                                                                  )
                                                                 )
+                                                            ),
+                                                            div(style="margin: 10px -10px 10px -10px; border: 2px solid #dddddd; border-radius: 5px; padding: 0px 10px",
+                                                                h4("Differential Expression Criteria"),
+                                                                sliderInput("fold.change", "Minimum Fold Ratio", min=1, max=30, value=2, step=0.5),
+                                                                sliderInput("pval.thresh", "Maximum P-Value Exponent", min=-300, max=0, value=-100, step=1),
+                                                                selectInput("expr.filter.opt", "", c("AND"="both","OR"="either","Fold Ratio ONLY (two-sided)"="fc","Abundance ONLY"="amt")),
+                                                                tags$table(tags$tr(tags$td(sliderInput("min.amt.within", "Min Mean Log Amount in Target", min=0, max=6, value=2.5, step=0.25),
+                                                                                           valign="top"),
+                                                                                   tags$td(width="5%"),
+                                                                                   tags$td(sliderInput("max.amt.without", "Max Mean Log Amount in Comp", min=0, max=6, value=1, step=0.25),
+                                                                                           valign="top")),
+                                                                           width='100%'),
+                                                                actionButton("upload.genes","Upload Gene List", width='100%', onclick="alert('Not Implemented')")
                                                             )
-                                                   ),
-                                                   tabPanel("Diff Expr",
-                                                            h4("Differential Expression Criteria"),
-                                                            sliderInput("fold.change", "Minimum Fold Ratio", min=1, max=30, value=2, step=0.5),
-                                                            sliderInput("pval.thresh", "Maximum P-Value Exponent", min=-300, max=0, value=-100, step=1),
-                                                            selectInput("expr.filter.opt", "", c("AND"="both","OR"="either","Fold Ratio ONLY (two-sided)"="fc","Abundance ONLY"="amt")),
-                                                            tags$table(tags$tr(tags$td(sliderInput("min.amt.within", "Min Mean Log Amount in Target", min=0, max=6, value=2.5, step=0.25),
-                                                                                       valign="top"),
-                                                                               tags$td(width="5%"),
-                                                                               tags$td(sliderInput("max.amt.without", "Max Mean Log Amount in Comp", min=0, max=6, value=1, step=0.25),
-                                                                                       valign="top")),
-                                                                       width='100%'),
-                                                            actionButton("upload.genes","Upload Gene List", width='100%', onclick="alert('Not Implemented')")
                                                    ),
                                                    tabPanel("Display",
                                                             # opt.*.label effects how items are displayed in pull-downs, table titles, etc. If these are changed
@@ -151,9 +162,11 @@ shinyUI(
                                                                                  checkboxInput("use.common.name", "Use Common Name for Subcluster, If Present", value = TRUE))),
                                                             selectInput("opt.plot.label", "Plot Labels for Clusters and Subclusters", choices=c("Names"='disp',"Numbers"='number',"None"='none')),
                                                             checkboxInput("opt.show.bags","Display t-SNE using bag plots", value=TRUE),
-                                                            selectInput("opt.downsampling.method","Down Sample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
+                                                            selectInput("opt.downsampling.method","Downsample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
                                                             conditionalPanel("input['opt.downsampling.method']!='none'",
-                                                                             sliderInput("downsampling", "Down-sample Count", 0, 100000, value=2000, step=1000)),
+                                                                             sliderInput("downsampling", "Downsample Count", 0, 100000, value=2000, step=1000)),
+                                                            selectInput("top.N","Gene Search: Show Top Cluster or Subcluster Matches", choices=c(1,2,3,4,5,10,20),selected=5),
+                                                   
                                                             sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=3, step=0.5),
                                                             checkboxInput("opt.scatter.gene.labels","Show Gene Labels on Scatter Plots", value=TRUE),
                                                             selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all')),
@@ -186,9 +199,12 @@ shinyUI(
                                                                                            DT::dataTableOutput("dt.clusters"))))),
                                                          hr(),
                                                          uiOutput("dt.cluster.markers.heading"),
-                                                         fluidRow(class="table-area",
-                                                                  tableDownload("dt.cluster.markers.dl"),
-                                                                  column(11,DT::dataTableOutput("dt.cluster.markers")))
+                                                         conditionalPanel(
+                                                             'true && !$("div[id=\'current.cluster\']").is(":empty")',
+                                                             fluidRow(class="table-area",
+                                                                      tableDownload("dt.cluster.markers.dl"),
+                                                                      column(11,DT::dataTableOutput("dt.cluster.markers")))
+                                                         )
                                                 ),
                                                 tabPanel("Subclusters", value = "subclusters",
                                                          tabsetPanel(type="pills", id="subclusterpanel",
@@ -232,11 +248,12 @@ shinyUI(
                         )
                ),
                tabPanel("Data",
-                        p("Links to data sets for downloading")),
-               tabPanel("Help",
-                        p("Explanations about using the app. We should also have some help info within the app panels.")),
-               tabPanel("About",
-                        p("Credits, manuscript, contact go here"))
+                        p("Data sets will be released concurrently with the publication of our manuscript. Please check back soon.")),
+               tabPanel("Credits",
+                        h3("Contributors"),
+                        p("A list of people and perhaps their roles"),
+                        h3("Contact"), p(a(href="mailto:asaunders@genetics.med.harvard.edu","A. Saunders"),"and",p(href="mailto:emacosko@broadinstitute.org","E. Macosko")),
+                        h3("Funding"), p("A.S is funded through a post-doctoral fellowship from the Helen Hay Whitney foundation."))
     ),
     tags$script(src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"),
     tags$script("jQuery(function (){ $('.scroll-area').resizable(); });")
