@@ -475,13 +475,13 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         if (opt.horiz.facet) {
           plot.gg <- p + facet_grid(facet2.gg~region.disp)
         } else {
-          plot.gg <- p + facet_wrap(~region.disp, ncol=4)
+          plot.gg <- p + facet_wrap(~region.disp, ncol=3)
         }
       } else {
         if (opt.horiz.facet) {
           plot.gg <- p + facet_grid(facet2.gg~region.disp+facet.gg)
         } else {
-          plot.gg <- p + facet_wrap(~region.disp+facet.gg, ncol=ifelse(opt.global,3,4))
+          plot.gg <- p + facet_wrap(~region.disp+facet.gg, ncol=3)
         }
       }
       plot.gg
@@ -501,20 +501,21 @@ is.filtered <- function() {
   isTruthy(input$tissue) || isTruthy(input$cell.class) || isTruthy(input$cell.cluster) || isTruthy(input$cell.type)
 }
 
-# Set the image size to create square facets. The display is divided into at most 4 facets across when wrapping (e.g. 250x250 for a 1000px region).
+# Set the image size to create square facets. The display is divided into at most 3 facets across when wrapping (e.g. 333x333 for a 1000px region).
 # If there's a second facet, then a facet_grid display is used only if the 2nd facet is less than MAX_REGIONS (otherwise each facet would be too small)
 tsne.image.size <- function(facet1, facet2, display.width) {
   if (facet2 > 0 && facet1 <= MAX_REGIONS) {
     # grid: 
     facet.wide = (if (facet1==1) display.width %/% 2 else display.width)
-    facet.high <- if (facet2==1) display.width %/% 2 else facet2 * (display.width %/% 4)
+    facet.high <- if (facet2==1) display.width %/% 2 else facet2 * (display.width %/% 3)
   } else {
     # wrap
-    facet.wide.count <- min(4, facet1)
+    facet.wide.count <- min(3, facet1)
     facet.wide <- ifelse(facet.wide.count==1, display.width %/% 2, display.width)
     facet.high <- (facet.wide %/% facet.wide.count) * (((facet1-1) %/% facet.wide.count)+1)
   }
-  
+
+  write.log(glue("facet1={facet1} facet2={facet2} facet.wide={facet.wide} facet.high={facet.high}"))
   return(list(width=facet.wide, height=facet.high))
 }
 

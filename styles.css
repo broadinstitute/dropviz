@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css?family=Josefin+Slab|Oswald');
 
+.control-box {
+  border: 2px solid #dddddd; 
+  border-radius: 5px; 
+  padding: 0 10px;
+  margin: 10px -10px 10px -10px
+}
+
 .scroll-area {
   overflow-y:auto;
   overflow-x:hidden;
