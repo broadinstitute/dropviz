@@ -1,3 +1,88 @@
+library(digest)
+library(ggplot2)
+library(shiny)
+
+
+# allows interactive debugging within RStudio
+# Why does this fail when running shiny?! For now, uncomment manually shorter form during debug. Grr.
+# reactive <- function(x, env=parent.frame(), ...) {
+#   if (is.null(getDefaultReactiveDomain())) {
+#     exprToFunction(x, env=env)
+#   } else {
+#     shiny::reactive(x, env, ...)
+#   }
+# }
+# reactive <- function(x, env=parent.frame(), ...) exprToFunction(x, env=env)
+
+
+server <- function(input, output, session) {
+  
+  if (file.exists("message.txt") && !is.null(getDefaultReactiveDomain())) {
+    msg <- readLines("message.txt")
+    showNotification(div(h4(msg[1]),msg[2]),duration=NULL,type="warning")
+  }
+  
+  # general plot utility functions
+  source("plot.R", local=TRUE)
+  
+  # display labels for regions, clusters, subclusters
+  source("display_labels.R", local=TRUE)
+  
+  # filtering on [sub]clusters
+  source("cell_types.R", local=TRUE)
+  
+  # choosing a current [sub]cluster selection among the filtered options
+  # for marker filtering and plotting
+  source("user_cluster_selection.R", local=TRUE)  
+  
+  # filtering on differentially expressed genes for the current [sub]cluster selection
+  source("markers.R", local=TRUE)    
+  
+  # plots for both cluster and subcluster with overlays for labels, gene expression and components
+  source("tSNE.R", local=TRUE)  
+  
+  # differential expression
+  source("diffex.R", local=TRUE)
+  
+  # metacells - scatter plots, heatmaps
+  source("metacells.R", local=TRUE)
+  
+  # independent components
+  source("components.R", local=TRUE)
+  
+  # proxy objects for shiny
+  source("proxy.R", local=TRUE)
+  
+  #####################################################################################################
+  # save the latest input for interactive debug
+  # load with input <- readRDS("dump.RDS")
+  observeEvent(input$dump, {
+    write.log("Dump"); saveRDS(reactiveValuesToList(input), file="dump.RDS")
+  })
+  
+  observeEvent(input$clear.cache, {
+    unlink("www/cache/*.png")
+  })
+  
+  observeEvent(input$select.analysis.tab, {
+    updateNavbarPage(session, "top-nav", selected = "Analysis")
+  })  
+  
+  # dropped this idea of expanding and collapsing the sidebar, but this might be an approach
+  # observe({
+  #   if (input$wideside1) {
+  #     jqui_switch_class("#sidebar", 'col-sm-4', 'col-sm-6',1000)
+  #     jqui_switch_class("#mainpanel", 'col-sm-8', 'col-sm-6',1000)
+  #   } else {
+  #     jqui_switch_class("#sidebar", 'col-sm-6', 'col-sm-4',1000)
+  #     jqui_switch_class("#mainpanel", 'col-sm-6', 'col-sm-8',1000)
+  #   }
+  # })
+  
+  # after network disconnect, client will try to reconnect using current state
+  session$allowReconnect(TRUE)
+}
+
 
 # this is a hack to set the ID for the actual sidebar div because shiny::sidebarPanel() assigns the
 # id to the sidebar's child (a form).
@@ -33,7 +118,7 @@ help.doc <- list(tsne.local.label.dl=withTags(span(h4("Help for t-SNE plot of su
                                                         p("Any manually added genes are always displayed in the table and colored green if the expression criteria is met and red otherwise."),
                                                         p("One or more rows can be selected to display gene expression in the t-SNE and scatter plots, above."))),
                  config='TBD. Help for the left configuration panel'
-                 )
+)
 
 # draw download icon
 downloadIcon <- function(label, title, ...) {
@@ -94,8 +179,8 @@ debug.controls <- function() {
   }
 }
 
-# Define UI for application that draws a histogram
-shinyUI(
+ui <-
+function(request) {
   fluidPage(
     useShinyjs(),
     #    extendShinyjs(text = jsCode),
@@ -181,13 +266,14 @@ shinyUI(
                                                             conditionalPanel("input['opt.downsampling.method']!='none'",
                                                                              sliderInput("downsampling", "Downsample Count", 0, 100000, value=2000, step=1000)),
                                                             selectInput("top.N","Gene Search: Show Top Cluster or Subcluster Matches", choices=c(1,2,3,4,5,10,20),selected=5),
-                                                   
+                                                            
                                                             sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=3, step=0.5),
                                                             checkboxInput("opt.scatter.gene.labels","Show Gene Labels on Scatter Plots", value=TRUE),
                                                             selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all'))
                                                    ),
                                                    debug.controls()
-                                       )
+                                       ),
+                                       div(style="margin-top:20px", bookmarkButton())
                           ),
                           
                           # Show a plot of the generated distribution
@@ -213,10 +299,10 @@ shinyUI(
                                                          hr(),
                                                          uiOutput("dt.cluster.markers.heading"),
                                                          conditionalPanel(
-                                                             'true && !$("div[id=\'current.cluster\']").is(":empty")',
-                                                             fluidRow(class="table-area",
-                                                                      tableDownload("dt.cluster.markers.dl"),
-                                                                      column(11,DT::dataTableOutput("dt.cluster.markers")))
+                                                           'true && !$("div[id=\'current.cluster\']").is(":empty")',
+                                                           fluidRow(class="table-area",
+                                                                    tableDownload("dt.cluster.markers.dl"),
+                                                                    column(11,DT::dataTableOutput("dt.cluster.markers")))
                                                          )
                                                 ),
                                                 tabPanel("Subclusters", value = "subclusters",
@@ -239,7 +325,7 @@ shinyUI(
                                                                                            span(class="img-center",imageOutput("gene.expr.scatter.subcluster", height=500))))),
                                                                      tabPanel("Independent Components",
                                                                               fluidRow(div(id="ic-grid", class="scroll-area",
-#                                                                                           plotDownload("ic.grid.dl"),
+                                                                                           #                                                                                           plotDownload("ic.grid.dl"),
                                                                                            span(class="img-center",plotOutput("ic.grid", height=500))))),
                                                                      tabPanel("Table",  
                                                                               fluidRow(div(id="dt-subclusters", class="scroll-area", DT::dataTableOutput("dt.subclusters"))))),
@@ -271,4 +357,8 @@ shinyUI(
     tags$script(src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"),
     tags$script("jQuery(function (){ $('.scroll-area').resizable(); });")
   )
-)
+}
+
+
+shinyApp(ui, server, enableBookmarking = "server")
+
