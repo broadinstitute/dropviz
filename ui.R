@@ -79,6 +79,21 @@ embed.tags <- function(markup, tag) {
   markup
 }
 
+debug.controls <- function() {
+  if (getOption("dropviz.debug", default=FALSE)) {
+    tabPanel("X",
+             div(class="control-box",
+                 h4("Debug"),
+                 actionButton("dump","Save State"),
+                 fluidRow(column(7,checkboxInput("opt.use.cache", "Use Cached Plot Images", value=TRUE)), 
+                          column(2,actionButton("clear.cache","Clear Cache"))),
+                 p(glue("Hostname: {system2('hostname', stdout=TRUE)}")))
+    )
+  } else {
+    ""
+  }
+}
+
 # Define UI for application that draws a histogram
 shinyUI(
   fluidPage(
@@ -99,7 +114,7 @@ shinyUI(
                                        div(helpIcon("config"), class='top-right'),
                                        tabsetPanel(type="tabs",
                                                    tabPanel("Query",
-                                                            div(style="margin: 10px -10px 0px -10px; border: 2px solid #dddddd; border-radius: 5px; padding: 0px 10px",
+                                                            div(class="control-box", style="margin-bottom: 0",
                                                                 h4("Filter"),
                                                                 fluidRow(
                                                                   column(6, selectizeInput("user.genes", "Gene", choices=c("Symbol"="",top.genes),
@@ -118,7 +133,7 @@ shinyUI(
                                                             )
                                                    ),
                                                    tabPanel("Compare",
-                                                            div(style="margin: 10px -10px 10px -10px; border: 2px solid #dddddd; border-radius: 5px; padding: 0px 10px",
+                                                            div(class="control-box",
                                                                 conditionalPanel('input.mainpanel=="clusters"',
                                                                                  h4("Compare Clusters"),
                                                                                  fluidRow(
@@ -134,7 +149,7 @@ shinyUI(
                                                                                  )
                                                                 )
                                                             ),
-                                                            div(style="margin: 10px -10px 10px -10px; border: 2px solid #dddddd; border-radius: 5px; padding: 0px 10px",
+                                                            div(class="control-box",
                                                                 h4("Differential Expression Criteria"),
                                                                 sliderInput("fold.change", "Minimum Fold Ratio", min=1, max=30, value=2, step=0.5),
                                                                 sliderInput("pval.thresh", "Maximum P-Value Exponent", min=-300, max=0, value=-100, step=1),
@@ -169,12 +184,10 @@ shinyUI(
                                                    
                                                             sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=3, step=0.5),
                                                             checkboxInput("opt.scatter.gene.labels","Show Gene Labels on Scatter Plots", value=TRUE),
-                                                            selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all')),
-                                                            fluidRow(column(7,checkboxInput("opt.use.cache", "Use Cached Plot Images", value=TRUE)), 
-                                                                     column(2,actionButton("clear.cache","Clear Cache")))
-                                                   )
-                                       ),
-                                       (if (getOption("dropviz.debug", default=FALSE)) actionButton("dump","Save Debug State") else "")
+                                                            selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all'))
+                                                   ),
+                                                   debug.controls()
+                                       )
                           ),
                           
                           # Show a plot of the generated distribution

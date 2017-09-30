@@ -8,9 +8,18 @@ img.size.round <- function(x) {
   (x %/% 100) * 100
 }
 
+# this needs to default to TRUE even if it is missing
+use.cache <- reactive({
+  if (is.null(input$opt.use.cache)) {
+    TRUE
+  } else {
+    isTruthy(input$opt.use.cache)
+  }
+})
+
 # create a plot from plot.func, save it as a PNG using the size of the output region, cache it using key,
 # and return image info, setting the class to the output.id and its id to key.
-renderCacheImage <- function(plot.func, key, width, height=width, opt.use.cache=input$opt.use.cache, progress=NULL) {
+renderCacheImage <- function(plot.func, key, width, height=width, opt.use.cache=use.cache(), progress=NULL) {
 
   write.log(glue("WxH = {width}x{height}"))
   

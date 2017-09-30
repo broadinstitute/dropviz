@@ -78,4 +78,6 @@ shinyServer(function(input, output, session) {
   #   }
   # })
   
+  # after network disconnect, client will try to reconnect using current state
+  session$allowReconnect(TRUE)
 })
