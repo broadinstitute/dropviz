@@ -1,7 +1,4 @@
-library(digest)
-library(ggplot2)
-library(shiny)
-
+source("global.R")
 
 # allows interactive debugging within RStudio
 # Why does this fail when running shiny?! For now, uncomment manually shorter form during debug. Grr.
@@ -181,6 +178,7 @@ debug.controls <- function() {
 
 ui <-
 function(request) {
+  require(shinyjs)
   fluidPage(
     useShinyjs(),
     #    extendShinyjs(text = jsCode),
