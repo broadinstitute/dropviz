@@ -6,6 +6,8 @@ library(plyr)
 library(dplyr)
 library(glue)
 library(ggthemes)
+library(digest)
+library(ggplot2)
 
 source("shared.R")
 

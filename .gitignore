@@ -1,6 +1,9 @@
 # Created from .template to list the local data sources
 exp_sets.txt
 
+# bookmarks are generated at runtime
+shiny_bookmarks
+
 # runtime cacheing is stored in www
 /www/cache
 
