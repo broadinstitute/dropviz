@@ -455,11 +455,11 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           alpha.range <- scale_alpha_continuous(guide="none",range=c(0,1), trans=scales::trans_new("sqr", function(x) x^2, function(x) sqrt(x)))
           bag.gg <- geom_polygon(data=filter(bag.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
           loop.gg <- geom_polygon(data=filter(loop.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
-          center.gg <- geom_point(data=filter(center.data, !is.na(cx.gg)), aes(x=x,y=y, fill=cx.gg, alpha=alpha), size=3)
+          center.gg <- geom_point(data=filter(center.data, !is.na(cx.gg)), aes(x=x,y=y, color=cx.gg, alpha=alpha), size=3)
         } else {
           bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,fill=cx.gg,group=cx), alpha=0.4)
           loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,fill=cx.gg,group=cx), alpha=0.2)
-          center.gg <- geom_point(data=center.data, aes(x=x,y=y,fill=cx.gg), size=3)
+          center.gg <- geom_point(data=center.data, aes(x=x,y=y,color=cx.gg), size=3)
           alpha.range <- scale_alpha()
         }
       } else {
