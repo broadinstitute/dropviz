@@ -30,19 +30,21 @@ output$current.cluster <- renderUI({
     selected <- NULL
   }
   
-  column(12, selectizeInput("current.cluster", "Target cluster", choices=c("Select target cluster"="",choices), selected=selected, multiple=FALSE))
+  column(12, selectizeInput("current.cluster", "Target cluster", choices=c("Select target cluster"="",choices), selected=selected, multiple=input$compare.multiple))
 })
 
 output$comparison.cluster <- renderUI({
   if (isTruthy(input$current.cluster)) {
-    choices <- setdiff(which(clusters.selected()$exp.label == current.cluster()$exp.label), current.cluster.i())
+    choices <- setdiff(1:nrow(clusters.selected()), current.cluster.i())
     names(choices) <- glue("{clusters.selected()$region.abbrev[choices]} {clusters.selected()$cluster.disp[choices]}")
     
-    # prepend the region comparison
-    choices <- c(0,choices) 
-    names(choices)[1] <- glue("Rest of {current.cluster()$region.disp}")
+    ## prepend the region comparison
+    if (nrow(current.cluster())==1) {
+      choices <- c(0,choices) 
+      names(choices)[1] <- glue("Rest of {current.cluster()$region.disp}")
+    }
     
-    column(12, selectizeInput("comparison.cluster", "Comparison", choices=choices, multiple=FALSE))
+    column(12, selectizeInput("comparison.cluster", "Comparison", choices=choices, multiple=input$compare.multiple))
   }
 })
 
@@ -69,20 +71,22 @@ output$current.subcluster <- renderUI({
     selected <- NULL
   }
   
-  column(12, selectizeInput("current.subcluster", "Target Subcluster", choices=c("Select target subcluster"="",choices), selected=selected, multiple=FALSE))
+  column(12, selectizeInput("current.subcluster", "Target Subcluster", choices=c("Select target subcluster"="",choices), selected=selected, multiple=input$compare.multiple))
 })
 
 output$comparison.subcluster <- renderUI({
   if (isTruthy(input$current.subcluster)) {
     
-    choices <- setdiff(which(subclusters.selected()$exp.label == current.subcluster()$exp.label & subclusters.selected()$cluster == current.subcluster()$cluster), current.subcluster.i())
+    choices <- setdiff(1:nrow(subclusters.selected()), current.subcluster.i())
     names(choices) <- glue("{subclusters.selected()$region.abbrev[choices]} {subclusters.selected()$subcluster.disp[choices]}")
     
     # prepend the region comparison
-    choices <- c(0,choices) 
-    names(choices)[1] <- glue("Rest of {current.subcluster()$region.disp}")
+    if (nrow(current.subcluster())==1) {
+      choices <- c(0,choices) 
+      names(choices)[1] <- glue("Rest of {current.subcluster()$region.disp}")
+    }
     
-    column(12, selectizeInput("comparison.subcluster", "Comparison", choices=choices, multiple=FALSE), style="z-index: 99;")
+    column(12, selectizeInput("comparison.subcluster", "Comparison", choices=choices, multiple=input$compare.multiple))
   }
 })
 
@@ -91,8 +95,8 @@ output$comparison.subcluster <- renderUI({
 comparison.cluster <- reactive({
 log.reactive("fn: comparison.cluster")
   req(input$comparison.cluster)
-  if (input$comparison.cluster==0) {
-    tibble(cluster='global', cluster.disp=glue("Rest of {current.cluster()$region.disp}"))
+  if (length(input$comparison.cluster)==1 && input$comparison.cluster==0) {
+    tibble(cluster='global', exp.label=first(current.cluster()$exp.label), cluster.disp=glue("Rest of {current.cluster()$region.disp}"))
   } else {
     clusters.selected()[as.numeric(input$comparison.cluster),]  
   }
@@ -101,8 +105,8 @@ log.reactive("fn: comparison.cluster")
 comparison.subcluster <- reactive({
 log.reactive("fn: comparison.subcluster")
   req(input$comparison.subcluster)
-  if (input$comparison.subcluster==0) {
-    tibble(subcluster='global', subcluster.disp=glue("Rest of {current.subcluster()$region.disp}"))
+  if (length(input$comparison.subcluster)==1 && input$comparison.subcluster==0) {
+    tibble(subcluster='global', exp.label=first(current.subcluster()$exp.label), subcluster.disp=glue("Rest of {current.subcluster()$region.disp}"))
   } else {
     subclusters.selected()[as.numeric(input$comparison.subcluster),]  
   }
@@ -116,54 +120,9 @@ observeEvent(input$current.cluster,{
   dt.clusters.proxy %>% DT::selectRows(current.cluster.i())
 })
 
-observeEvent(input$prev.cluster, {
-  if (!is.na(current.cluster.i())) {
-    if (current.cluster.i() == 1) {
-      new.c <- ""
-    } else {
-      new.c <- current.cluster.i() - 1
-    }
-    updateSelectizeInput(session, 'current.cluster', selected=new.c)
-  }
-})
-
-observeEvent(input$next.cluster, {
-  if (is.na(current.cluster.i())) {
-    new.c <- 1
-  } else if (nrow(clusters.selected())>0 && current.cluster.i() <= nrow(clusters.selected())) {
-    new.c <- current.cluster.i() + 1
-  } else {
-    new.c <- NULL
-  }
-  updateSelectizeInput(session, 'current.cluster', selected=new.c)
-})
-
 # If the user changes the pull-down, then update the table selection accordingly
 observeEvent(input$current.subcluster,{
   req(input$current.subcluster)
   dt.subclusters.proxy %>% DT::selectRows(current.subcluster.i())
 })
-
-observeEvent(input$prev.subcluster, {
-  if (!is.na(current.subcluster.i())) {
-    if (current.subcluster.i() == 1) {
-      new.c <- ""
-    } else {
-      new.c <- current.subcluster.i() - 1
-    }
-    updateSelectizeInput(session, 'current.subcluster', selected=new.c)
-  }
-})
-
-observeEvent(input$next.subcluster, {
-  if (is.na(current.subcluster.i())) {
-    new.c <- 1
-  } else if (nrow(subclusters.selected())>0 && current.subcluster.i() <= nrow(subclusters.selected())) {
-    new.c <- current.subcluster.i() + 1
-  } else {
-    new.c <- NULL
-  }
-  updateSelectizeInput(session, 'current.subcluster', selected=new.c)
-})
-
 
