@@ -39,7 +39,7 @@ output$comparison.cluster <- renderUI({
     names(choices) <- glue("{clusters.selected()$region.abbrev[choices]} {clusters.selected()$cluster.disp[choices]}")
     
     ## prepend the region comparison
-    if (nrow(current.cluster())==1) {
+    if (!input$compare.multiple) {
       choices <- c(0,choices) 
       names(choices)[1] <- glue("Rest of {current.cluster()$region.disp}")
     }
@@ -81,7 +81,7 @@ output$comparison.subcluster <- renderUI({
     names(choices) <- glue("{subclusters.selected()$region.abbrev[choices]} {subclusters.selected()$subcluster.disp[choices]}")
     
     # prepend the region comparison
-    if (nrow(current.subcluster())==1) {
+    if (!input$compare.multiple) {
       choices <- c(0,choices) 
       names(choices)[1] <- glue("Rest of {current.subcluster()$region.disp}")
     }
