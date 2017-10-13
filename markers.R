@@ -31,7 +31,7 @@ observeEvent(input$expr.filter.opt, {
 # Gene Expression Filter
 
 
-pairwise.markers <- function(target, comparison, kind) {
+pairwise.markers <- function(kind) {
   (if (kind=='cluster') {
     cluster.metacells.selected()
   } else {
@@ -44,14 +44,14 @@ pairwise.markers <- function(target, comparison, kind) {
 cluster.markers <- reactive({
 log.reactive("fn: cluster.markers")
   req(current.cluster.i())
-  pairwise.markers(current.cluster(), comparison.cluster(), 'cluster')
+  pairwise.markers('cluster')
 })
 
 
 subcluster.markers <- reactive({
 log.reactive("fn: subcluster.markers")
   req(current.subcluster.i())
-  pairwise.markers(current.subcluster(), comparison.subcluster(), 'subcluster')
+  pairwise.markers('subcluster')
 })
 
 # Returns a subset of the cluster.markers for rows that user clicked in table
@@ -101,7 +101,15 @@ output$dt.cluster.markers.dl <- downloadHandler(filename="cluster-markers.csv",
 
 output$dt.cluster.markers.heading <- renderUI({
   if (isTruthy(current.cluster.i())) {
-    tags$h4(glue("Differentially Over-Expressed: {current.cluster()$region.abbrev} {current.cluster()$cluster.disp} vs {comparison.cluster()$region.abbrev} {comparison.cluster()$cluster.disp}"))
+    target.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label%in%current.cluster()$exp.label]} {current.cluster()$cluster.disp}"),collapse='+')
+    if (comparison.cluster()$cluster=='global') {
+      comparison.names <- comparison.cluster()$cluster.disp
+    } else {
+      comparison.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label%in%comparison.cluster()$exp.label]} {comparison.cluster()$cluster.disp}"),collapse='+')
+    }
+    
+    
+    tags$h4(glue("Differentially Over-Expressed: {target.names} vs {comparison.names}"))
   } else {
     tags$p(align="center","Choose a target and comparison cluster in the 'Compare' panel to find differentially expressed genes")
   }
@@ -119,7 +127,15 @@ output$dt.subcluster.markers.dl <- downloadHandler(filename="subcluster-markers.
 
 output$dt.subcluster.markers.heading <- renderUI({
   if (isTruthy(current.subcluster.i())) {
-    tags$h4(glue("Differentially Over-Expressed: {current.subcluster()$region.abbrev} {current.subcluster()$subcluster.disp} vs {comparison.subcluster()$region.abbrev} {comparison.subcluster()$subcluster.disp}"))
+    target.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label %in% current.subcluster()$exp.label]} {current.subcluster()$subcluster.disp}"),collapse=' + ')
+    if (comparison.subcluster()$subcluster=='global') {
+      comparison.names <- comparison.subcluster()$subcluster.disp
+    } else {
+      comparison.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label %in% comparison.subcluster()$exp.label]} {comparison.subcluster()$subcluster.disp}"),collapse=' + ')
+    }
+    
+    
+    tags$h4(glue("Differentially Over-Expressed: {target.names} vs {comparison.names}"))
   } else {
     tags$p(align="center","Choose a target and comparison subcluster in the 'Compare' panel to find differentially expressed genes")
   }

@@ -1,9 +1,9 @@
 source("metacells-shared.R", local=TRUE)
 
 # adds local attributes to results of compute.pair
-cx.pairwise <- function(exp.label, cx, cmp.cx, kind) {
+cx.pairwise <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind) {
 
-  mutate(compute.pair(exp.label, cx, cmp.cx, kind), 
+  mutate(compute.pair(exp.label, cx, cmp.exp.label, cmp.cx, kind), 
          fc.thresh=( if (input$expr.filter.opt %in% 'fc') { (abs(fc) > log(input$fold.change)) } else { fc > log(input$fold.change) } ),
          pval.thresh=pval < 10^input$pval.thresh,
          amt.thresh=( (log.target.u > input$min.amt.within) & (log.comparison.u < input$max.amt.without) ),
@@ -26,8 +26,7 @@ log.reactive("fn: cluster.metacells.selected")
   cx <- as.character(current.cluster()$cluster)
   cmp.cx <- ifelse(comparison.cluster()$cluster == 'global', paste0('N', current.cluster()$cluster), as.character(comparison.cluster()$cluster))
 
-  cx.pairwise(current.cluster()$exp.label, cx, cmp.cx, 'cluster') %>% 
-    mutate(region.disp=current.cluster()$region.disp)  
+  cx.pairwise(current.cluster()$exp.label, cx, comparison.cluster()$exp.label, cmp.cx, 'cluster')
 })
 
 # same as above, but for subclusters
@@ -38,26 +37,29 @@ log.reactive("fn: subcluster.metacells.selected")
   cx <- as.character(current.subcluster()$subcluster)
   cmp.cx <- ifelse(comparison.subcluster()$subcluster == 'global', paste0('N', current.subcluster()$subcluster), as.character(comparison.subcluster()$subcluster))
 
-  cx.pairwise(current.subcluster()$exp.label, cx, cmp.cx, 'subcluster') %>% 
-    mutate(region.disp=current.subcluster()$region.disp)
+  cx.pairwise(current.subcluster()$exp.label, cx, comparison.subcluster()$exp.label, cmp.cx, 'subcluster')
 })
 
 # returns a closure of a scatter plot of target vs comparison
 scatter.plot <- function(target, comparison, cx.metacells, cx.markers, cx.selected.markers, kind, return.closure=FALSE) {
   function(progress=NULL) {
-    target.cx <- target[[kind]]
-    target.label <- filter(cx.names(), exp.label==target$exp.label, cx==as.character(target.cx))$cx.disp
+    target$cx <- as.character(target[[kind]])
+    target.label <- paste(inner_join(cx.names(), target, by=c('exp.label','cx'))$cx.disp, collapse='+')
     
-    compare.cx <- comparison[[kind]]
-    if (compare.cx == 'global') {
-      compare.cx <- paste0('N',target.cx)
+    comparison$cx <- as.character(comparison[[kind]])
+    if (nrow(comparison)==1 && comparison$cx == 'global') {
+      comparison$cx <- paste0('N',target$cx)
       compare.label <- filter(region.names(), exp.label==target$exp.label)$region.disp
     } else {
-      compare.label <- filter(cx.names(), exp.label==comparison$exp.label, cx==as.character(compare.cx))$cx.disp
+      compare.label <- paste(inner_join(cx.names(), comparison, by=c('exp.label','cx'))$cx.disp, collapse='+')
     }
     
     cell.pairs <- mutate(cx.metacells, 
-                         pval=ifelse(pval==0, .Machine$double.xmin, pval))  # to allow log
+                         pval=ifelse(pval==0, .Machine$double.xmin, pval),  # to allow taking log
+                         target.region=paste(target$region.disp, collapse=' + '),
+                         compare.region=paste(comparison$region.disp, collapse=' + ')
+    )
+
 
     cell.pairs$pval.disp <- log(cell.pairs$pval)
     cell.pairs$criteria.thresh <- cell.pairs$gene %in% cx.markers$gene
@@ -105,7 +107,7 @@ scatter.plot <- function(target, comparison, cx.metacells, cx.markers, cx.select
         geom_point(data=filter(cell.pairs, !is.na(gene.label) & !expr.pass), color='red') +
         scale_color_continuous(name='p-val exp') + 
         scale_size_manual(guide="none",values=c('Other'=.5,'Filtered'=opt.expr.size)) + 
-        facet_wrap(~region.disp) + xlab(paste(target.label,"\n(log normal mean)")) + ylab(paste(compare.label,"\n(log normal mean)"))
+        facet_grid(compare.region~target.region) + xlab(paste(target.label,"\n(log normal mean)")) + ylab(paste(compare.label,"\n(log normal mean)"))
 
     }
     

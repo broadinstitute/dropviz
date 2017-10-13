@@ -46,7 +46,7 @@ polygons.labeled <- function(polygon, regions, clusters, kind, region.nms, clust
       left_join(select(clusters, exp.label, subcluster) %>%
                   mutate(cx.selected=TRUE),
                 by=c('exp.label','subcluster')) %>%
-      mutate(cx.gg=factor(ifelse(is.na(cx.selected),NA,as.character(subcluster)), levels=levels(polygon$subcluster))) %>%
+      mutate(cx.gg=factor(ifelse(is.na(cx.selected) | (x==0 & y==0),NA,as.character(subcluster)), levels=levels(polygon$subcluster))) %>%
       inner_join(cluster.nms, by=c('exp.label','subcluster')) %>%
       dplyr::rename(cx=subcluster, cx.disp=subcluster.disp)
   } else {
@@ -55,7 +55,7 @@ polygons.labeled <- function(polygon, regions, clusters, kind, region.nms, clust
     x <- filter(polygon, exp.label %in% regions$exp.label) %>% inner_join(region.nms, by='exp.label') %>%
       right_join(select(major.clusters, exp.label, cluster), by=c('exp.label','cluster')) %>%
       left_join(select(clusters, exp.label, subcluster) %>% mutate(cx.selected=TRUE), by=c('exp.label','subcluster')) %>%
-      mutate(cx.gg=factor(ifelse(is.na(cx.selected),NA,as.character(subcluster)), levels=levels(polygon$subcluster))) %>%
+      mutate(cx.gg=factor(ifelse(is.na(cx.selected) | (x==0 & y==0),NA,as.character(subcluster)), levels=levels(polygon$subcluster))) %>%
       inner_join(cluster.nms, by=c('exp.label','subcluster')) %>%
       inner_join(facet.nms, by=c('exp.label','cluster')) %>%
       dplyr::rename(cx=subcluster, cx.disp=subcluster.disp, facet.gg=cluster.disp) 
@@ -304,10 +304,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           if (is.global) {
             filter(global.selected.sub.center(), !is.na(cx.gg))
           } else {
-            # sometimes there is no local cluster map. If so, then the centers will be (0,0) and there's no points and no bag/loop.
-            mutate(filter(local.selected.sub.center(), !is.na(cx.gg)),
-                   cx.disp=ifelse(x==0 & y==0, 'No Data', as.character(cx.disp)))
-            
+            mutate(local.selected.sub.center(), 
+                   cx.disp=ifelse(is.na(cx.gg), 'No Data', as.character(cx.disp)))
           }
         } else {
           na.omit(global.selected.center())
@@ -386,15 +384,25 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     opt.horiz.facet <- nrow(diff.data)>0 || nrow(comp.data)>0
 
     p.func <- function() {
-      require(ggplot2);
-      geom_blank_tsne <- geom_blank(data=data.frame(region.disp=character(),facet.gg=character(),facet2.gg=character()))
-      tsne.gg <- ggplot() + scale_fill_gdocs(guide="none", na.value='lightgray') + scale_size(guide="none", range=c(0.1,opt.expr.size)) + theme_few() + theme(strip.text=element_text(size=20))
+      require(ggplot2)
+      require(ggthemes)
       
+      if (length(unique(bag.data$cx.gg)) <= 20) {
+        scale_fill <- scale_fill_gdocs
+        scale_color <- scale_color_gdocs
+      } else {
+        scale_fill <- scale_fill_discrete
+        scale_color <- scale_color_discrete
+      }
+
+      geom_blank_tsne <- geom_blank(data=data.frame(region.disp=character(),facet.gg=character(),facet2.gg=character()))
+      tsne.gg <- ggplot() + scale_fill(guide="none", na.value='lightgray') + scale_size(guide="none", range=c(0.1,opt.expr.size)) + theme_few() + theme(strip.text=element_text(size=20))
+
       tsne.color.scale <- (
         if (nrow(comp.data)>0) {
           scale_color_gradient2(low="blue", mid="lightgrey", high="red", midpoint=0, limits=c(-max(comp.data$weight),max(comp.data$weight)))
         } else {
-          scale_color_gdocs(guide="none", na.value='lightgray') 
+          scale_color(guide="none", na.value='lightgray') 
         }
       )
 
@@ -445,13 +453,13 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       if (opt.show.bags & nrow(comp.data)==0) {
         if (opt.tx.alpha) {
           alpha.range <- scale_alpha_continuous(guide="none",range=c(0,1), trans=scales::trans_new("sqr", function(x) x^2, function(x) sqrt(x)))
-          bag.gg <- geom_polygon(data=filter(bag.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg,group=cx, alpha=alpha))
-          loop.gg <- geom_polygon(data=filter(loop.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg,group=cx, alpha=alpha))
-          center.gg <- geom_point(data=filter(center.data, !is.na(cx.gg)), aes(x=x,y=y,color=cx.gg, fill=cx.gg,alpha=alpha), size=3)
+          bag.gg <- geom_polygon(data=filter(bag.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
+          loop.gg <- geom_polygon(data=filter(loop.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
+          center.gg <- geom_point(data=filter(center.data, !is.na(cx.gg)), aes(x=x,y=y, color=cx.gg, alpha=alpha), size=3)
         } else {
           bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,fill=cx.gg,group=cx), alpha=0.4)
           loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,fill=cx.gg,group=cx), alpha=0.2)
-          center.gg <- geom_point(data=center.data, aes(x=x,y=y,color=cx.gg, fill=cx.gg), size=3)
+          center.gg <- geom_point(data=center.data, aes(x=x,y=y,color=cx.gg), size=3)
           alpha.range <- scale_alpha()
         }
       } else {
@@ -470,7 +478,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       )
 
       p <- tsne.gg + tsne.color.scale + xy.gg + loop.gg + bag.gg + alpha.range + center.gg + diff.gg + comp.gg + label.gg + facet.label.gg 
-      
+
       if (opt.global) {
         if (opt.horiz.facet) {
           plot.gg <- p + facet_grid(facet2.gg~region.disp)

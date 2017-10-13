@@ -195,7 +195,7 @@ function(request) {
                         sidebarLayout(
                           sidebarPanel(width=3, id="controlpanel",
                                        div(helpIcon("config"), class='top-right'),
-                                       tabsetPanel(type="tabs",
+                                       tabsetPanel(type="tabs", id='controltabs',
                                                    tabPanel("Query",
                                                             div(class="control-box", style="margin-bottom: 0",
                                                                 h4("Filter"),
@@ -230,7 +230,8 @@ function(request) {
                                                                                    uiOutput("current.subcluster"),
                                                                                    uiOutput("comparison.subcluster")
                                                                                  )
-                                                                )
+                                                                ),
+                                                                checkboxInput("compare.multiple","Allow target/comparison meta-groups", value=FALSE)
                                                             ),
                                                             div(class="control-box",
                                                                 h4("Differential Expression Criteria"),
