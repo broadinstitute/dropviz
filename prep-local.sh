@@ -3,12 +3,16 @@
 # When developing locally, syncronize a subset of the atlas and staged data from a remote host
 # for a subset of the data.
 
-REMOTE=104.154.207.118:/dropseq
-REMOTE_STAGED=${REMOTE}/staged
-REMOTE_ATLAS=${REMOTE}/atlas_ica
+REMOTE_HOST=104.154.207.118
+REMOTE_DIR=/dropseq
+REMOTE_STAGED_DIR=${REMOTE_DIR}/staged
+REMOTE_ATLAS_DIR=${REMOTE_DIR}/atlas_ica
+REMOTE_STAGED=${REMOTE_HOST}:${REMOTE_STAGED_DIR}
+REMOTE_ATLAS=${REMOTE_HOST}:${REMOTE_ATLAS_DIR}
 LOCAL=/cygdrive/d/dropviz
 LOCAL_STAGED=${LOCAL}/staged
 LOCAL_ATLAS=${LOCAL}/atlas_ica
+LOCAL_ATLAS_W=`cygpath -m ${LOCAL_ATLAS}`
 
 EXPERIMENTS="GRCm38.81.P60Hippocampus GRCm38.81.P60Striatum"
 EXPERIMENTS_Q=`perl -e 'print join("\",\"",@ARGV)' \"${EXPERIMENTS}\"`
@@ -29,7 +33,7 @@ rsync -v ${REMOTE_STAGED}/globals.Rdata ${LOCAL_STAGED}/globals-all.Rdata
 R --vanilla <<EOF 
 library(dplyr)
 load('${LOCAL_STAGED}/globals-all.Rdata')
-experiments <- filter(experiments, exp.label %in% c(${EXPERIMENTS_Q}))
+experiments <- filter(experiments, exp.label %in% c(${EXPERIMENTS_Q})) %>% mutate(exp.dir=sub('${REMOTE_ATLAS_DIR}','${LOCAL_ATLAS_W}',exp.dir))
 cell.types <- filter(cell.types, exp.label %in% c(${EXPERIMENTS_Q}))
 components <- filter(components, exp.label %in% c(${EXPERIMENTS_Q}))
 cluster.names_ <- filter(cluster.names_, exp.label %in% c(${EXPERIMENTS_Q}))
