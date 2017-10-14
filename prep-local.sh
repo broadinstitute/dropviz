@@ -3,7 +3,7 @@
 # When developing locally, syncronize a subset of the atlas and staged data from a remote host
 # for a subset of the data.
 
-REMOTE=35.193.114.82:/mnt/disks/dropseq
+REMOTE=104.154.207.118:/dropseq
 REMOTE_STAGED=${REMOTE}/staged
 REMOTE_ATLAS=${REMOTE}/atlas_ica
 LOCAL=/cygdrive/d/dropviz
@@ -49,6 +49,7 @@ for exp in ${EXPERIMENTS}; do
     rsync -rav ${REMOTE_ATLAS}/F_${exp}/components ${LOCAL_ATLAS}/F_${exp}/
     rsync -rav ${REMOTE_ATLAS}/F_${exp}/curation_sheets ${LOCAL_ATLAS}/F_${exp}/
     rsync -rav ${REMOTE_ATLAS}/F_${exp}/cluster_sheets ${LOCAL_ATLAS}/F_${exp}/
+    rsync -rav ${REMOTE_ATLAS}/F_${exp}/assign ${LOCAL_ATLAS}/F_${exp}/
 done
 
 # create exp_sets.txt

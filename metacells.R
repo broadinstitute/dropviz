@@ -187,7 +187,7 @@ rank.plot <- function(clusters, kind) {
   require(tidyr)
   
   Kind <- paste0(toupper(substring(kind,1,1)),substring(kind,2))
-  clusters <- gather(clusters, gene.var, value, contains('-log.target.u'))
+  clusters <- gather(clusters, gene.var, value, contains('-target.sum'))
   clusters <- separate(clusters, gene.var, c('gene','var'), sep='-')
   clusters <- spread(clusters, var, value)
   clusters$cx.disp <- paste(clusters$region.disp,clusters[[paste0(kind,'.disp')]])
@@ -198,7 +198,7 @@ rank.plot <- function(clusters, kind) {
   clusters.top <- group_by(clusters, region.disp,gene) %>% top_n(as.integer(input$top.N), log.target.u) %>%
     mutate(gene.description=paste(gene,"-",gene.desc(gene)))
 
-  ggplot(clusters.top, aes(x=log.target.u, xmin=log.target.u.L, xmax=log.target.u.R, y=cx.disp, yend=cx.disp)) + geom_point(size=3) + geom_segment(aes(x=log.target.u.L,xend=log.target.u.R)) +
+  ggplot(clusters.top, aes(x=target.sum, xmin=target.sum.L, xmax=target.sum.R, y=cx.disp, yend=cx.disp)) + geom_point(size=3) + geom_segment(aes(x=target.sum.L,xend=target.sum.R)) +
     ggtitle(glue("Ranked {Kind} by Gene Expression")) + 
     xlab("Normalized log mean") + ylab("") + facet_grid(region.disp~gene.description, scales = "free_y") + coord_cartesian(xlim=c(0,6))
   

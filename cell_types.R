@@ -171,7 +171,7 @@ gene.cols <- function(df, kind) {
   lapply(user.genes(), function(g) {
     g.fn <- glue("{prep.dir}/markers/genes/{kind}/{g}.diffexp.RDS")
     if (file.exists(g.fn)) {
-      g.diffexp <- readRDS(g.fn) %>% select(exp.label, cx, log.target.u, pval, log.target.u.L, log.target.u.R)
+      g.diffexp <- readRDS(g.fn) %>% select(exp.label, cx, log.target.u, pval, target.sum, target.sum.L, target.sum.R)
 
       names(g.diffexp)[3] <- paste0(g,'-',names(g.diffexp[3]))
       names(g.diffexp)[4] <- paste0(g,'-',names(g.diffexp[4]))
