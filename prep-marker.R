@@ -8,7 +8,7 @@ library(glue)
 source("global.R")
 markers.dir <- glue("{prep.dir}/markers")
 genes.dir <- glue("{markers.dir}/genes")
-pairs.dir <- glue("{cache.dir}/metacells")
+pairs.dir <- glue("{prep.dir}/pairs")
 meta.dir <- glue('{prep.dir}/metacells')
 
 suppressWarnings(dir.create(genes.dir, recursive = TRUE))

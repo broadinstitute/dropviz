@@ -2,8 +2,8 @@
 
 suppressWarnings(dir.create(glue("{cache.dir}/metacells"), recursive = TRUE))
 
-per.10k <- function(x) 10000*x+1
-log.transform <- function(x) log(per.10k(x))
+per.100k <- function(x) round(100000*x+1)
+log.transform <- function(x) log(per.100k(x))
 
 # User can specify >1 cx or cmp.cx. generate weighted means and sum sums.
 merge.cxs <- function(cxs, kind) {
@@ -36,7 +36,7 @@ merge.cxs <- function(cxs, kind) {
   list(means=tibble(gene=means$gene, means=means.vals), sums=tibble(gene=sums$gene, sums=sums.vals))
 }
 
-compute.pair <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind, use.cached=TRUE) {
+compute.pair <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind, use.cached=TRUE, pairs.dir=glue("{cache.dir}/metacells")) {
   
   targets <- tibble(exp.label=exp.label, cx=cx)
   comparisons <- tibble(exp.label=cmp.exp.label, cx=cmp.cx)
@@ -44,7 +44,7 @@ compute.pair <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind, use.cached=
   target.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label%in%targets$exp.label]}.{targets$cx}"),collapse='+')
   comparison.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label%in%comparisons$exp.label]}.{comparisons$cx}"),collapse='+')
   
-  cache.file <- glue("{cache.dir}/metacells/{target.names}.vs.{comparison.names}.RDS")
+  cache.file <- glue("{pairs.dir}/{target.names}.vs.{comparison.names}.RDS")
   
   if (use.cached && file.exists(cache.file)) {
     x <- readRDS(cache.file)
@@ -78,8 +78,6 @@ compute.pair <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind, use.cached=
     
     if (!is.null(progress)) progress$set(value=0.6, detail=glue("Fold ratios, p-vals and conf ints for {nrow(x)} genes"))
     
-    target.total <- sum(x$target.sum)
-    
     ## binom tests are subtly different. The pval is calculated based
     ## on how far target.sum is from
     ## sum(target.sum)/(sum(target.sum)+sum(comparison.sum)), i.e. the
@@ -101,11 +99,12 @@ compute.pair <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind, use.cached=
     ## the proportion is estimated at 10/40 = .25. If that's the case
     ## then there is a 95% confidence we would observe counts between
     ## qbinom(0.025, 40, 1/4) and qbinom(0.975, 40, 1/4), i.e. [5,16].
-    ## This latter confidence interval measure does not seem
-    ## interesting to me because it's merely a function of the total
-    ## transcript count, so confidence intervals are tighter as the
-    ## observed counts increase. 
-    ## 
+    ##
+    ## Each confidence interval is based on scaled values of the target
+    ## per 100,000 in the target group.
+
+    target.total <- sum(x$target.sum)
+    scale.per.100k <- 100000/target.total
 
     x <- mutate(x, 
                 log.target.u=log.transform(target.u), 
@@ -113,11 +112,11 @@ compute.pair <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind, use.cached=
                 pval=edgeR::binomTest(target.sum, comparison.sum),
                 fc=log.target.u-log.comparison.u, 
                 fc.disp=exp(fc),
-                target.sum.L=qbinom(0.025, target.sum+comparison.sum, target.sum/(target.sum+comparison.sum)),
-                target.sum.R=qbinom(0.975, target.sum+comparison.sum, target.sum/(target.sum++comparison.sum)),
-                target.sum.per.10k=per.10k(target.sum/target.total),
-                target.sum.L.per.10k=per.10k(target.sum.L/target.total),
-                target.sum.R.per.10k=per.10k(target.sum.R/target.total))
+                target.sum.L=qbinom(0.025, target.total, target.sum/target.total),
+                target.sum.R=qbinom(0.975, target.total, target.sum/target.total),
+                target.sum.per.100k=target.sum*scale.per.100k,
+                target.sum.L.per.100k=target.sum.L*scale.per.100k,
+                target.sum.R.per.100k=target.sum.R*scale.per.100k)
 
     if (!is.null(progress)) progress$set(0.8, detail=glue("Cacheing pairwise data"))
     

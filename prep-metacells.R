@@ -3,11 +3,17 @@
 # - the mean of normalized counts for all genes in group (where counts are normalized to sum to 1 within cell)  metacell.means
 # where group is each cluster and !cluster
 
-# Also pre-compute all pairwise stats for each cluster/subcluster vs region. This is used by prep-markers to generate
-# fast lookup of differentially expressed genes and also provides quick app response for diffex table because default
-# comparison is the region.
+# Also pre-compute all pairwise stats for each cluster/subcluster vs
+# region. This is used by prep-marker to generate fast lookup of
+# differentially expressed genes and also provides quick app response
+# for diffex table because default comparison is the region. The code
+# that is used is the same code that's used during runtime for
+# arbitrary cx1 vs cx2 computations. These cx vs Ncx calcs are stored
+# in prep.dir by locally reassigning cache.dir here and in
+# prep-marker.R. Later those pre-computed values will be transferred to
+# local cache.dir for each new server instance.
 
-# This is (hopefully) consistent with the statistics used in IcaCluster_Functions.R:diffexp
+# The calculations here are (hopefully) consistent with the statistics used in IcaCluster_Functions.R:diffexp
 
 # scaled DGE: total expression f each cell sum to 1.  Genes X Cells
 # raw DGE: Genes X Cells (raw transcript counts)
@@ -20,6 +26,8 @@ source("metacells-shared.R")
 
 meta.dir <- glue('{prep.dir}/metacells')
 suppressWarnings(dir.create(meta.dir, recursive = TRUE))
+
+pairs.dir <- glue("{prep.dir}/pairs")
 
 mk.neg.cols <- function(mc, mc.sum) {
   cols <- 2:ncol(mc)
@@ -127,7 +135,7 @@ ddply(experiments, .(exp.label), function(exp) {
 do.pairwise.Ncx <- function(exp.label, groups, kind) {
   lapply(groups, function(cx) {
     cmp.cx <- paste0('N',cx)
-    compute.pair(exp.label, as.character(cx), exp.label, cmp.cx, kind, use.cached = getOption("dropviz.prep.cache", default = TRUE))
+    compute.pair(exp.label, as.character(cx), exp.label, cmp.cx, kind, use.cached = getOption("dropviz.prep.cache", default = TRUE), pairs.dir=pairs.dir)
   })
 }
 

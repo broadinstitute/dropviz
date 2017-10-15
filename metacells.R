@@ -1,5 +1,8 @@
 source("metacells-shared.R", local=TRUE)
 
+# in prep-metacells, all cx vs Ncx are pre-computed. Copy those locally
+try(system2("rsync",c(glue("{prep.dir}/pairs"),glue("{cache.dir}/metacells"))))
+
 # adds local attributes to results of compute.pair
 cx.pairwise <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind) {
 
@@ -192,15 +195,15 @@ rank.plot <- function(clusters, kind) {
   clusters <- spread(clusters, var, value)
   clusters$cx.disp <- paste(clusters$region.disp,clusters[[paste0(kind,'.disp')]])
   
-  clusters <- arrange(clusters, desc(log.target.u))
+  clusters <- arrange(clusters, desc(target.sum))
   clusters$cx.disp <- with(clusters, factor(cx.disp, levels=rev(unique(cx.disp))))
   
-  clusters.top <- group_by(clusters, region.disp,gene) %>% top_n(as.integer(input$top.N), log.target.u) %>%
+  clusters.top <- group_by(clusters, region.disp,gene) %>% top_n(as.integer(input$top.N), target.sum) %>%
     mutate(gene.description=paste(gene,"-",gene.desc(gene)))
 
   ggplot(clusters.top, aes(x=target.sum, xmin=target.sum.L, xmax=target.sum.R, y=cx.disp, yend=cx.disp)) + geom_point(size=3) + geom_segment(aes(x=target.sum.L,xend=target.sum.R)) +
     ggtitle(glue("Ranked {Kind} by Gene Expression")) + 
-    xlab("Normalized log mean") + ylab("") + facet_grid(region.disp~gene.description, scales = "free_y") + coord_cartesian(xlim=c(0,6))
+    xlab("Transcripts") + ylab("") + facet_grid(region.disp~gene.description, scales = "free_y") 
   
 }
 

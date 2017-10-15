@@ -173,10 +173,8 @@ gene.cols <- function(df, kind) {
     if (file.exists(g.fn)) {
       g.diffexp <- readRDS(g.fn) %>% select(exp.label, cx, log.target.u, pval, target.sum, target.sum.L, target.sum.R)
 
-      names(g.diffexp)[3] <- paste0(g,'-',names(g.diffexp[3]))
-      names(g.diffexp)[4] <- paste0(g,'-',names(g.diffexp[4]))
-      names(g.diffexp)[5] <- paste0(g,'-',names(g.diffexp[5]))
-      names(g.diffexp)[6] <- paste0(g,'-',names(g.diffexp[6]))
+      # prepend gene name on columns
+      lapply(3:7, function(idx) names(g.diffexp)[idx] <<- paste0(g,'-',names(g.diffexp[idx])))
       
       by.names <- c('exp.label','cx') %>% setNames(c('exp.label',kind))
       df <<- left_join(df, g.diffexp, by=by.names)  
