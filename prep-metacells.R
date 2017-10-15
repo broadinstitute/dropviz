@@ -28,6 +28,7 @@ meta.dir <- glue('{prep.dir}/metacells')
 suppressWarnings(dir.create(meta.dir, recursive = TRUE))
 
 pairs.dir <- glue("{prep.dir}/pairs")
+suppressWarnings(dir.create(pairs.dir, recursive = TRUE))
 
 mk.neg.cols <- function(mc, mc.sum) {
   cols <- 2:ncol(mc)
