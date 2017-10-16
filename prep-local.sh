@@ -14,7 +14,7 @@ LOCAL_STAGED=${LOCAL}/staged
 LOCAL_ATLAS=${LOCAL}/atlas_ica
 LOCAL_ATLAS_W=`cygpath -m ${LOCAL_ATLAS}`
 
-EXPERIMENTS="GRCm38.81.P60Hippocampus GRCm38.81.P60Striatum"
+EXPERIMENTS="GRCm38.81.P60Hippocampus GRCm38.81.P60Striatum GRCm38.81.P60Thalamus"
 EXPERIMENTS_Q=`perl -e 'print join("\",\"",@ARGV)' \"${EXPERIMENTS}\"`
 
 
@@ -25,6 +25,7 @@ mkdir -p ${LOCAL_ATLAS}
 
 rsync -v ${REMOTE_STAGED}/expr/gene.map.RDS ${LOCAL_STAGED}/expr/
 rsync -rav ${REMOTE_STAGED}/markers ${LOCAL_STAGED}/
+rsync -rav ${REMOTE_STAGED}/pairs ${LOCAL_STAGED}/
 rsync -v ${REMOTE_STAGED}/tsne/\*.Rdata ${LOCAL_STAGED}/tsne
 rsync -v ${REMOTE_STAGED}/globals.Rdata ${LOCAL_STAGED}/globals-all.Rdata
 
@@ -68,7 +69,7 @@ EOF
     echo "${exp}	${short}	${abbrev}	${dir}"
 done) >> exp_sets.txt
 
-LOCAL_STAGED_W=`cygpath -w ${LOCAL_STAGED}`
+LOCAL_STAGED_W=`cygpath -m ${LOCAL_STAGED}`
 cat >> options.R <<EOF
 options(dropviz.prep.dir='${LOCAL_STAGED_W}')
 EOF

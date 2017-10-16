@@ -78,30 +78,30 @@ compute.pair <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind, use.cached=
     
     if (!is.null(progress)) progress$set(value=0.6, detail=glue("Fold ratios, p-vals and conf ints for {nrow(x)} genes"))
     
-    ## binom tests are subtly different. The pval is calculated based
-    ## on how far target.sum is from
+    ## binom tests are subtly different here. The pval is calculated
+    ## based on how far target.sum is from
     ## sum(target.sum)/(sum(target.sum)+sum(comparison.sum)), i.e. the
     ## expected random counts based on the size of the two sets if
     ## there was no difference in expression.
     ##
-    ## But the L and R confidence is based on the range of probable
+    ## The L and R confidence are NOT based on the range of probable
     ## counts for target.sum IF target.sum/(target.sum+comparison.sum)
-    ## IS the true proportion probability.
+    ## is the true proportion probability. (Seemed like a good idea to me.)
     ##
-    ## E.g., there may be 10000 transcripts in target (A) and 20000 in
-    ## target (B). For gene G, we might observe 10 transcripts in A
-    ## and 30 in B for a total of 40. Based on the background counts
-    ## (10000 vs 20000), we expect 10000/30000=1/3 of counts in A and
-    ## 2/3 in B. So for gene G, we'd expect 1/3*40=13. 10 is close to
-    ## 13, so binom.test(10, 40, 1/3)$p.value => 0.316
-    ##
-    ## But suppose that G is differentially expressed in A vs B. Then
-    ## the proportion is estimated at 10/40 = .25. If that's the case
-    ## then there is a 95% confidence we would observe counts between
-    ## qbinom(0.025, 40, 1/4) and qbinom(0.975, 40, 1/4), i.e. [5,16].
-    ##
-    ## Each confidence interval is based on scaled values of the target
-    ## per 100,000 in the target group.
+    ## Instead, the confidence is only related to the size of the
+    ## target set. Smaller sets have larger CI when normalized to a
+    ## common size pool.  E.g., the target may contain 100,000
+    ## transcripts total. And 100 genes might be observed for gene
+    ## G. Assuming that the true proportion of G among all the other
+    ## genes in the target cluster is .1% (100/100,000), then a
+    ## binomial distribution with p=0.001 and N=100000 implies a range
+    ## of qbinom(c(0.025,0.975), 100000, 0.001) == [81, 120] for the
+    ## 95% confidence interval. But if the total in the target cluster
+    ## is N=1000 and observed count of 1, then qbinom(c(0.025,0.975,
+    ## 1000, 0.001) == [0,3]. When scaled to a common cluster size of
+    ## 100,000 transcripts, then the range is [0,300]. In this way,
+    ## we can compare relative expression levels, but represent the
+    ## uncertainty based on the target size.
 
     target.total <- sum(x$target.sum)
     scale.per.100k <- 100000/target.total

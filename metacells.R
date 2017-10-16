@@ -1,6 +1,6 @@
 source("metacells-shared.R", local=TRUE)
 
-# in prep-metacells, all cx vs Ncx are pre-computed. Copy those locally
+# in prep-metacells, all cx vs Ncx are pre-computed. Copy those locally. This does not work on Windows
 try(system2("rsync",c(glue("{prep.dir}/pairs"),glue("{cache.dir}/metacells"))))
 
 # adds local attributes to results of compute.pair
@@ -186,7 +186,7 @@ output$gene.expr.scatter.subcluster.dl <- downloadHandler(filename="scatter.zip"
 
 # Creates a dot plot showing the relative normalized expression for the top.N clusters or subclusters.
 # Doesn't work well for multiple genes, because the topN are different and the order also varies.
-rank.plot <- function(clusters, kind) {
+rank.plot <- function(clusters, kind, genes) {
   require(tidyr)
   
   Kind <- paste0(toupper(substring(kind,1,1)),substring(kind,2))
@@ -194,23 +194,29 @@ rank.plot <- function(clusters, kind) {
   clusters <- separate(clusters, gene.var, c('gene','var'), sep='-')
   clusters <- spread(clusters, var, value)
   clusters$cx.disp <- paste(clusters$region.disp,clusters[[paste0(kind,'.disp')]])
+  clusters$gene <- factor(clusters$gene, levels=genes)
   
-  clusters <- arrange(clusters, desc(target.sum))
+  clusters <- arrange(clusters, desc(target.sum.per.100k))
   clusters$cx.disp <- with(clusters, factor(cx.disp, levels=rev(unique(cx.disp))))
   
-  clusters.top <- group_by(clusters, region.disp,gene) %>% top_n(as.integer(input$top.N), target.sum) %>%
-    mutate(gene.description=paste(gene,"-",gene.desc(gene)))
+  clusters.top <- group_by(clusters, region.disp,gene) %>% top_n(as.integer(input$top.N), target.sum.per.100k)
+  gene.description <- paste(clusters.top$gene,"-",gene.desc(clusters.top$gene))
+  clusters.top$gene.description <- factor(gene.description, levels=unique(gene.description[order(clusters.top$gene)]))
 
-  ggplot(clusters.top, aes(x=target.sum, xmin=target.sum.L, xmax=target.sum.R, y=cx.disp, yend=cx.disp)) + geom_point(size=3) + geom_segment(aes(x=target.sum.L,xend=target.sum.R)) +
-    ggtitle(glue("Ranked {Kind} by Gene Expression")) + 
-    xlab("Transcripts") + ylab("") + facet_grid(region.disp~gene.description, scales = "free_y") 
+  ggplot(clusters.top, aes(x=target.sum.per.100k, xmin=target.sum.L.per.100k, xmax=target.sum.R.per.100k, y=cx.disp, yend=cx.disp)) + geom_point(size=3) + geom_segment(aes(x=target.sum.L.per.100k,xend=target.sum.R.per.100k)) +
+    ggtitle(glue("Ranked {Kind}s by Gene Expression")) + 
+    xlab(glue("Transcripts Per 100,000 in {Kind}")) + ylab("") + facet_grid(region.disp~gene.description, scales = "free_y") 
   
 }
 
 output$gene.expr.rank.cluster <- renderPlot({
   if (isTruthy(user.genes())) {
-    clusters <- select(clusters.selected(), -class.disp) %>% unique
-    rank.plot(clusters,'cluster')
+    if (length(user.genes()) > 2) {
+      plot.text("Rank display requires 1 or 2 genes.")
+    } else {
+      clusters <- select(clusters.selected(), -class.disp) %>% unique
+      rank.plot(clusters,'cluster', user.genes())
+    }
   } else {
     plot.text("Enter a gene symbol in the 'Compare' panel\nto display a ranked order of clusters by transcript abundance")    
   }
@@ -218,8 +224,12 @@ output$gene.expr.rank.cluster <- renderPlot({
 
 output$gene.expr.rank.subcluster <- renderPlot({
   if (isTruthy(user.genes())) {
-    subclusters <- select(subclusters.selected(), -class.disp) %>% unique
-    rank.plot(subclusters, 'subcluster')
+    if (length(user.genes()) > 2) {
+      plot.text("Rank display requires 1 or 2 genes.")
+    } else {
+      subclusters <- select(subclusters.selected(), -class.disp) %>% unique
+      rank.plot(subclusters, 'subcluster', user.genes())
+    }
   } else {
     plot.text("Enter a gene symbol in the 'Compare' panel\nto display a ranked order of subclusters by transcript abundance")    
   }
