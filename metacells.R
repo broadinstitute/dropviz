@@ -1,7 +1,7 @@
 source("metacells-shared.R", local=TRUE)
 
 # in prep-metacells, all cx vs Ncx are pre-computed. Copy those locally. This does not work on Windows
-try(system2("rsync",c(glue("{prep.dir}/pairs"),glue("{cache.dir}/metacells"))))
+try(system2("rsync",c("--size-only",glue("{prep.dir}/pairs"),glue("{cache.dir}/metacells"))))
 
 # adds local attributes to results of compute.pair
 cx.pairwise <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind) {
