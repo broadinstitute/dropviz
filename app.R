@@ -200,19 +200,19 @@ function(request) {
                                                             div(class="control-box", style="margin-bottom: 0",
                                                                 h4("Filter"),
                                                                 fluidRow(
-                                                                  column(6, selectizeInput("user.genes", "Gene", choices=c("Symbol"="",top.genes),
-                                                                                           multiple=TRUE, width='100%', options=list(create=TRUE,persist=FALSE))),
-                                                                  column(6, uiOutput("region"))),
+                                                                  column(12, selectizeInput("user.genes", "Gene", choices=c("Symbol"="",top.genes),
+                                                                                            multiple=TRUE, width='100%', options=list(create=TRUE,persist=FALSE)))),
+                                                                fluidRow(
+                                                                  column(12, uiOutput("region"))),
+                                                                fluidRow(column(12, uiOutput("cell.class"))),
+                                                                fluidRow(column(12, uiOutput("cell.cluster"))), 
+                                                                conditionalPanel("input.mainpanel=='subclusters'",
+                                                                                 fluidRow(column(12, uiOutput("cell.type")))
+                                                                ),
                                                                 conditionalPanel("input['user.genes'] && input['opt.show.bags'] && ((input.mainpanel=='clusters' && input.clusterpanel=='tSNE') || (input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'))",
                                                                                  checkboxInput("opt.tx.alpha",span(style="font-size: small","Show Expression as Transparency in t-SNE"),value = TRUE)),
                                                                 conditionalPanel("input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'",
-                                                                                 checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE)),
-                                                                fluidRow(
-                                                                  column(6, uiOutput("cell.class")),
-                                                                  column(6, uiOutput("cell.cluster")), 
-                                                                  conditionalPanel("input.mainpanel=='subclusters'",
-                                                                                   column(12, uiOutput("cell.type")))
-                                                                )
+                                                                                 checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE))
                                                             )
                                                    ),
                                                    tabPanel("Compare",
