@@ -263,7 +263,7 @@ function(request) {
                                                             checkboxInput("opt.show.bags","Display t-SNE using bag plots", value=TRUE),
                                                             selectInput("opt.downsampling.method","Downsample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
                                                             conditionalPanel("input['opt.downsampling.method']!='none'",
-                                                                             sliderInput("downsampling", "Downsample Count", 0, 100000, value=2000, step=1000)),
+                                                                             sliderInput("downsampling", "Downsample Count", 0, 100000, value=20000, step=1000)),
                                                             selectInput("top.N","Gene Search: Show Top Cluster or Subcluster Matches", choices=c(1,2,3,4,5,10,20),selected=5),
                                                             
                                                             sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=3, step=0.5),
