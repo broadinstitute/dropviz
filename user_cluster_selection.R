@@ -32,6 +32,7 @@ output$current.cluster <- renderUI({
   
   column(12, selectizeInput("current.cluster", "Target cluster", choices=c("Select target cluster"="",choices), selected=selected, multiple=input$compare.multiple))
 })
+outputOptions(output, 'current.cluster', suspendWhenHidden=FALSE, priority=100)
 
 output$comparison.cluster <- renderUI({
   if (isTruthy(input$current.cluster)) {
@@ -47,6 +48,7 @@ output$comparison.cluster <- renderUI({
     column(12, selectizeInput("comparison.cluster", "Comparison", choices=choices, multiple=input$compare.multiple))
   }
 })
+outputOptions(output, 'comparison.cluster', suspendWhenHidden=FALSE, priority=99)
 
 
 current.subcluster.i <- reactive({
@@ -73,6 +75,7 @@ output$current.subcluster <- renderUI({
   
   column(12, selectizeInput("current.subcluster", "Target Subcluster", choices=c("Select target subcluster"="",choices), selected=selected, multiple=input$compare.multiple))
 })
+outputOptions(output, 'current.subcluster', suspendWhenHidden=FALSE, priority=100)
 
 output$comparison.subcluster <- renderUI({
   if (isTruthy(input$current.subcluster)) {
@@ -89,6 +92,7 @@ output$comparison.subcluster <- renderUI({
     column(12, selectizeInput("comparison.subcluster", "Comparison", choices=choices, multiple=input$compare.multiple))
   }
 })
+outputOptions(output, 'comparison.subcluster', suspendWhenHidden=FALSE, priority=99)
 
 
 

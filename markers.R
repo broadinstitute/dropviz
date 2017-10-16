@@ -93,6 +93,8 @@ output$dt.cluster.markers <- DT::renderDataTable( {
   mrkrs <- mutate(cluster.markers(), row.highlight=ifelse(user.selected,ifelse(expr.pass,1,0),2), description=gene.desc(gene)) 
   dt.markers(mrkrs)
 })
+outputOptions(output, 'dt.cluster.markers', suspendWhenHidden=FALSE, priority=1)
+
 
 output$dt.cluster.markers.dl <- downloadHandler(filename="cluster-markers.csv", 
                                                 content= function(file) {
@@ -119,6 +121,8 @@ output$dt.subcluster.markers <- DT::renderDataTable( {
   mrkrs <- mutate(subcluster.markers(), row.highlight=ifelse(user.selected,ifelse(expr.pass,1,0),2), description=gene.desc(gene))
   dt.markers(mrkrs)
 })
+outputOptions(output, 'dt.subcluster.markers', suspendWhenHidden=FALSE, priority=1)
+
 
 output$dt.subcluster.markers.dl <- downloadHandler(filename="subcluster-markers.csv", 
                                                    content= function(file) {
