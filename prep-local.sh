@@ -55,6 +55,7 @@ for exp in ${EXPERIMENTS}; do
     rsync -rav ${REMOTE_ATLAS}/F_${exp}/curation_sheets ${LOCAL_ATLAS}/F_${exp}/
     rsync -rav ${REMOTE_ATLAS}/F_${exp}/cluster_sheets ${LOCAL_ATLAS}/F_${exp}/
     rsync -rav ${REMOTE_ATLAS}/F_${exp}/assign ${LOCAL_ATLAS}/F_${exp}/
+    rsync -rav ${REMOTE_ATLAS}/F_${exp}/metacells ${LOCAL_ATLAS}/F_${exp}/
 done
 
 # create exp_sets.txt

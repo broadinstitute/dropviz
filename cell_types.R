@@ -209,7 +209,7 @@ subclusters.selected <- reactive({
 clusters.selected <- reactive({
 log.reactive("fn: clusters.selected")
   user.selection.changed()
-  select(subclusters.selected__(), region.disp, region.abbrev, class.disp, cluster.disp, exp.label, cluster) %>% unique %>%
+  select(subclusters.selected__(), c.id, region.disp, region.abbrev, class.disp, cluster.disp, exp.label, cluster) %>% unique %>%
     gene.cols('cluster')
 })
 
@@ -218,20 +218,6 @@ log.reactive("fn: regions.selected")
   user.selection.changed()
   select(subclusters.selected(), region.disp, exp.label) %>% unique 
 })
-
-# # The markers are indirect values
-# class.marker.options <- reactive({
-#   user.selection.changed()
-#   (filter.df(cell.types, cell.types.filter.opts, excl='class.marker') %>%
-#      inner_join(class.markers, by='class'))$class_marker.y %>% na.omit() %>% sort
-# })
-# 
-# type.marker.options <- reactive({
-#   user.selection.changed()
-#   (filter.df(cell.types, cell.types.filter.opts, excl='type.marker') %>%
-#      inner_join(type.markers, by='full_name'))$type_marker.y %>% na.omit() %>% sort
-# })
-
 
 
 #####################################################################################################
@@ -260,14 +246,14 @@ output$dt.clusters <- DT::renderDataTable({
   
   DT::datatable(ct, 
                 rownames=FALSE,
-                selection="single",
+                selection="none",
                 colnames=colnames,
                 options=list(dom='t', paging=FALSE)) %>% setSig(names(ct), 4, ncol(ct), 3)
 })
 
-observeEvent(input$dt.clusters_rows_selected, {
-  updateSelectInput(session, 'current.cluster', selected=input$dt.clusters_rows_selected)
-})
+## observeEvent(input$dt.clusters_rows_selected, {
+##   updateSelectInput(session, 'current.cluster', selected=input$dt.clusters_rows_selected)
+## })
 
 output$dt.subclusters <- DT::renderDataTable({
   
@@ -283,13 +269,13 @@ output$dt.subclusters <- DT::renderDataTable({
                 lapply(user.genes(), function(g) paste(g,c('Amount','P-Val'))) %>% unlist)
   DT::datatable(ct, 
                 rownames=FALSE,
-                selection="single",
+                selection="none",
                 colnames=colnames,
                 options=list(dom='t', paging=FALSE)) %>% setSig(names(ct), 4, ncol(ct), 3)
 })
 
-observeEvent(input$dt.subclusters_rows_selected, {
-  updateSelectInput(session, 'current.subcluster', selected=input$dt.subclusters_rows_selected)
-})
+## observeEvent(input$dt.subclusters_rows_selected, {
+##   updateSelectInput(session, 'current.subcluster', selected=input$dt.subclusters_rows_selected)
+## })
 
 

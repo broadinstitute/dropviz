@@ -10,10 +10,11 @@ source("global.R")
 #   }
 # }
 # reactive <- function(x, env=parent.frame(), ...) exprToFunction(x, env=env)
-
+# output <- list()
 
 server <- function(input, output, session) {
   
+  try(rm(dt.cluster.markers,dt.subcluster.markers))
   if (file.exists("message.txt") && !is.null(getDefaultReactiveDomain())) {
     msg <- readLines("message.txt")
     showNotification(div(h4(msg[1]),msg[2]),duration=NULL,type="warning")
@@ -49,6 +50,9 @@ server <- function(input, output, session) {
   
   # proxy objects for shiny
   source("proxy.R", local=TRUE)
+
+  # output options - do not source when interactive debug
+  source("outputOptions.R", local=TRUE)
   
   #####################################################################################################
   # save the latest input for interactive debug
@@ -190,7 +194,6 @@ function(request) {
                         HTML(readLines("html/featurette.html"))),
                tabPanel("Analysis",
                         
-                        
                         # Sidebar with a slider input for number of bins 
                         sidebarLayout(
                           sidebarPanel(width=3, id="controlpanel",
@@ -198,7 +201,6 @@ function(request) {
                                        tabsetPanel(type="tabs", id='controltabs',
                                                    tabPanel("Query",
                                                             div(class="control-box", style="margin-bottom: 0",
-                                                                h4("Filter"),
                                                                 fluidRow(
                                                                   column(12, selectizeInput("user.genes", "Gene", choices=c("Symbol"="",top.genes),
                                                                                             multiple=TRUE, width='100%', options=list(create=TRUE,persist=FALSE)))),

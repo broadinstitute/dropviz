@@ -23,8 +23,9 @@ cx.pairwise <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind) {
 # for all the cells in the current.cluster() and comparison.cluster() 
 # if the comparison is global, then expression is all cells except the target in the target region.
 cluster.metacells.selected <- reactive({
-log.reactive("fn: cluster.metacells.selected")
+  log.reactive("fn: cluster.metacells.selected")
   req(input$current.cluster)
+  req(current.cluster()$cluster)
   
   cx <- as.character(current.cluster()$cluster)
   cmp.cx <- ifelse(comparison.cluster()$cluster == 'global', paste0('N', current.cluster()$cluster), as.character(comparison.cluster()$cluster))
@@ -36,6 +37,7 @@ log.reactive("fn: cluster.metacells.selected")
 subcluster.metacells.selected <- reactive({
 log.reactive("fn: subcluster.metacells.selected")
   req(input$current.subcluster)
+  req(current.subcluster()$subcluster)
 
   cx <- as.character(current.subcluster()$subcluster)
   cmp.cx <- ifelse(comparison.subcluster()$subcluster == 'global', paste0('N', current.subcluster()$subcluster), as.character(comparison.subcluster()$subcluster))

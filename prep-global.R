@@ -120,11 +120,17 @@ cell.types_ <- as_tibble(ddply(experiments, .(exp.label), function(exp) {
   })
 })) %>% mutate(exp.label=as.factor(exp.label))
 
+cluster.names_ <-  as_tibble(ddply(experiments, .(exp.label), function(exp) {
+  cluster.class.dir <- sprintf("%s/curation_sheets", exp$exp.dir)
+  cluster.class.fn <- list.files(cluster.class.dir, "*.cluster_class")
+  stopifnot(length(cluster.class.fn)==1)
+  csv <- suppressWarnings(read.csv(sprintf("%s/%s", cluster.class.dir, cluster.class.fn), fill=TRUE, stringsAsFactors=FALSE)) 
 
-# Create "biologically meaningful" names for cluster and subcluster
-cluster.names_ <- mk.cluster.names(cell.types_)
+  dplyr::rename(csv, cluster=cluster_number, class=cluster_class)
+})) %>% mutate(exp.label=factor(exp.label, levels=levels(experiments$exp.label)), cluster=factor(cluster, levels=levels(cell.types_$cluster)))
+
 subcluster.names_ <- mk.subcluster.names(cell.types_)
-cell.types <- select(cell.types_, -region, -full_name, -common_name, -class_marker) 
+cell.types <- select(cell.types_, -class, -region, -full_name, -common_name, -class_marker) 
 
 
 components <- as_tibble(ddply(experiments, .(exp.label), function(exp) {

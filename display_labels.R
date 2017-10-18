@@ -14,16 +14,18 @@ log.reactive("fn: region.names")
 # returns a tibble containing the currently configured display form of the cluster
 # [ exp.label, cluster, cluster.disp ]
 cluster.names <- reactive({
-log.reactive("fn: cluster.names")
-  if (input$opt.cluster.disp=='numbers') {
-    tibble(exp.label=cluster.names_$exp.label, cluster=cluster.names_$cluster, cluster.disp=cluster.names_$cluster)
-  } else { # annotated or all
-    df <- tibble(exp.label=cluster.names_$exp.label, cluster=cluster.names_$cluster, cluster.disp=cluster.names_$cluster_name)
-    if (input$opt.cluster.disp=='all') {
-      mutate(df, cluster.disp=sprintf("%s [#%s]", cluster.disp, cluster))
-    } else
-      df
-  }
+  log.reactive("fn: cluster.names")
+  (
+    if (input$opt.cluster.disp=='numbers') {
+      tibble(exp.label=cluster.names_$exp.label, cluster=cluster.names_$cluster, cluster.disp=cluster.names_$cluster)
+    } else { # annotated or all
+      df <- tibble(exp.label=cluster.names_$exp.label, cluster=cluster.names_$cluster, cluster.disp=cluster.names_$cluster_name)
+      if (input$opt.cluster.disp=='all') {
+        mutate(df, cluster.disp=sprintf("%s [#%s]", cluster.disp, cluster))
+      } else
+        df
+    }
+  ) %>% mutate(c.id=1:length(exp.label))
 })
 
 
@@ -44,21 +46,23 @@ cluster.labels <- reactive({
 # returns a tibble containing the currently configured display form of the subcluster
 # [ exp.label, subcluster, subcluster.disp ]
 subcluster.names <- reactive({
-log.reactive("fn: subcluster.names")
-  if (input$opt.cluster.disp=='numbers') {
-    tibble(exp.label=subcluster.names_$exp.label, subcluster=subcluster.names_$subcluster, subcluster.disp=subcluster.names_$subcluster)
-  } else { # annotated or all
-
-    if (input$use.common.name)
-      df <- tibble(exp.label=subcluster.names_$exp.label, subcluster=subcluster.names_$subcluster, subcluster.disp=subcluster.names_$subcluster_name)
-    else
-      df <- tibble(exp.label=subcluster.names_$exp.label, subcluster=subcluster.names_$subcluster, subcluster.disp=subcluster.names_$full_name)
+  log.reactive("fn: subcluster.names")
+  (
+    if (input$opt.cluster.disp=='numbers') {
+      tibble(exp.label=subcluster.names_$exp.label, subcluster=subcluster.names_$subcluster, subcluster.disp=subcluster.names_$subcluster)
+    } else { # annotated or all
+      
+      if (input$use.common.name)
+        df <- tibble(exp.label=subcluster.names_$exp.label, subcluster=subcluster.names_$subcluster, subcluster.disp=subcluster.names_$subcluster_name)
+      else
+        df <- tibble(exp.label=subcluster.names_$exp.label, subcluster=subcluster.names_$subcluster, subcluster.disp=subcluster.names_$full_name)
     
-    if (input$opt.cluster.disp=='all') {
-      mutate(df, subcluster.disp=sprintf("%s [#%s]", subcluster.disp, subcluster))
-    } else
-      df
-  }
+      if (input$opt.cluster.disp=='all') {
+        mutate(df, subcluster.disp=sprintf("%s [#%s]", subcluster.disp, subcluster))
+      } else
+        df
+    }
+  ) %>% mutate(sc.id=1:length(exp.label))
 })
 
 subcluster.labels <- reactive({
@@ -81,7 +85,7 @@ log.reactive("fn: all.subclusters")
 # [ exp.label, cx, cx.disp ]
 cx.names <- reactive({
 log.reactive("fn: cx.names")
-  rbind(dplyr::rename(cluster.names(), cx=cluster, cx.disp=cluster.disp), dplyr::rename(subcluster.names(), cx=subcluster, cx.disp=subcluster.disp)) %>%
+  rbind(dplyr::select(cluster.names(), exp.label, cx=cluster, cx.disp=cluster.disp), dplyr::select(subcluster.names(), exp.label, cx=subcluster, cx.disp=subcluster.disp)) %>%
     mutate(cx=as.character(cx))
 })
 

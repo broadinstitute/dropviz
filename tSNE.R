@@ -396,7 +396,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       }
 
       geom_blank_tsne <- geom_blank(data=data.frame(region.disp=character(),facet.gg=character(),facet2.gg=character()))
-      tsne.gg <- ggplot() + scale_fill(guide="none", na.value='lightgray') + scale_size(guide="none", range=c(0.1,opt.expr.size)) + theme_few() + theme(strip.text=element_text(size=20))
+      tsne.gg <- ggplot() + scale_fill(guide="none", na.value='lightgray') + scale_size(guide="none", range=c(0.1,opt.expr.size)) + theme_few() + theme(strip.text.x=element_text(size=20), strip.text.y=element_text(size=14))
 
       tsne.color.scale <- (
         if (nrow(comp.data)>0) {

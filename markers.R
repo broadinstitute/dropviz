@@ -76,10 +76,21 @@ log.reactive("fn: subcluster.markers.selected")
 #####################################################################################################
 # OUTPUT - Markers tables
 
-dt.markers <- function(mrkrs) {
+dt.markers <- function(mrkrs,label) {
+  if (nrow(mrkrs)==0) {
+    rows.selected <- NULL
+  } else {
+    prev.rows.selected <- isolate(input[[paste0(label,'_rows_selected')]])
+    if (!exists(label) || identical(get(label),mrkrs)) {
+      rows.selected <- prev.rows.selected
+    } else {
+      rows.selected <- which(mrkrs$gene %in% get(label)$gene[prev.rows.selected])
+    }
+  }
+  assign(label, mrkrs, 1) # assign global
   DT::datatable(select(mrkrs, gene, description, log.target.u, log.comparison.u, fc.disp, pval, row.highlight),
                 rownames = FALSE,
-                selection="multiple",
+                selection=list(mode="multiple", selected=rows.selected),
                 colnames = c('Gene','Description', 'Target\n(normalized mean log)', 'Comparison\n(normalized mean log)', 'Fold Ratio', 'P-Value', 'row.highlight'),
                 options=list(dom="tp", pageLength=50,
                              language=list(zeroRecords = "No results - adjust Diff Expr criteria using Scatter Plot as guide"),
@@ -91,9 +102,8 @@ dt.markers <- function(mrkrs) {
 
 output$dt.cluster.markers <- DT::renderDataTable( {
   mrkrs <- mutate(cluster.markers(), row.highlight=ifelse(user.selected,ifelse(expr.pass,1,0),2), description=gene.desc(gene)) 
-  dt.markers(mrkrs)
+  dt.markers(mrkrs,'dt.cluster.markers')
 })
-outputOptions(output, 'dt.cluster.markers', suspendWhenHidden=FALSE, priority=1)
 
 
 output$dt.cluster.markers.dl <- downloadHandler(filename="cluster-markers.csv", 
@@ -109,8 +119,6 @@ output$dt.cluster.markers.heading <- renderUI({
     } else {
       comparison.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label%in%comparison.cluster()$exp.label]} {comparison.cluster()$cluster.disp}"),collapse='+')
     }
-    
-    
     tags$h4(glue("Differentially Over-Expressed: {target.names} vs {comparison.names}"))
   } else {
     tags$p(align="center","Choose a target and comparison cluster in the 'Compare' panel to find differentially expressed genes")
@@ -119,9 +127,8 @@ output$dt.cluster.markers.heading <- renderUI({
 
 output$dt.subcluster.markers <- DT::renderDataTable( {
   mrkrs <- mutate(subcluster.markers(), row.highlight=ifelse(user.selected,ifelse(expr.pass,1,0),2), description=gene.desc(gene))
-  dt.markers(mrkrs)
+  dt.markers(mrkrs,'dt.subcluster.markers')
 })
-outputOptions(output, 'dt.subcluster.markers', suspendWhenHidden=FALSE, priority=1)
 
 
 output$dt.subcluster.markers.dl <- downloadHandler(filename="subcluster-markers.csv", 
