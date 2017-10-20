@@ -3,8 +3,8 @@
 # When developing locally, syncronize a subset of the atlas and staged data from a remote host
 # for a subset of the data.
 
-REMOTE_HOST=104.154.207.118
-REMOTE_DIR=/dropseq
+REMOTE_HOST=104.155.134.4
+REMOTE_DIR=/mnt/disks/dropseq-2
 REMOTE_STAGED_DIR=${REMOTE_DIR}/staged
 REMOTE_ATLAS_DIR=${REMOTE_DIR}/atlas_ica
 REMOTE_STAGED=${REMOTE_HOST}:${REMOTE_STAGED_DIR}

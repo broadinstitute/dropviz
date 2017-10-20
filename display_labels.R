@@ -17,9 +17,9 @@ cluster.names <- reactive({
   log.reactive("fn: cluster.names")
   (
     if (input$opt.cluster.disp=='numbers') {
-      tibble(exp.label=cluster.names_$exp.label, cluster=cluster.names_$cluster, cluster.disp=cluster.names_$cluster)
+      tibble(exp.label=cluster.names_$exp.label, cluster=cluster.names_$cluster, cluster.disp=cluster.names_$cluster, class=cluster.names_$class)
     } else { # annotated or all
-      df <- tibble(exp.label=cluster.names_$exp.label, cluster=cluster.names_$cluster, cluster.disp=cluster.names_$cluster_name)
+      df <- tibble(exp.label=cluster.names_$exp.label, cluster=cluster.names_$cluster, cluster.disp=cluster.names_$cluster_name, class=cluster.names_$class)
       if (input$opt.cluster.disp=='all') {
         mutate(df, cluster.disp=sprintf("%s [#%s]", cluster.disp, cluster))
       } else

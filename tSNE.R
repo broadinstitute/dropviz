@@ -340,7 +340,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         } else {
           cluster.transcript.amounts()
         }
-      ) %>% group_by(exp.label) %>% top_n(as.integer(input$top.N), alpha) 
+      ) 
       
       label.data <- left_join_alpha(label.data, tx.alpha, by=c('exp.label','cx')) 
       center.data <- left_join_alpha(center.data, tx.alpha, by=c('exp.label','cx')) 
@@ -350,7 +350,6 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       
       if (!is.null(progress)) progress$inc(0.2, detail=glue("Computing alpha for {user.genes()}"))
     }
-    
     
     # diff exp & components are row facets
     facet2.vals <- c()
@@ -452,7 +451,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       
       if (opt.show.bags & nrow(comp.data)==0) {
         if (opt.tx.alpha) {
-          alpha.range <- scale_alpha_continuous(guide="none",range=c(0,1), trans=scales::trans_new("sqr", function(x) x^2, function(x) sqrt(x)))
+          alpha.range <- scale_alpha_continuous(guide="none", range=c(0,1), limits=c(0,7)) # , trans=scales::trans_new("sqr", function(x) x^2, function(x) sqrt(x)))
           bag.gg <- geom_polygon(data=filter(bag.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
           loop.gg <- geom_polygon(data=filter(loop.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
           center.gg <- geom_point(data=filter(center.data, !is.na(cx.gg)), aes(x=x,y=y, color=cx.gg, alpha=alpha), size=3)
