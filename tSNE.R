@@ -386,7 +386,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       require(ggplot2)
       require(ggthemes)
       
-      if (length(unique(bag.data$cx.gg)) <= 20) {
+      if (length(unique(center.data$cx.gg)) <= 20) {
         scale_fill <- scale_fill_gdocs
         scale_color <- scale_color_gdocs
       } else {
@@ -476,8 +476,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       )
 
-      p <- tsne.gg + tsne.color.scale + xy.gg + loop.gg + bag.gg + alpha.range + center.gg + diff.gg + comp.gg + label.gg + facet.label.gg 
-
+      p <- tsne.gg + tsne.color.scale  + center.gg + loop.gg + bag.gg + xy.gg + alpha.range + diff.gg + comp.gg + label.gg + facet.label.gg
+      
       if (opt.global) {
         if (opt.horiz.facet) {
           plot.gg <- p + facet_grid(facet2.gg~region.disp)
