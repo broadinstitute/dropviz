@@ -230,7 +230,6 @@ observeEvent(input$gene.expr.heatmap.subcluster_rows_selected, {
 })
 
 expr.heatmap <- function(cx, kind, genes=input$user.genes, opt.heatmap.max=input$opt.heatmap.max.per100k) {
-  write.log(glue("opt.heatmap.max={opt.heatmap.max}"))
   Kind <- paste0(toupper(substring(kind,1,1)),substring(kind,2))
 
   gene.cols.idx <- 4:ncol(cx)
@@ -251,7 +250,7 @@ expr.heatmap <- function(cx, kind, genes=input$user.genes, opt.heatmap.max=input
   DT::datatable(cx,
                 selection = "single",
                 rownames = FALSE,
-                colnames = c('Region',Kind, genes),
+                colnames = c('Region',Kind, '', genes),
                 class = c('cell-border compact'),
                 options = list(dom="t", paging=FALSE, autoWidth=TRUE, columnDefs=coldefs))
 }
