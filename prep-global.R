@@ -26,53 +26,6 @@ patch.cluster.number <- function(cn) {
   cn
 }
 
-# TODO: I later discovered that curation_sheets/*.cluster_class contains a cluster_name for each cluster.
-# Use that instead!
-#
-# In the cell.types tibble, each class cluster can be assigned a name by choosing the class and marker
-# E.g.
-# 11-1 Astrocyte.Gja1.Myoc
-# 11-2 Astrocyte.Gja1.Vegfa
-# yields Astrocyte.Gja1
-# Sometimes there is a common marker, but the class name differs:
-# Macrophage.C1qb.Mrc1
-# Microglia.C1qb.Tmem119
-# In those cases, choose the class names like "Macrophage/Microglia:C1qb"
-mk.cluster.names <- function(ct) {
-  
-  ddply(ct, .(exp.label, cluster), function(df) {
-    first.class <- first(df$class)
-    first.class_marker <- first(df$class_marker)
-    
-    # The usual case
-    if (all(df$class==first.class) && all(df$class_marker==first.class_marker)) {
-      cluster_name <- glue("{first.class}.{first.class_marker}")
-    } else {
-      if (all(df$class_marker==first.class_marker)) {
-        # The Macrophage/Microglia case
-        cluster_name <- glue("{paste0(unique(df$class),collapse='/')}.{first.class_marker}")
-      } else {
-        if (all(df$class==first.class)) {
-          cluster_name <- first(df$class)
-        } else {
-          # oh man, these are ugly clusters. Example is frontal cortex 11:
-          # A tibble: 4 x 8
-          # exp.label subcluster cluster         region      class class_marker                  full_name
-          # <fctr>     <fctr>  <fctr>          <chr>      <chr>        <chr>                      <chr>
-          # 1 F_GRCm38.81.P60Cortex_noRep5_FRONTALonly       11-1      11 Frontal Cortex  Microglia         C1qb     Microglia.C1qb.Tmem119
-          # 2 F_GRCm38.81.P60Cortex_noRep5_FRONTALonly       11-2      11 Frontal Cortex     Neuron      Slc17a6        Neuron.Slc17a6.Reln
-          # 3 F_GRCm38.81.P60Cortex_noRep5_FRONTALonly       11-3      11 Frontal Cortex Macrophage         C1qb       Macrophage.C1qb.Mrc1
-          # 4 F_GRCm38.81.P60Cortex_noRep5_FRONTALonly       11-4      11 Frontal Cortex  Microglia         C1qb Microglia.C1qb.Tmem119-Fos
-          #
-          # Use class.marker
-          cluster_name <- paste(unlist(dlply(df, .(class_marker), function(df2) paste0(paste(unique(df2$class),collapse='/'),'.',first(df2$class_marker)))),collapse='+')
-          write.log("Ugly: ",cluster_name)
-        }
-      }
-    }
-    data.frame("cluster_name"=cluster_name)
-  }) %>% as_tibble
-}
 
 # Make a subcluster_name that is the full_name unless there is a common_name. If so, use that
 mk.subcluster.names <- function(ct) {
@@ -91,6 +44,15 @@ experiments.fn <- getOption('dropviz.experiments', default='exp_sets.txt')
 experiments <- as_tibble(read.delim(experiments.fn, header = TRUE, stringsAsFactors = FALSE)) %>%
   mutate(exp.label=as.factor(exp.label))
 experiments$base <- basename(experiments$exp.dir)
+
+cluster.names_ <-  as_tibble(ddply(experiments, .(exp.label), function(exp) {
+  cluster.class.dir <- sprintf("%s/curation_sheets", exp$exp.dir)
+  cluster.class.fn <- list.files(cluster.class.dir, "*.cluster_class")
+  stopifnot(length(cluster.class.fn)==1)
+  csv <- suppressWarnings(read.csv(sprintf("%s/%s", cluster.class.dir, cluster.class.fn), fill=TRUE, stringsAsFactors=FALSE)) 
+  
+  dplyr::rename(csv, cluster=cluster_number, class=cluster_class)
+})) %>% mutate(exp.label=factor(exp.label, levels=levels(experiments$exp.label)), cluster=factor(cluster))
 
 
 # read the cluster_sheets/cluster_N.csv files and concatenate them all together.
@@ -116,18 +78,9 @@ cell.types_ <- as_tibble(ddply(experiments, .(exp.label), function(exp) {
                          exp.title=exp$exp.title,
                          cluster=sub("([0-9]+)-[0-9]+", "\\1", subcluster)) %>% 
       select(exp.label, subcluster, cluster, region=exp.title, class, class_marker, full_name, common_name) %>%
-      mutate(cluster=as.factor(cluster), subcluster=as.factor(subcluster))
+      mutate(cluster=factor(cluster, levels=levels(cluster.names_$cluster)), subcluster=as.factor(subcluster))
   })
 })) %>% mutate(exp.label=as.factor(exp.label))
-
-cluster.names_ <-  as_tibble(ddply(experiments, .(exp.label), function(exp) {
-  cluster.class.dir <- sprintf("%s/curation_sheets", exp$exp.dir)
-  cluster.class.fn <- list.files(cluster.class.dir, "*.cluster_class")
-  stopifnot(length(cluster.class.fn)==1)
-  csv <- suppressWarnings(read.csv(sprintf("%s/%s", cluster.class.dir, cluster.class.fn), fill=TRUE, stringsAsFactors=FALSE)) 
-
-  dplyr::rename(csv, cluster=cluster_number, class=cluster_class)
-})) %>% mutate(exp.label=factor(exp.label, levels=levels(experiments$exp.label)), cluster=factor(cluster, levels=levels(cell.types_$cluster)))
 
 subcluster.names_ <- mk.subcluster.names(cell.types_)
 cell.types <- select(cell.types_, -class, -region, -full_name, -common_name, -class_marker) 
