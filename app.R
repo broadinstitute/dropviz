@@ -198,8 +198,8 @@ function(request) {
                         sidebarLayout(
                           sidebarPanel(width=3, id="controlpanel",
                                        div(helpIcon("config"), class='top-right'),
-                                       tabsetPanel(type="tabs", id='controltabs',
-                                                   tabPanel("Query",
+                                       tabsetPanel(type="tabs", id='controltabs', selected="controltabs-query",
+                                                   tabPanel("Query", value="controltabs-query",
                                                             div(class="control-box", style="margin-bottom: 0",
                                                                 fluidRow(
                                                                   column(12, selectizeInput("user.genes", "Gene", choices=c("Symbol"="",top.genes),
@@ -217,7 +217,7 @@ function(request) {
                                                                                  checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE))
                                                             )
                                                    ),
-                                                   tabPanel("Compare",
+                                                   tabPanel("Compare", value="controltabs-compare",
                                                             div(class="control-box",
                                                                 conditionalPanel('input.mainpanel=="clusters"',
                                                                                  h4("Compare Clusters"),
@@ -265,8 +265,10 @@ function(request) {
                                                             checkboxInput("opt.show.bags","Display t-SNE using bag plots", value=TRUE),
                                                             selectInput("opt.downsampling.method","Downsample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
                                                             conditionalPanel("input['opt.downsampling.method']!='none'",
-                                                                             sliderInput("downsampling", "Downsample Count", 0, 100000, value=20000, step=1000)),
-                                                            selectInput("top.N","Gene Search: Show Top Cluster or Subcluster Matches", choices=c(1,2,3,4,5,10,20),selected=5),
+                                                                             sliderInput("downsampling", "Downsample Count", 0, 100000, value=10000, step=1000)),
+                                                            selectInput("top.N","Gene Search: Show Top Cluster or Subcluster Matches in Rank Display", choices=c(1,2,3,4,5,10,20),selected=5),
+                                                            sliderInput("opt.heatmap.max.per100k", "Threshold Max Transcripts (per 100k) in Heatmap Display (lower values increase sensitivity)",
+                                                                        0, 1000, value=100, step=10),
                                                             
                                                             sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=3, step=0.5),
                                                             checkboxInput("opt.scatter.gene.labels","Show Gene Labels on Scatter Plots", value=TRUE),
@@ -289,7 +291,15 @@ function(request) {
                                                                      tabPanel("Rank", 
                                                                               fluidRow(div(id="global-rank", class="scroll-area",
                                                                                            plotDownload("gene.expr.rank.cluster.dl"),
-                                                                                           span(class="img-center",plotOutput("gene.expr.rank.cluster", height=500))))),
+                                                                                           conditionalPanel(
+                                                                                             "input['user.genes']==undefined || input['user.genes'].length <= 2",
+                                                                                             span(class="img-center",plotOutput("gene.expr.rank.cluster", height=500))
+                                                                                           ),
+                                                                                           conditionalPanel(
+                                                                                             "input['user.genes']!=undefined && input['user.genes'].length > 2",
+                                                                                             div(DT::dataTableOutput("gene.expr.heatmap.cluster"), height=500)
+                                                                                           )
+                                                                                           ))),
                                                                      tabPanel("Scatter", 
                                                                               fluidRow(div(id="global-scatter", class="scroll-area",
                                                                                            plotDownload("gene.expr.scatter.cluster.dl"),

@@ -211,6 +211,41 @@ rank.plot <- function(clusters, kind, genes) {
   
 }
 
+
+heatmap.clusters <- reactive({
+  select(clusters.selected(), 'region.abbrev','cluster.disp','c.id', contains('-target.sum.per.100k'), -class.disp) %>% unique
+})
+
+observeEvent(input$gene.expr.heatmap.cluster_rows_selected, {
+  write.log(glue("Clicked on cluster {heatmap.clusters()$cluster.disp[input$gene.expr.heatmap.cluster_rows_selected]}"))
+  write.log(glue("Panel selected = {input$controltabs}"))
+  updateTabsetPanel(session, "controltabs", selected="controltabs-compare")
+  updateSelectInput(session, "current.cluster", selected=heatmap.clusters()$c.id[input$gene.expr.heatmap.cluster_rows_selected])  
+})
+
+output$gene.expr.heatmap.cluster <- DT::renderDataTable({
+  gene.cols.idx <- 4:ncol(heatmap.clusters())
+  coldefs <- list(list(targets=0:1, 
+                       width='40px',
+                       render = JS(
+                         "function(data, type, row, meta) {",
+                         "return type === 'display' && data.length > 40 ?",
+                         "'<span title=\"' + data + '\">' + data.substr(0, 40) + '...</span>' : data;",
+                         "}")),
+                  list(targets=2, visible=FALSE),
+                  list(targets=gene.cols.idx-1,
+                       class = "dt-center",
+                       render = JS("function(data, type, row, meta) {",
+                                   "return type=='display' ? '<span title=\"'+Math.round(data)+'\"><img width=\"10px\" height=\"10px\" class=\"img-circle\" style=\"opacity:'+(Math.min(data,",input$opt.heatmap.max.per100k,")/",input$opt.heatmap.max.per100k,")+'\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==\"></span>':data;}"))
+  )
+  DT::datatable(heatmap.clusters(),
+                selection = "single",
+                rownames = FALSE,
+                colnames = c('Region','Cluster', input$user.genes),
+                class = c('cell-border compact'),
+                options = list(dom="t", paging=FALSE, autoWidth=TRUE, columnDefs=coldefs))
+})
+
 output$gene.expr.rank.cluster <- renderPlot({
   if (isTruthy(user.genes())) {
     if (length(user.genes()) > 2) {

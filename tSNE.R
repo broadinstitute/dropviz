@@ -275,7 +275,7 @@ log.reactive("fn: tsne.disp.opts")
 tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, show.bags=FALSE, diff.genes=tibble(), comps=tibble(), return.closure=FALSE) {
   function(progress=NULL) {
     stopifnot(is.global || show.subclusters) # can't show clusters on local tsne
-    stopifnot(opt.show.bags || opt.show.cells)
+    stopifnot(show.bags || show.cells)
     
     # for both global.xy (the positions of each cell) and global.[sub]cluster.avg.xy (the center position of each [sub]cluster),
     # limit to selected [sub]clusters and add pretty region name
