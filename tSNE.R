@@ -275,6 +275,7 @@ log.reactive("fn: tsne.disp.opts")
 tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, show.bags=FALSE, diff.genes=tibble(), comps=tibble(), return.closure=FALSE) {
   function(progress=NULL) {
     stopifnot(is.global || show.subclusters) # can't show clusters on local tsne
+    stopifnot(opt.show.bags || opt.show.cells)
     
     # for both global.xy (the positions of each cell) and global.[sub]cluster.avg.xy (the center position of each [sub]cluster),
     # limit to selected [sub]clusters and add pretty region name
@@ -475,8 +476,20 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           geom_blank_tsne
         }
       )
+      
+      tsne.lim <- 20  # at minimum show box [-20..20]
+      xy.limits.gg <- (
+        if (opt.show.bags) {
+          coord_cartesian(xlim=c(min(c(-tsne.lim, loop.data$x)), max(c(tsne.lim, loop.data$x))), 
+                          ylim=c(min(c(-tsne.lim, loop.data$y)), max(c(tsne.lim, loop.data$y))))
+        } else { 
+          # opt.show.cells
+          coord_cartesian(xlim=c(min(c(-tsne.lim, xy.data$V1)), max(c(tsne.lim, xy.data$V1))), 
+                          ylim=c(min(c(-tsne.lim, xy.data$V2)), max(c(tsne.lim, xy.data$V2))))
+        }
+      )
 
-      p <- tsne.gg + tsne.color.scale  + center.gg + loop.gg + bag.gg + xy.gg + alpha.range + diff.gg + comp.gg + label.gg + facet.label.gg
+      p <- tsne.gg + tsne.color.scale  + center.gg + loop.gg + bag.gg + xy.gg + alpha.range + diff.gg + comp.gg + label.gg + facet.label.gg + xy.limits.gg + xlab("V1") + ylab("V2")
       
       if (opt.global) {
         if (opt.horiz.facet) {
