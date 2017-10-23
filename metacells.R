@@ -215,16 +215,25 @@ rank.plot <- function(clusters, kind, genes) {
 heatmap.clusters <- reactive({
   select(clusters.selected(), 'region.abbrev','cluster.disp','c.id', contains('-target.sum.per.100k'), -class.disp) %>% unique
 })
+heatmap.subclusters <- reactive({
+  select(subclusters.selected(), 'region.abbrev','subcluster.disp','sc.id', contains('-target.sum.per.100k'), -class.disp) %>% unique
+})
 
 observeEvent(input$gene.expr.heatmap.cluster_rows_selected, {
-  write.log(glue("Clicked on cluster {heatmap.clusters()$cluster.disp[input$gene.expr.heatmap.cluster_rows_selected]}"))
-  write.log(glue("Panel selected = {input$controltabs}"))
   updateTabsetPanel(session, "controltabs", selected="controltabs-compare")
   updateSelectInput(session, "current.cluster", selected=heatmap.clusters()$c.id[input$gene.expr.heatmap.cluster_rows_selected])  
 })
 
-output$gene.expr.heatmap.cluster <- DT::renderDataTable({
-  gene.cols.idx <- 4:ncol(heatmap.clusters())
+observeEvent(input$gene.expr.heatmap.subcluster_rows_selected, {
+  updateTabsetPanel(session, "controltabs", selected="controltabs-compare")
+  updateSelectInput(session, "current.subcluster", selected=heatmap.subclusters()$sc.id[input$gene.expr.heatmap.subcluster_rows_selected])  
+})
+
+expr.heatmap <- function(cx, kind, genes=input$user.genes, opt.heatmap.max=input$opt.heatmap.max.per100k) {
+  write.log(glue("opt.heatmap.max={opt.heatmap.max}"))
+  Kind <- paste0(toupper(substring(kind,1,1)),substring(kind,2))
+
+  gene.cols.idx <- 4:ncol(cx)
   coldefs <- list(list(targets=0:1, 
                        width='40px',
                        render = JS(
@@ -236,14 +245,22 @@ output$gene.expr.heatmap.cluster <- DT::renderDataTable({
                   list(targets=gene.cols.idx-1,
                        class = "dt-center",
                        render = JS("function(data, type, row, meta) {",
-                                   "return type=='display' ? '<span title=\"'+Math.round(data)+'\"><img width=\"10px\" height=\"10px\" class=\"img-circle\" style=\"opacity:'+(Math.min(data,",input$opt.heatmap.max.per100k,")/",input$opt.heatmap.max.per100k,")+'\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==\"></span>':data;}"))
-  )
-  DT::datatable(heatmap.clusters(),
+                                   "return type==='sort' ? -Math.round(data) :",
+                                   "(type==='display' ? '<span title=\"'+Math.round(data)+'\"><img width=\"10px\" height=\"10px\" class=\"img-circle\" style=\"opacity:'+(Math.min(data,",opt.heatmap.max,")/",opt.heatmap.max,")+'\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==\"></span>':data);}"))
+                  )
+  DT::datatable(cx,
                 selection = "single",
                 rownames = FALSE,
-                colnames = c('Region','Cluster', input$user.genes),
+                colnames = c('Region',Kind, genes),
                 class = c('cell-border compact'),
                 options = list(dom="t", paging=FALSE, autoWidth=TRUE, columnDefs=coldefs))
+}
+
+output$gene.expr.heatmap.cluster <- DT::renderDataTable({
+  expr.heatmap(heatmap.clusters(),'cluster')
+})
+output$gene.expr.heatmap.subcluster <- DT::renderDataTable({
+  expr.heatmap(heatmap.subclusters(),'subcluster')
 })
 
 output$gene.expr.rank.cluster <- renderPlot({

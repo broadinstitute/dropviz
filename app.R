@@ -329,7 +329,15 @@ function(request) {
                                                                      tabPanel("Rank", 
                                                                               fluidRow(div(id="local-rank", class="scroll-area",
                                                                                            plotDownload("gene.expr.rank.subcluster.dl"),
-                                                                                           imageOutput("gene.expr.rank.subcluster", height=500)))),
+                                                                                           conditionalPanel(
+                                                                                             "input['user.genes']==undefined || input['user.genes'].length <= 2",
+                                                                                             span(class="img-center",plotOutput("gene.expr.rank.subcluster", height=500))
+                                                                                           ),
+                                                                                           conditionalPanel(
+                                                                                             "input['user.genes']!=undefined && input['user.genes'].length > 2",
+                                                                                             div(DT::dataTableOutput("gene.expr.heatmap.subcluster"), height=500)
+                                                                                           )
+                                                                                           ))),
                                                                      tabPanel("Scatter",
                                                                               fluidRow(div(id="local-scatter", class="scroll-area",
                                                                                            plotDownload("gene.expr.scatter.subcluster.dl"),
