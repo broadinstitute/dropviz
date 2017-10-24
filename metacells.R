@@ -195,13 +195,25 @@ rank.plot <- function(clusters, kind, genes) {
   clusters <- gather(clusters, gene.var, value, contains('-target.sum'))
   clusters <- separate(clusters, gene.var, c('gene','var'), sep='-')
   clusters <- spread(clusters, var, value)
-  clusters$cx.disp <- paste(clusters$region.disp,clusters[[paste0(kind,'.disp')]])
+  clusters$cx.disp <- (
+    if (input$opt.rank.by.region) {
+      clusters[[paste0(kind,'.disp')]]
+    } else {
+      glue("{clusters[[paste0(kind,'.disp')]]} ({clusters$region.abbrev})")
+    }
+  )
   clusters$gene <- factor(clusters$gene, levels=genes)
   
   clusters <- arrange(clusters, desc(target.sum.per.100k))
   clusters$cx.disp <- with(clusters, factor(cx.disp, levels=rev(unique(cx.disp))))
   
-  clusters.top <- group_by(clusters, region.disp,gene) %>% top_n(as.integer(input$top.N), target.sum.per.100k)
+  clusters.top <- (
+    if (input$opt.rank.by.region) {
+      group_by(clusters, region.disp,gene) %>% top_n(as.integer(input$top.N), target.sum.per.100k)       
+    } else {
+      group_by(clusters, gene) %>% top_n(as.integer(input$top.N), target.sum.per.100k)      
+    }
+  )
   gene.description <- paste(clusters.top$gene,"-",gene.desc(clusters.top$gene))
   clusters.top$gene.description <- factor(gene.description, levels=unique(gene.description[order(clusters.top$gene)]))
 

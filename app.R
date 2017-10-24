@@ -254,7 +254,7 @@ function(request) {
                                                                              conditionalPanel('input["user.genes"]==undefined || input["user.genes"].length <= 2',
                                                                                               div(class="control-box", h4("Rank Plot Settings"), 
                                                                                                   checkboxInput("opt.rank.by.region", "Group Rankings By Region", value=TRUE), 
-                                                                                                  selectInput("top.N","Show Top N Cluster or Subcluster Matches", choices=c(1,2,3,4,5,10,20),selected=5)
+                                                                                                  selectInput("top.N","Top N Cluster or Subcluster", choices=c(1,2,3,4,5,10,20,50,200),selected=5)
                                                                                               )),
                                                                              conditionalPanel('input["user.genes"]!=undefined && input["user.genes"].length > 2',
                                                                                               div(class="control-box", h4("Heat Map Settings"), 
