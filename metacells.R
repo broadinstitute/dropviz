@@ -204,7 +204,10 @@ rank.plot <- function(clusters, kind, genes) {
   )
   clusters$gene <- factor(clusters$gene, levels=genes)
   
-  clusters <- arrange(clusters, desc(target.sum.per.100k))
+  clusters <- arrange(filter(clusters, target.sum.per.100k > 0), desc(target.sum.per.100k))
+  
+  if (nrow(clusters) == 0) { return(plot.text("No data")) }
+  
   clusters$cx.disp <- with(clusters, factor(cx.disp, levels=rev(unique(cx.disp))))
   
   clusters.top <- (
