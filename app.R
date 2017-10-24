@@ -274,13 +274,13 @@ function(request) {
                                                                                  checkboxInput("opt.show.bags","Display t-SNE using bag plots", value=TRUE),
                                                                                  selectInput("opt.downsampling.method","Downsample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
                                                                                  conditionalPanel("input['opt.downsampling.method']!='none'",
-                                                                                                  sliderInput("downsampling", "Downsample Count", 0, 100000, value=10000, step=1000))
+                                                                                                  sliderInput("downsampling", "Downsample Count", 0, 100000, value=10000, step=1000)),
+                                                                                 sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=3, step=0.5)
                                                                              )
                                                             ),
                                                             conditionalPanel('(input["mainpanel"]=="clusters" && input["clusterpanel"]=="scatter") || (input["mainpanel"]=="subclusters" && input["subclusterpanel"]=="scatter")',
                                                                              div(class="control-box", 
                                                                                  h4("Scatter Plot Settings"),
-                                                                                 sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=3, step=0.5),
                                                                                  checkboxInput("opt.scatter.gene.labels","Show Gene Labels on Scatter Plots", value=TRUE)
                                                                              )
                                                             ),
