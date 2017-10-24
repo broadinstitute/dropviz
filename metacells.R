@@ -205,9 +205,17 @@ rank.plot <- function(clusters, kind, genes) {
   gene.description <- paste(clusters.top$gene,"-",gene.desc(clusters.top$gene))
   clusters.top$gene.description <- factor(gene.description, levels=unique(gene.description[order(clusters.top$gene)]))
 
+  rank.facet_grid <- (
+    if (input$opt.rank.by.region) {
+      facet_grid(region.disp~gene.description, scales="free_y")
+    } else {
+      facet_grid(~gene.description, scales="free_y")
+    }
+  )
+
   ggplot(clusters.top, aes(x=target.sum.per.100k, xmin=target.sum.L.per.100k, xmax=target.sum.R.per.100k, y=cx.disp, yend=cx.disp)) + geom_point(size=3) + geom_segment(aes(x=target.sum.L.per.100k,xend=target.sum.R.per.100k)) +
     ggtitle(glue("Ranked {Kind}s by Gene Expression")) + 
-    xlab(glue("Transcripts Per 100,000 in {Kind}")) + ylab("") + facet_grid(region.disp~gene.description, scales = "free_y") 
+    xlab(glue("Transcripts Per 100,000 in {Kind}")) + ylab("") + rank.facet_grid 
   
 }
 

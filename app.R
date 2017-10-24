@@ -250,29 +250,41 @@ function(request) {
                                                             )
                                                    ),
                                                    tabPanel("Display",
-                                                            # opt.*.label effects how items are displayed in pull-downs, table titles, etc. If these are changed
-                                                            # in real time, then options generally reset. One advantage of different displayed options is that querying
-                                                            # can be more general. E.g. If cluster labels are just a class and marker e.g. Atrocyte.Gja1 instead of
-                                                            # Astrocyte.Gja1 [#4], then you can match the same cluster across different regions. But if these are
-                                                            # changed on the fly, then current selections are lost. And there's no general solution because there
-                                                            # isn't a 1:1 mapping of display options to model values.
+                                                            conditionalPanel('(input["mainpanel"]=="clusters" && input["clusterpanel"]=="rank") || (input["mainpanel"]=="subclusters" && input["subclusterpanel"]=="rank")',
+                                                                             conditionalPanel('input["user.genes"]==undefined || input["user.genes"].length <= 2',
+                                                                                              div(class="control-box", h4("Rank Plot Settings"), 
+                                                                                                  checkboxInput("opt.rank.by.region", "Group Rankings By Region", value=TRUE), 
+                                                                                                  selectInput("top.N","Show Top N Cluster or Subcluster Matches", choices=c(1,2,3,4,5,10,20),selected=5)
+                                                                                              )),
+                                                                             conditionalPanel('input["user.genes"]!=undefined && input["user.genes"].length > 2',
+                                                                                              div(class="control-box", h4("Heat Map Settings"), 
+                                                                                                  sliderInput("opt.heatmap.max.per100k", "Threshold Max Transcripts (per 100k) in Heatmap Display (lower values increase sensitivity)",
+                                                                                                              0, 1000, value=100, step=10)
+                                                                                              ))
+                                                                             ),
                                                             div(style="display:none",
                                                                 selectInput("opt.cluster.disp","Label Clusters", choices=c("Using Annotated Class and Markers"='annotated', "With Numbers"='numbers',"Class, Markers and Numbers"="all"), selected = 'all'),
                                                                 selectInput("opt.region.disp","Label Region", choices=c("Using Region Name"='region',"Using Experiment Name"='experiment')),
                                                                 conditionalPanel("input['opt.cluster.disp']=='annotated' || input['opt.cluster.disp']=='all'",
                                                                                  checkboxInput("use.common.name", "Use Common Name for Subcluster, If Present", value = TRUE))),
-                                                            selectInput("opt.plot.label", "Plot Labels for Clusters and Subclusters", choices=c("Names"='disp',"Numbers"='number',"None"='none')),
-                                                            checkboxInput("opt.show.bags","Display t-SNE using bag plots", value=TRUE),
-                                                            selectInput("opt.downsampling.method","Downsample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
-                                                            conditionalPanel("input['opt.downsampling.method']!='none'",
-                                                                             sliderInput("downsampling", "Downsample Count", 0, 100000, value=10000, step=1000)),
-                                                            selectInput("top.N","Gene Search: Show Top Cluster or Subcluster Matches in Rank Display", choices=c(1,2,3,4,5,10,20),selected=5),
-                                                            sliderInput("opt.heatmap.max.per100k", "Threshold Max Transcripts (per 100k) in Heatmap Display (lower values increase sensitivity)",
-                                                                        0, 1000, value=100, step=10),
-                                                            
-                                                            sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=3, step=0.5),
-                                                            checkboxInput("opt.scatter.gene.labels","Show Gene Labels on Scatter Plots", value=TRUE),
-                                                            selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all'))
+                                                            conditionalPanel('(input["mainpanel"]=="clusters" && input["clusterpanel"]=="tsne") || (input["mainpanel"]=="subclusters" && input["subclusterpanel"]=="tsne")',
+                                                                             div(class="control-box",
+                                                                                 h4("t-SNE Plot Settings"),
+                                                                                 selectInput("opt.plot.label", "Plot Labels for Clusters and Subclusters", choices=c("Names"='disp',"Numbers"='number',"None"='none')),
+                                                                                 checkboxInput("opt.show.bags","Display t-SNE using bag plots", value=TRUE),
+                                                                                 selectInput("opt.downsampling.method","Downsample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
+                                                                                 conditionalPanel("input['opt.downsampling.method']!='none'",
+                                                                                                  sliderInput("downsampling", "Downsample Count", 0, 100000, value=10000, step=1000))
+                                                                             )
+                                                            ),
+                                                            conditionalPanel('(input["mainpanel"]=="clusters" && input["clusterpanel"]=="scatter") || (input["mainpanel"]=="subclusters" && input["subclusterpanel"]=="scatter")',
+                                                                             div(class="control-box", 
+                                                                                 h4("Scatter Plot Settings"),
+                                                                                 sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=3, step=0.5),
+                                                                                 checkboxInput("opt.scatter.gene.labels","Show Gene Labels on Scatter Plots", value=TRUE)
+                                                                             )
+                                                            ),
+                                                            div(style="display:none", selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all')))
                                                    ),
                                                    debug.controls()
                                        ),
@@ -282,13 +294,13 @@ function(request) {
                           # Show a plot of the generated distribution
                           mainPanel(width=9, 
                                     tabsetPanel(type="tabs", id="mainpanel",
-                                                tabPanel(span("Global Clusters"), value = "clusters",
+                                                tabPanel("Global Clusters", value = "clusters",
                                                          tabsetPanel(type="pills", id="clusterpanel",
-                                                                     tabPanel("tSNE",
+                                                                     tabPanel("tSNE", value="tsne",
                                                                               fluidRow(div(id="global-expression", class="scroll-area", 
                                                                                            plotDownload("tsne.global.cluster.label.dl"),
                                                                                            span(class="img-center",imageOutput("tsne.global.cluster.label", height="500px"))))),
-                                                                     tabPanel("Rank", 
+                                                                     tabPanel("Rank", value="rank",
                                                                               fluidRow(div(id="global-rank", class="scroll-area",
                                                                                            plotDownload("gene.expr.rank.cluster.dl"),
                                                                                            conditionalPanel(
@@ -300,7 +312,7 @@ function(request) {
                                                                                              div(DT::dataTableOutput("gene.expr.heatmap.cluster"), height=500)
                                                                                            )
                                                                                            ))),
-                                                                     tabPanel("Scatter", 
+                                                                     tabPanel("Scatter", value="scatter",
                                                                               fluidRow(div(id="global-scatter", class="scroll-area",
                                                                                            plotDownload("gene.expr.scatter.cluster.dl"),
                                                                                            span(class="img-center",imageOutput("gene.expr.scatter.cluster", height=500))))),
@@ -318,7 +330,7 @@ function(request) {
                                                 ),
                                                 tabPanel("Subclusters", value = "subclusters",
                                                          tabsetPanel(type="pills", id="subclusterpanel",
-                                                                     tabPanel("tSNE",
+                                                                     tabPanel("tSNE", value="tsne",
                                                                               fluidRow(div(id="local-expression", class="scroll-area",
                                                                                            conditionalPanel("input.showSubclustersInGlobal",
                                                                                                             plotDownload("tsne.global.subcluster.label.dl"),
@@ -326,7 +338,7 @@ function(request) {
                                                                                            conditionalPanel("!input.showSubclustersInGlobal",
                                                                                                             plotDownload("tsne.local.label.dl"),
                                                                                                             span(class="img-center",imageOutput("tsne.local.label", height=500)))))),
-                                                                     tabPanel("Rank", 
+                                                                     tabPanel("Rank", value="rank",
                                                                               fluidRow(div(id="local-rank", class="scroll-area",
                                                                                            plotDownload("gene.expr.rank.subcluster.dl"),
                                                                                            conditionalPanel(
@@ -338,7 +350,7 @@ function(request) {
                                                                                              div(DT::dataTableOutput("gene.expr.heatmap.subcluster"), height=500)
                                                                                            )
                                                                                            ))),
-                                                                     tabPanel("Scatter",
+                                                                     tabPanel("Scatter", value="scatter",
                                                                               fluidRow(div(id="local-scatter", class="scroll-area",
                                                                                            plotDownload("gene.expr.scatter.subcluster.dl"),
                                                                                            span(class="img-center",imageOutput("gene.expr.scatter.subcluster", height=500))))),
