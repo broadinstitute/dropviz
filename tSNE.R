@@ -210,15 +210,29 @@ psum.amounts <- function(cx, amounts) {
   amounts$total <- log(rowSums(as_tibble(lapply(as.list(amounts), function(a) exp(a)))))
   cbind(cx, alpha=amounts$total)
 }
+
+HEAT.COLOR.N <- 9
 cluster.transcript.amounts <- reactive({
   cx <- select(clusters.selected(), exp.label, cx=cluster)
   amounts <- select(clusters.selected(), ends_with('-log.target.u'))
-  psum.amounts(cx, amounts)
+  pa <- psum.amounts(cx, amounts)
+  if (input$normalize.expression.by.facet) {
+    ddply(pa, .(exp.label), mutate, alpha=alpha/sum(alpha), heat=as.numeric(cut(alpha,HEAT.COLOR.N))) %>%
+      mutate(heat=as.factor(heat))
+  } else {
+    mutate(pa, heat=cut(alpha, HEAT.COLOR.N))
+  }
 })
 subcluster.transcript.amounts <- reactive({
-  cx <- select(subclusters.selected(), exp.label, cx=subcluster)
+  cx <- select(subclusters.selected(), exp.label, cluster=cluster, cx=subcluster)
   amounts <- select(subclusters.selected(), ends_with('-log.target.u'))
-  psum.amounts(cx, amounts)
+  pa <- psum.amounts(cx, amounts)
+  (if (input$normalize.expression.by.facet) {
+    ddply(pa, .(exp.label, cluster), mutate, alpha=alpha/sum(alpha), heat=as.numeric(cut(alpha, HEAT.COLOR.N))) %>%
+      mutate(heat=as.factor(heat))
+  } else {
+    mutate(pa, heat=cut(alpha, HEAT.COLOR.N))
+  }) %>% select(-cluster)
 })
 
 
@@ -228,7 +242,7 @@ subcluster.transcript.amounts <- reactive({
 alpha.na2zero <- function(df) mutate(df, alpha=ifelse(is.na(alpha),0,alpha))
 
 # just a short hand to join with alpha only if lhs has data and then replace all NA alphas with zero
-left_join_alpha <- function(lhs, rhs, by) {
+left_join_alpha_heat <- function(lhs, rhs, by) {
   if (nrow(lhs) > 0) {
     left_join(lhs, rhs, by=by) %>% alpha.na2zero()
   } else {
@@ -275,6 +289,11 @@ log.reactive("fn: tsne.disp.opts")
 tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, show.bags=FALSE, diff.genes=tibble(), comps=tibble(), return.closure=FALSE) {
   function(progress=NULL) {
     stopifnot(is.global || show.subclusters) # can't show clusters on local tsne
+    
+    if (length(user.genes())>0 && input$opt.tx %in% c('heat','grey')) {
+      show.bags <- TRUE
+      show.cells <- FALSE
+    }
     stopifnot(show.bags || show.cells)
     
     # for both global.xy (the positions of each cell) and global.[sub]cluster.avg.xy (the center position of each [sub]cluster),
@@ -333,22 +352,30 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     # alpha is either fixed or set by transcript amounts.
     # if fixed, then alpha range is set by scale further below.
     # if user.genes are specified, then sum all of the amounts per cx and use that as the alpha for colors
-    opt.tx.alpha <- isTruthy(user.genes()) && !is.null(input$opt.tx.alpha) && input$opt.tx.alpha
-    if (opt.tx.alpha) {
-      tx.alpha <- (
+    opt.tx.alpha <- isTruthy(user.genes()) && !is.null(input$opt.tx) && input$opt.tx=='alpha'
+    opt.tx.heat <- isTruthy(user.genes()) && !is.null(input$opt.tx) && (input$opt.tx=='heat' || input$opt.tx=='grey')
+    opt.heat.scale <- ifelse(input$opt.tx=='heat','heat','grey')
+    if (opt.tx.alpha || opt.tx.heat) {
+      tx.cx <- (
         if (show.subclusters) {
           subcluster.transcript.amounts() 
         } else {
           cluster.transcript.amounts()
         }
       ) 
+
+      label.data <- left_join_alpha_heat(label.data, tx.cx, by=c('exp.label','cx')) 
+      center.data <- left_join_alpha_heat(center.data, tx.cx, by=c('exp.label','cx')) 
+      bag.data <- left_join_alpha_heat(bag.data, tx.cx, by=c('exp.label','cx'))
+      loop.data <- left_join_alpha_heat(loop.data, tx.cx, by=c('exp.label','cx'))
+      xy.data <- left_join_alpha_heat(xy.data, tx.cx, by=c('exp.label','cx'))
       
-      label.data <- left_join_alpha(label.data, tx.alpha, by=c('exp.label','cx')) 
-      center.data <- left_join_alpha(center.data, tx.alpha, by=c('exp.label','cx')) 
-      bag.data <- left_join_alpha(bag.data, tx.alpha, by=c('exp.label','cx'))  %>% mutate(alpha=pmax(0,alpha-0.5))
-      loop.data <- left_join_alpha(loop.data, tx.alpha, by=c('exp.label','cx'))  %>% mutate(alpha=pmax(0,alpha-1))
-      xy.data <- left_join_alpha(xy.data, tx.alpha, by=c('exp.label','cx'))   %>% mutate(alpha=pmax(0,alpha-1))
-      
+      bag.data <- mutate(bag.data, alpha=pmax(0,alpha-0.5))
+      loop.data <- mutate(loop.data, alpha=pmax(0,alpha-1))
+      xy.data <- mutate(xy.data, alpha=pmax(0,alpha-1))
+
+      label.data <- filter(label.data, (as.integer(heat)/HEAT.COLOR.N)>=(input$opt.tx.min/100))
+
       if (!is.null(progress)) progress$inc(0.2, detail=glue("Computing alpha for {user.genes()}"))
     }
     
@@ -374,7 +401,6 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     
     # define local vars for objects not in local scope.
     # p.func must depend on only local vars, which get contained in closure's environment 
-    diff.data <- diff.genes
     comp.data <- comps
     opt.expr.size <- input$opt.expr.size
     opt.show.cells <- show.cells
@@ -382,17 +408,29 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     opt.global <- is.global
     opt.plot.label <- input$opt.plot.label
     opt.horiz.facet <- nrow(diff.data)>0 || nrow(comp.data)>0
-
+    opt.cell.display.type <- input$opt.cell.display.type
+    diff.data <- (if (opt.cell.display.type=='detect') filter(diff.genes, transcripts > input$opt.detection.thresh) else diff.genes)
+                      
     p.func <- function() {
       require(ggplot2)
       require(ggthemes)
       
-      if (length(unique(center.data$cx.gg)) <= 20) {
-        scale_fill <- scale_fill_gdocs
-        scale_color <- scale_color_gdocs
+      if (opt.tx.heat) {
+        if (opt.heat.scale=="grey") {
+          scale_color <- function(...) scale_color_grey(..., start=1, end=.1)
+          scale_fill <- function(...) scale_fill_grey(..., start=1, end=.1)
+        } else {
+          scale_color <- function(...) scale_color_brewer(..., palette='YlOrRd')
+          scale_fill <- function(...) scale_fill_brewer(..., palette='YlOrRd')
+        }
       } else {
-        scale_fill <- scale_fill_discrete
-        scale_color <- scale_color_discrete
+        if (length(unique(center.data$cx.gg)) <= 20) {
+          scale_fill <- scale_fill_gdocs
+          scale_color <- scale_color_gdocs
+        } else {
+          scale_fill <- scale_fill_discrete
+          scale_color <- scale_color_discrete
+        }
       }
 
       geom_blank_tsne <- geom_blank(data=data.frame(region.disp=character(),facet.gg=character(),facet2.gg=character()))
@@ -402,7 +440,11 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         if (nrow(comp.data)>0) {
           scale_color_gradient2(low="blue", mid="lightgrey", high="red", midpoint=0, limits=c(-max(comp.data$weight),max(comp.data$weight)))
         } else {
-          scale_color(guide="none", na.value='lightgray') 
+          if (opt.tx.heat) {
+            scale_color(name="Log Expression", na.value='lightgray')
+          } else {
+            scale_color(guide="none", na.value='lightgray') 
+          }
         }
       )
 
@@ -413,6 +455,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           } else {
             if (opt.tx.alpha) {
               geom_point(data=xy.data, aes(x=V1,y=V2,color=cx, alpha=alpha), size=xy.cell.size()) 
+            } else if (opt.tx.heat) {
+              geom_point(data=xy.data, aes(x=V1,y=V2,color=heat), alpha=0.25, size=CELL.MIN.SIZE)
             } else {
               geom_point(data=xy.data, aes(x=V1,y=V2,color=cx), alpha=0.25, size=xy.cell.size()) 
             }
@@ -426,8 +470,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         if (nrow(comp.data)>0) {
           geom_label(data=label.data, aes(x=x,y=y,label=as.character(cx.disp)), color='grey')
         } else {
-          if (opt.tx.alpha) {
-            dv_label(data=label.data, aes(x=x,y=y,color=cx.gg,label=as.character(cx.disp),alpha=alpha))
+          if (opt.tx.heat) {
+            dv_label(data=label.data, aes(x=x,y=y,color=heat,label=as.character(cx.disp)))
           } else {
             dv_label(data=label.data, aes(x=x,y=y,color=cx.gg,label=as.character(cx.disp)))
           }
@@ -436,7 +480,12 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       
       diff.gg <- (
         if (nrow(diff.data)>0) {
-          geom_point(data=diff.data, aes(x=V1, y=V2, size=transcripts), color='black', alpha=0.2)
+          if (opt.cell.display.type=='size') {
+            geom_point(data=diff.data, aes(x=V1, y=V2, size=transcripts), color='black', alpha=0.2)
+          } else {
+            # absent/present
+            geom_point(data=diff.data, aes(x=V1, y=V2, size=CELL.MIN.SIZE), color='black', alpha=0.2)
+          }
         } else {
           geom_blank_tsne
         }
@@ -456,6 +505,11 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           bag.gg <- geom_polygon(data=filter(bag.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
           loop.gg <- geom_polygon(data=filter(loop.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
           center.gg <- geom_point(data=filter(center.data, !is.na(cx.gg)), aes(x=x,y=y, color=cx.gg, alpha=alpha), size=3)
+        } else if (opt.tx.heat) {
+          bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,fill=heat,group=cx), alpha=0.4)
+          loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,fill=heat,group=cx), alpha=0.2)
+          center.gg <- geom_point(data=center.data, aes(x=x,y=y,color=heat), size=3)
+          alpha.range <- scale_alpha()
         } else {
           bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,fill=cx.gg,group=cx), alpha=0.4)
           loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,fill=cx.gg,group=cx), alpha=0.2)
@@ -470,7 +524,12 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       }
       
       facet.label.gg <- (
-        if (opt.horiz.facet) {
+        if (opt.tx.alpha || opt.tx.heat) {
+          stopifnot(!opt.horiz.facet) # FIXME
+          geom_text(data=tibble(x=min(loop.data$x),
+                                y=max(loop.data$y),
+                                gene=paste(user.genes(), collapse='+')), aes(x=x,y=y,label=gene), hjust="left")
+        } else if (opt.horiz.facet) {
           geom_text(data=facet.label.data, aes(x=x, y=y, label=facet2.gg), hjust="left")
         } else {
           geom_blank_tsne
@@ -489,7 +548,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       )
 
-      p <- tsne.gg + tsne.color.scale  + center.gg + loop.gg + bag.gg + xy.gg + alpha.range + diff.gg + comp.gg + label.gg + facet.label.gg + xy.limits.gg + xlab("V1") + ylab("V2")
+      p <- tsne.gg + tsne.color.scale  + center.gg + xy.gg + loop.gg + bag.gg + alpha.range + diff.gg + comp.gg + label.gg + facet.label.gg + xy.limits.gg + xlab("V1") + ylab("V2")
       
       if (opt.global) {
         if (opt.horiz.facet) {
@@ -552,7 +611,7 @@ output$tsne.global.cluster.label <- renderImage({
 
   img.sz <- tsne.image.size(facet1=region.count, facet2=gene.count, display.width=img.size.round(session$clientData[[glue("output_tsne.global.cluster.label_width")]]))
 
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,cluster.markers.selected()$gene,user.genes(),input$top.N,input$opt.show.bags,input$opt.tx.alpha))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,cluster.markers.selected()$gene,user.genes(),input$top.N,input$opt.show.bags,input$opt.tx,input$opt.tx.min))
 
   renderCacheImage(tsne.plot, glue("tsne_global_cluster_label_{key.str}"), img.sz$width, img.sz$height, progress=progress)
 }, deleteFile = FALSE)
@@ -583,7 +642,7 @@ output$tsne.global.subcluster.label <- renderImage({
     h <- img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_height")]])
     img.sz <- list(height=h,width=h)
   } 
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,subcluster.markers.selected()$gene,user.genes(),input$top.N,input$opt.show.bags,input$opt.tx.alpha))
+key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,subcluster.markers.selected()$gene,user.genes(),input$top.N,input$opt.show.bags,input$opt.tx,input$opt.tx.min))
   
   renderCacheImage(tsne.plot, glue("tsne_global_subcluster_label_{key.str}"), img.sz$width, img.sz$height, progress=progress)
 }, deleteFile = FALSE)
@@ -613,7 +672,7 @@ output$tsne.local.label <- renderImage({
     h <- img.size.round(session$clientData[[glue("output_tsne.local.label_height")]])
     img.sz <- list(height=h,width=h)
   }
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, subcluster.markers.selected()$gene, selected.components()$ic.number,user.genes(),input$top.N,input$opt.show.bags,input$opt.tx.alpha))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, subcluster.markers.selected()$gene, selected.components()$ic.number,user.genes(),input$top.N,input$opt.show.bags,input$opt.tx,input$opt.tx.min))
   
   renderCacheImage(tsne.plot, glue("tsne_local_label_{key.str}"), img.sz$width, img.sz$height, progress=progress)
 }, deleteFile = FALSE)

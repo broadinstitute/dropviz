@@ -203,7 +203,8 @@ function(request) {
                                                             div(class="control-box", style="margin-bottom: 0",
                                                                 fluidRow(
                                                                   column(12, selectizeInput("user.genes", "Gene", choices=c("Symbol"="",top.genes),
-                                                                                            multiple=TRUE, width='100%', options=list(create=TRUE,persist=FALSE)))),
+                                                                                            multiple=TRUE, width='100%', options=list(create=TRUE,persist=FALSE)))
+                                                                ),
                                                                 fluidRow(
                                                                   column(12, uiOutput("region"))),
                                                                 fluidRow(column(12, uiOutput("cell.class"))),
@@ -211,8 +212,6 @@ function(request) {
                                                                 conditionalPanel("input.mainpanel=='subclusters'",
                                                                                  fluidRow(column(12, uiOutput("cell.type")))
                                                                 ),
-                                                                conditionalPanel("input['user.genes'] && input['opt.show.bags'] && ((input.mainpanel=='clusters' && input.clusterpanel=='tSNE') || (input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'))",
-                                                                                 checkboxInput("opt.tx.alpha",span(style="font-size: small","Show Expression as Transparency in t-SNE"),value = TRUE)),
                                                                 conditionalPanel("input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'",
                                                                                  checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE))
                                                             )
@@ -253,7 +252,7 @@ function(request) {
                                                             conditionalPanel('(input["mainpanel"]=="clusters" && input["clusterpanel"]=="rank") || (input["mainpanel"]=="subclusters" && input["subclusterpanel"]=="rank")',
                                                                              conditionalPanel('input["user.genes"]==undefined || input["user.genes"].length <= 2',
                                                                                               div(class="control-box", h4("Rank Plot Settings"), 
-                                                                                                  checkboxInput("opt.rank.by.region", "Group Rankings By Region", value=TRUE), 
+                                                                                                  checkboxInput("opt.rank.by.region", "Group Rankings By Region", value=FALSE), 
                                                                                                   selectInput("top.N","Top N Cluster or Subcluster", choices=c(1,2,3,4,5,10,20,50,200),selected=5)
                                                                                               )),
                                                                              conditionalPanel('input["user.genes"]!=undefined && input["user.genes"].length > 2',
@@ -261,21 +260,38 @@ function(request) {
                                                                                                   sliderInput("opt.heatmap.max.per100k", "Threshold Max Transcripts (per 100k) in Heatmap Display (lower values increase sensitivity)",
                                                                                                               0, 1000, value=100, step=10)
                                                                                               ))
-                                                                             ),
+                                                            ),
+                                                            conditionalPanel("input['user.genes'] && ((input.mainpanel=='clusters' && input.clusterpanel=='tsne') || (input.mainpanel=='subclusters' && input.subclusterpanel=='tsne'))",
+                                                                             div(class="control-box",
+                                                                                 h4("Gene Search Settings"),
+                                                                                 div(style="display:none",checkboxInput("normalize.expression.by.facet","Normalize Expression within Region or Cluster", value=FALSE)),
+                                                                                 selectizeInput("opt.tx", "Show Expression as", choices=c("Transparency"="alpha", "Hot-Cool"="heat", "Grey Scale"="grey"), selected = "heat"),
+                                                                                 sliderInput("opt.tx.min", "Show Labels When Expression is Greater than % of Max", 0, 90, value=70, round=TRUE, step=10, post='%'),
+                                                                                 checkboxInput("opt.tx.cells","Show Expression Per Cell for Search Genes", value=FALSE))
+                                                            ),
                                                             div(style="display:none",
                                                                 selectInput("opt.cluster.disp","Label Clusters", choices=c("Using Annotated Class and Markers"='annotated', "With Numbers"='numbers',"Class, Markers and Numbers"="all"), selected = 'all'),
                                                                 selectInput("opt.region.disp","Label Region", choices=c("Using Region Name"='region',"Using Experiment Name"='experiment')),
                                                                 conditionalPanel("input['opt.cluster.disp']=='annotated' || input['opt.cluster.disp']=='all'",
                                                                                  checkboxInput("use.common.name", "Use Common Name for Subcluster, If Present", value = TRUE))),
                                                             conditionalPanel('(input["mainpanel"]=="clusters" && input["clusterpanel"]=="tsne") || (input["mainpanel"]=="subclusters" && input["subclusterpanel"]=="tsne")',
+                                                                             conditionalPanel('input["opt.tx.cells"]',
+                                                                                              div(class="control-box",
+                                                                                                  h4("Cell Expression Settings"),
+                                                                                                  selectInput("opt.cell.display.type","Display Gene Expression Using", choices=c("Size"="size","Absent/Present"="detect"), selected="size"),
+                                                                                                  conditionalPanel('input["opt.cell.display.type"]=="detect"',
+                                                                                                                   sliderInput("opt.detection.thresh","Observed Transcript Copies (FIXME - currently data is normalized values)", 0, 5, value=0, step=1)),
+                                                                                                  conditionalPanel('input["opt.cell.display.type"]=="size"',
+                                                                                                                   sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=4, step=1))
+                                                                                              )
+                                                                             ),
                                                                              div(class="control-box",
                                                                                  h4("t-SNE Plot Settings"),
                                                                                  selectInput("opt.plot.label", "Plot Labels for Clusters and Subclusters", choices=c("Names"='disp',"Numbers"='number',"None"='none')),
                                                                                  checkboxInput("opt.show.bags","Display t-SNE using bag plots", value=TRUE),
                                                                                  selectInput("opt.downsampling.method","Downsample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
                                                                                  conditionalPanel("input['opt.downsampling.method']!='none'",
-                                                                                                  sliderInput("downsampling", "Downsample Count", 0, 100000, value=10000, step=1000)),
-                                                                                 sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=3, step=0.5)
+                                                                                                  sliderInput("downsampling", "Downsample Count", 0, 100000, value=2000, step=1000))
                                                                              )
                                                             ),
                                                             conditionalPanel('(input["mainpanel"]=="clusters" && input["clusterpanel"]=="scatter") || (input["mainpanel"]=="subclusters" && input["subclusterpanel"]=="scatter")',

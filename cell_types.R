@@ -237,7 +237,9 @@ output$dt.clusters <- DT::renderDataTable({
   ct <- clusters.selected()
   col.idx <- c(
     which(names(ct) %in% c('region.disp','class.disp','cluster.disp')),
-    lapply(user.genes(), function(g) grep('.[LR]$', grep(paste0('^',g,'-'), names(ct)), invert=TRUE)) %>% unlist
+    lapply(user.genes(), function(g) 
+      which(grepl(paste0('^',g,'-'), names(ct)) & !grepl('target.sum', names(ct)))
+    ) %>% unlist
   )
   ct <- ct[,col.idx]
   
