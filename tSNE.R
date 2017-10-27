@@ -281,7 +281,10 @@ xy.cell.size <- reactive({
 
 tsne.disp.opts <- reactive({
 log.reactive("fn: tsne.disp.opts")
-  c(input$opt.cluster.disp, input$use.common.name, downsample(), input$opt.downsampling.method, input$opt.region.disp, input$opt.plot.label, input$use.bag.plot, input$opt.expr.size)
+  c(input$opt.cluster.disp, input$use.common.name, downsample(), input$opt.downsampling.method, 
+    input$opt.region.disp, input$opt.plot.label, input$use.bag.plot, input$opt.expr.size,
+    input$opt.show.bags,input$opt.tx,input$opt.tx.min,
+    input$opt.tx.cells, input$opt.cell.display.type, input$opt.expr.size, input$opt.detection.thresh)
 })
 
 ## returns a function that returns either (1) a ggplot object to draw a tsne plot or (2) a closure of the ggplot object and all dependencies
@@ -484,7 +487,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
             geom_point(data=diff.data, aes(x=V1, y=V2, size=transcripts), color='black', alpha=0.2)
           } else {
             # absent/present
-            geom_point(data=diff.data, aes(x=V1, y=V2, size=CELL.MIN.SIZE), color='black', alpha=0.2)
+            geom_point(data=diff.data, aes(x=V1, y=V2), size=CELL.MIN.SIZE, color='black', alpha=0.2)
           }
         } else {
           geom_blank_tsne
@@ -525,7 +528,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       
       facet.label.gg <- (
         if (opt.tx.alpha || opt.tx.heat) {
-          stopifnot(!opt.horiz.facet) # FIXME
+          # stopifnot(!opt.horiz.facet) # FIXME
           geom_text(data=tibble(x=min(loop.data$x),
                                 y=max(loop.data$y),
                                 gene=paste(user.genes(), collapse='+')), aes(x=x,y=y,label=gene), hjust="left")
@@ -611,7 +614,7 @@ output$tsne.global.cluster.label <- renderImage({
 
   img.sz <- tsne.image.size(facet1=region.count, facet2=gene.count, display.width=img.size.round(session$clientData[[glue("output_tsne.global.cluster.label_width")]]))
 
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,cluster.markers.selected()$gene,user.genes(),input$top.N,input$opt.show.bags,input$opt.tx,input$opt.tx.min))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,cluster.markers.selected()$gene,user.genes(),input$top.N))
 
   renderCacheImage(tsne.plot, glue("tsne_global_cluster_label_{key.str}"), img.sz$width, img.sz$height, progress=progress)
 }, deleteFile = FALSE)
@@ -642,7 +645,7 @@ output$tsne.global.subcluster.label <- renderImage({
     h <- img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_height")]])
     img.sz <- list(height=h,width=h)
   } 
-key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,subcluster.markers.selected()$gene,user.genes(),input$top.N,input$opt.show.bags,input$opt.tx,input$opt.tx.min))
+key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,subcluster.markers.selected()$gene,user.genes(),input$top.N))
   
   renderCacheImage(tsne.plot, glue("tsne_global_subcluster_label_{key.str}"), img.sz$width, img.sz$height, progress=progress)
 }, deleteFile = FALSE)
@@ -672,7 +675,7 @@ output$tsne.local.label <- renderImage({
     h <- img.size.round(session$clientData[[glue("output_tsne.local.label_height")]])
     img.sz <- list(height=h,width=h)
   }
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, subcluster.markers.selected()$gene, selected.components()$ic.number,user.genes(),input$top.N,input$opt.show.bags,input$opt.tx,input$opt.tx.min))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, subcluster.markers.selected()$gene, selected.components()$ic.number,user.genes(),input$top.N))
   
   renderCacheImage(tsne.plot, glue("tsne_local_label_{key.str}"), img.sz$width, img.sz$height, progress=progress)
 }, deleteFile = FALSE)
