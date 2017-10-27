@@ -407,10 +407,10 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     opt.show.bags <- show.bags
     opt.global <- is.global
     opt.plot.label <- input$opt.plot.label
-    opt.horiz.facet <- nrow(diff.data)>0 || nrow(comp.data)>0
     opt.cell.display.type <- input$opt.cell.display.type
     diff.data <- (if (opt.cell.display.type=='detect') filter(diff.genes, transcripts > input$opt.detection.thresh) else diff.genes)
-                      
+    opt.horiz.facet <- nrow(diff.data)>0 || nrow(comp.data)>0
+    
     p.func <- function() {
       require(ggplot2)
       require(ggthemes)
