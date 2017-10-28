@@ -267,7 +267,8 @@ function(request) {
                                                                                  div(style="display:none",checkboxInput("normalize.expression.by.facet","Normalize Expression within Region or Cluster", value=FALSE)),
                                                                                  selectizeInput("opt.tx", "Show Expression as", choices=c("Transparency"="alpha", "Hot-Cool"="heat", "Grey Scale"="grey"), selected = "heat"),
                                                                                  sliderInput("opt.tx.min", "Show Labels When Expression is Greater than % of Max", 0, 90, value=70, round=TRUE, step=10, post='%'),
-                                                                                 checkboxInput("opt.tx.cells","Show Expression Per Cell for Search Genes", value=FALSE))
+                                                                                 checkboxInput("opt.tx.cells","Show Expression Per Cell for Search Genes", value=FALSE),
+                                                                                 conditionalPanel("!input['opt.tx.cells']", checkboxInput("opt.tx.sum", "Sum Expression of Multiple Search Genes", value=TRUE)))
                                                             ),
                                                             div(style="display:none",
                                                                 selectInput("opt.cluster.disp","Label Clusters", choices=c("Using Annotated Class and Markers"='annotated', "With Numbers"='numbers',"Class, Markers and Numbers"="all"), selected = 'all'),

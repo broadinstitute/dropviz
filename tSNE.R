@@ -205,6 +205,12 @@ log.reactive("fn: local.xy.selected")
   x
 })
 
+opt.tx <- reactive({ isTruthy(user.genes()) && !is.null(input$opt.tx) })
+opt.tx.cells <- reactive({ input$opt.tx.cells })
+opt.tx.alpha <- reactive({ opt.tx() && input$opt.tx=='alpha' })
+opt.tx.heat <- reactive({ opt.tx() && (input$opt.tx=='heat' || input$opt.tx=='grey') })
+opt.tx.facet2 <- reactive({ opt.tx() && (!input$opt.tx.sum || opt.tx.cells()) && user.genes() > 1 })
+
 # returns the sum of all of the log normal transcript counts for all user.genes
 psum.amounts <- function(cx, amounts) {
   amounts$total <- log(rowSums(as_tibble(lapply(as.list(amounts), function(a) exp(a)))))
@@ -213,26 +219,45 @@ psum.amounts <- function(cx, amounts) {
 
 HEAT.COLOR.N <- 9
 cluster.transcript.amounts <- reactive({
-  cx <- select(clusters.selected(), exp.label, cx=cluster)
-  amounts <- select(clusters.selected(), ends_with('-log.target.u'))
-  pa <- psum.amounts(cx, amounts)
-  if (input$normalize.expression.by.facet) {
-    ddply(pa, .(exp.label), mutate, alpha=alpha/sum(alpha), heat=as.numeric(cut(alpha,HEAT.COLOR.N))) %>%
-      mutate(heat=as.factor(heat))
+  # If a gene search that includes cell expression for more than one gene, then return amounts
+  # per gene. Otherwise, sum the levels across genes
+  if (opt.tx.facet2()) {
+    select(clusters.selected(), exp.label, cx=cluster, ends_with('-log.target.u')) %>%
+      gather(gene, alpha, ends_with('-log.target.u')) %>%
+      separate(gene, 'facet2.gg', sep='-', extra='drop') %>%
+      mutate(heat=cut(alpha, HEAT.COLOR.N))
   } else {
-    mutate(pa, heat=cut(alpha, HEAT.COLOR.N))
+    cx <- select(clusters.selected(), exp.label, cx=cluster)
+    amounts <- select(clusters.selected(), ends_with('-log.target.u'))
+    pa <- psum.amounts(cx, amounts)
+    if (input$normalize.expression.by.facet) {
+      ddply(pa, .(exp.label), mutate, alpha=alpha/sum(alpha), heat=as.numeric(cut(alpha,HEAT.COLOR.N))) %>%
+        mutate(heat=as.factor(heat))
+    } else {
+      mutate(pa, heat=cut(alpha, HEAT.COLOR.N))
+    }
+    
   }
 })
+
+# TODO: factor into single function
 subcluster.transcript.amounts <- reactive({
-  cx <- select(subclusters.selected(), exp.label, cluster=cluster, cx=subcluster)
-  amounts <- select(subclusters.selected(), ends_with('-log.target.u'))
-  pa <- psum.amounts(cx, amounts)
-  (if (input$normalize.expression.by.facet) {
-    ddply(pa, .(exp.label, cluster), mutate, alpha=alpha/sum(alpha), heat=as.numeric(cut(alpha, HEAT.COLOR.N))) %>%
-      mutate(heat=as.factor(heat))
+  if (opt.tx.facet2()) {
+    select(subclusters.selected(), exp.label, cx=subcluster, ends_with('-log.target.u')) %>%
+      gather(gene, alpha, ends_with('-log.target.u')) %>%
+      separate(gene, 'facet2.gg', sep='-', extra='drop') %>%
+      mutate(heat=cut(alpha, HEAT.COLOR.N))
   } else {
-    mutate(pa, heat=cut(alpha, HEAT.COLOR.N))
-  }) %>% select(-cluster)
+    cx <- select(subclusters.selected(), exp.label, cluster=cluster, cx=subcluster)
+    amounts <- select(subclusters.selected(), ends_with('-log.target.u'))
+    pa <- psum.amounts(cx, amounts)
+    (if (input$normalize.expression.by.facet) {
+      ddply(pa, .(exp.label, cluster), mutate, alpha=alpha/sum(alpha), heat=as.numeric(cut(alpha, HEAT.COLOR.N))) %>%
+        mutate(heat=as.factor(heat))
+    } else {
+      mutate(pa, heat=cut(alpha, HEAT.COLOR.N))
+    }) %>% select(-cluster)
+  }
 })
 
 
@@ -283,7 +308,7 @@ tsne.disp.opts <- reactive({
 log.reactive("fn: tsne.disp.opts")
   c(input$opt.cluster.disp, input$use.common.name, downsample(), input$opt.downsampling.method, 
     input$opt.region.disp, input$opt.plot.label, input$use.bag.plot, input$opt.expr.size,
-    input$opt.show.bags,input$opt.tx,input$opt.tx.min,
+    input$opt.show.bags,input$opt.tx,input$opt.tx.min,input$opt.tx.sum,
     input$opt.tx.cells, input$opt.cell.display.type, input$opt.expr.size, input$opt.detection.thresh)
 })
 
@@ -293,7 +318,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
   function(progress=NULL) {
     stopifnot(is.global || show.subclusters) # can't show clusters on local tsne
     
-    if (length(user.genes())>0 && input$opt.tx %in% c('heat','grey')) {
+    if (opt.tx() && input$opt.tx %in% c('heat','grey')) {
       show.bags <- TRUE
       show.cells <- FALSE
     }
@@ -355,10 +380,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     # alpha is either fixed or set by transcript amounts.
     # if fixed, then alpha range is set by scale further below.
     # if user.genes are specified, then sum all of the amounts per cx and use that as the alpha for colors
-    opt.tx.alpha <- isTruthy(user.genes()) && !is.null(input$opt.tx) && input$opt.tx=='alpha'
-    opt.tx.heat <- isTruthy(user.genes()) && !is.null(input$opt.tx) && (input$opt.tx=='heat' || input$opt.tx=='grey')
-    opt.heat.scale <- ifelse(input$opt.tx=='heat','heat','grey')
-    if (opt.tx.alpha || opt.tx.heat) {
+    if (opt.tx.alpha() || opt.tx.heat()) {
       tx.cx <- (
         if (show.subclusters) {
           subcluster.transcript.amounts() 
@@ -412,7 +434,10 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     opt.plot.label <- input$opt.plot.label
     opt.cell.display.type <- input$opt.cell.display.type
     diff.data <- (if (opt.cell.display.type=='detect') filter(diff.genes, transcripts > input$opt.detection.thresh) else diff.genes)
-    opt.horiz.facet <- nrow(diff.data)>0 || nrow(comp.data)>0
+    opt.horiz.facet <- nrow(diff.data)>0 || nrow(comp.data)>0 || opt.tx.facet2()
+    opt.tx.alpha <- opt.tx.alpha()
+    opt.tx.heat <- opt.tx.heat()
+    opt.heat.scale <- ifelse(input$opt.tx=='heat','heat','grey')
     
     p.func <- function() {
       require(ggplot2)
@@ -527,13 +552,12 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       }
       
       facet.label.gg <- (
-        if (opt.tx.alpha || opt.tx.heat) {
-          # stopifnot(!opt.horiz.facet) # FIXME
+        if (opt.horiz.facet) {
+          geom_text(data=facet.label.data, aes(x=x, y=y, label=facet2.gg), hjust="left")
+        } else if (opt.tx.alpha || opt.tx.heat) {
           geom_text(data=tibble(x=min(loop.data$x),
                                 y=max(loop.data$y),
                                 gene=paste(user.genes(), collapse='+')), aes(x=x,y=y,label=gene), hjust="left")
-        } else if (opt.horiz.facet) {
-          geom_text(data=facet.label.data, aes(x=x, y=y, label=facet2.gg), hjust="left")
         } else {
           geom_blank_tsne
         }
@@ -611,6 +635,7 @@ output$tsne.global.cluster.label <- renderImage({
   
   region.count <- nrow(regions.selected())
   gene.count <- nrow(cluster.markers.selected())
+  if (opt.tx.facet2() && gene.count==0) { gene.count <- length(user.genes()) }
 
   img.sz <- tsne.image.size(facet1=region.count, facet2=gene.count, display.width=img.size.round(session$clientData[[glue("output_tsne.global.cluster.label_width")]]))
 
