@@ -66,7 +66,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$select.analysis.tab, {
-    updateNavbarPage(session, "top-nav", selected = "Analysis")
+    updateNavbarPage(session, "top-nav", selected = "Query")
   })  
   
   # dropped this idea of expanding and collapsing the sidebar, but this might be an approach
@@ -192,14 +192,14 @@ function(request) {
                tabPanel("Home",div(column(2), column(8, embed.tags(HTML(readLines("html/landing.html")), 
                                                                    list(actionButton("select.analysis.tab","Get Started", class="btn btn-lg btn-primary")))), column(2)),
                         HTML(readLines("html/featurette.html"))),
-               tabPanel("Analysis",
+               tabPanel("Query",
                         
                         # Sidebar with a slider input for number of bins 
                         sidebarLayout(
                           sidebarPanel(width=3, id="controlpanel",
                                        div(helpIcon("config"), class='top-right'),
                                        tabsetPanel(type="tabs", id='controltabs', selected="controltabs-query",
-                                                   tabPanel("Query", value="controltabs-query",
+                                                   tabPanel("Gene", value="controltabs-query",
                                                             div(class="control-box", style="margin-bottom: 0",
                                                                 fluidRow(
                                                                   column(12, selectizeInput("user.genes", "Gene", choices=c("Symbol"="",top.genes),
@@ -212,11 +212,11 @@ function(request) {
                                                                 conditionalPanel("input.mainpanel=='subclusters'",
                                                                                  fluidRow(column(12, uiOutput("cell.type")))
                                                                 ),
-                                                                conditionalPanel("input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'",
+                                                                conditionalPanel("input.mainpanel=='subclusters' && input.subclusterpanel=='tsne'",
                                                                                  checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE))
                                                             )
                                                    ),
-                                                   tabPanel("Compare", value="controltabs-compare",
+                                                   tabPanel("Cluster", value="controltabs-compare",
                                                             div(class="control-box",
                                                                 conditionalPanel('input.mainpanel=="clusters"',
                                                                                  h4("Compare Clusters"),
@@ -251,9 +251,10 @@ function(request) {
                                                    tabPanel("Display",
                                                             conditionalPanel('(input["mainpanel"]=="clusters" && input["clusterpanel"]=="rank") || (input["mainpanel"]=="subclusters" && input["subclusterpanel"]=="rank")',
                                                                              conditionalPanel('input["user.genes"]==undefined || input["user.genes"].length <= 2',
-                                                                                              div(class="control-box", h4("Rank Plot Settings"), 
+                                                                                              div(class="control-box", h4("Level Plot Settings"), 
                                                                                                   checkboxInput("opt.rank.by.region", "Group Rankings By Region", value=FALSE), 
-                                                                                                  selectInput("top.N","Top N Cluster or Subcluster", choices=c(1,2,3,4,5,10,20,50,200),selected=5)
+                                                                                                  selectInput("top.N","Top N Cluster or Subcluster", choices=c(1,2,3,4,5,10,20,50,200),selected=10),
+                                                                                                  selectInput("opt.plot.height", "Plot Height", choices=c('Fixed'='fixed', 'Adjust'='auto'), selected='auto')
                                                                                               )),
                                                                              conditionalPanel('input["user.genes"]!=undefined && input["user.genes"].length > 2',
                                                                                               div(class="control-box", h4("Heat Map Settings"), 
@@ -265,10 +266,12 @@ function(request) {
                                                                              div(class="control-box",
                                                                                  h4("Gene Search Settings"),
                                                                                  div(style="display:none",checkboxInput("normalize.expression.by.facet","Normalize Expression within Region or Cluster", value=FALSE)),
-                                                                                 selectizeInput("opt.tx", "Show Expression as", choices=c("Transparency"="alpha", "Hot-Cool"="heat", "Grey Scale"="grey"), selected = "heat"),
+                                                                                 selectizeInput("opt.tx", "Show Expression as", choices=c("Transparency"="alpha", "Hot-Cool"="heat"), selected = "heat"),
                                                                                  sliderInput("opt.tx.min", "Show Labels When Expression is Greater than % of Max", 0, 90, value=70, round=TRUE, step=10, post='%'),
-                                                                                 checkboxInput("opt.tx.cells","Show Expression Per Cell for Search Genes", value=FALSE),
-                                                                                 conditionalPanel("!input['opt.tx.cells']", checkboxInput("opt.tx.sum", "Sum Expression of Multiple Search Genes", value=TRUE)))
+                                                                                 checkboxInput("opt.tx.cells","Show Expression Per Cell for Search Genes", value=TRUE),
+                                                                                 checkboxInput("opt.tx.legend","Show Expression Legend", value=FALSE),
+                                                                                 selectInput("opt.tx.scale", "Scale transparency or color range: ", choices=c("Fixed"="fixed", "Observed Min/Max Value"="max", "Min/Max Per Gene"="gene"), selected="fixed"),
+                                                                                 conditionalPanel("!input['opt.tx.cells'] && input['user.genes'].length > 1", checkboxInput("opt.tx.sum", "Sum Expression of Multiple Search Genes", value=FALSE)))
                                                             ),
                                                             div(style="display:none",
                                                                 selectInput("opt.cluster.disp","Label Clusters", choices=c("Using Annotated Class and Markers"='annotated', "With Numbers"='numbers',"Class, Markers and Numbers"="all"), selected = 'all'),
@@ -313,22 +316,18 @@ function(request) {
                                     tabsetPanel(type="tabs", id="mainpanel",
                                                 tabPanel("Global Clusters", value = "clusters",
                                                          tabsetPanel(type="pills", id="clusterpanel",
+                                                                     tabPanel("Levels By Cluster", value="rank",
+                                                                              div(plotDownload("gene.expr.rank.cluster.dl"), 
+                                                                                  conditionalPanel("input['user.genes']==undefined || input['user.genes'].length <= 2",
+                                                                                                   uiOutput("gene.expr.rank.cluster.output")
+                                                                                                   ),
+                                                                                  conditionalPanel("input['user.genes']!=undefined && input['user.genes'].length > 2",
+                                                                                                   DT::dataTableOutput("gene.expr.heatmap.cluster")
+                                                                                                   ))),
                                                                      tabPanel("tSNE", value="tsne",
                                                                               fluidRow(div(id="global-expression", class="scroll-area", 
                                                                                            plotDownload("tsne.global.cluster.label.dl"),
                                                                                            span(class="img-center",imageOutput("tsne.global.cluster.label", height="500px"))))),
-                                                                     tabPanel("Rank", value="rank",
-                                                                              fluidRow(div(id="global-rank", class="scroll-area",
-                                                                                           plotDownload("gene.expr.rank.cluster.dl"),
-                                                                                           conditionalPanel(
-                                                                                             "input['user.genes']==undefined || input['user.genes'].length <= 2",
-                                                                                             span(class="img-center",plotOutput("gene.expr.rank.cluster", height=500))
-                                                                                           ),
-                                                                                           conditionalPanel(
-                                                                                             "input['user.genes']!=undefined && input['user.genes'].length > 2",
-                                                                                             div(DT::dataTableOutput("gene.expr.heatmap.cluster"), height=500)
-                                                                                           )
-                                                                                           ))),
                                                                      tabPanel("Scatter", value="scatter",
                                                                               fluidRow(div(id="global-scatter", class="scroll-area",
                                                                                            plotDownload("gene.expr.scatter.cluster.dl"),
@@ -339,7 +338,7 @@ function(request) {
                                                          hr(),
                                                          uiOutput("dt.cluster.markers.heading"),
                                                          conditionalPanel(
-                                                           'true && !$("div[id=\'current.cluster\']").is(":empty")',
+                                                           'input["current.cluster"]',
                                                            fluidRow(class="table-area",
                                                                     tableDownload("dt.cluster.markers.dl"),
                                                                     column(11,DT::dataTableOutput("dt.cluster.markers")))
@@ -347,6 +346,14 @@ function(request) {
                                                 ),
                                                 tabPanel("Subclusters", value = "subclusters",
                                                          tabsetPanel(type="pills", id="subclusterpanel",
+                                                                     tabPanel("Levels By Subcluster", value="rank",
+                                                                              div(plotDownload("gene.expr.rank.subcluster.dl"),
+                                                                                  conditionalPanel("input['user.genes']==undefined || input['user.genes'].length <= 2",
+                                                                                                   uiOutput("gene.expr.rank.subcluster.output")
+                                                                                                   ),
+                                                                                  conditionalPanel("input['user.genes']!=undefined && input['user.genes'].length > 2",
+                                                                                                   DT::dataTableOutput("gene.expr.heatmap.subcluster")
+                                                                                                   ))),
                                                                      tabPanel("tSNE", value="tsne",
                                                                               fluidRow(div(id="local-expression", class="scroll-area",
                                                                                            conditionalPanel("input.showSubclustersInGlobal",
@@ -355,38 +362,30 @@ function(request) {
                                                                                            conditionalPanel("!input.showSubclustersInGlobal",
                                                                                                             plotDownload("tsne.local.label.dl"),
                                                                                                             span(class="img-center",imageOutput("tsne.local.label", height=500)))))),
-                                                                     tabPanel("Rank", value="rank",
-                                                                              fluidRow(div(id="local-rank", class="scroll-area",
-                                                                                           plotDownload("gene.expr.rank.subcluster.dl"),
-                                                                                           conditionalPanel(
-                                                                                             "input['user.genes']==undefined || input['user.genes'].length <= 2",
-                                                                                             span(class="img-center",plotOutput("gene.expr.rank.subcluster", height=500))
-                                                                                           ),
-                                                                                           conditionalPanel(
-                                                                                             "input['user.genes']!=undefined && input['user.genes'].length > 2",
-                                                                                             div(DT::dataTableOutput("gene.expr.heatmap.subcluster"), height=500)
-                                                                                           )
-                                                                                           ))),
                                                                      tabPanel("Scatter", value="scatter",
                                                                               fluidRow(div(id="local-scatter", class="scroll-area",
                                                                                            plotDownload("gene.expr.scatter.subcluster.dl"),
                                                                                            span(class="img-center",imageOutput("gene.expr.scatter.subcluster", height=500))))),
-                                                                     tabPanel("Independent Components",
-                                                                              fluidRow(div(id="ic-grid", class="scroll-area",
-                                                                                           #                                                                                           plotDownload("ic.grid.dl"),
-                                                                                           span(class="img-center",plotOutput("ic.grid", height=500))))),
+                                                                     ## tabPanel("Independent Components",
+                                                                     ##          fluidRow(div(id="ic-grid", class="scroll-area",
+                                                                     ##                       #                                                                                           plotDownload("ic.grid.dl"),
+                                                                     ##                       span(class="img-center",plotOutput("ic.grid", height=500))))),
                                                                      tabPanel("Table",  
                                                                               fluidRow(div(id="dt-subclusters", class="scroll-area", DT::dataTableOutput("dt.subclusters"))))),
                                                          hr(),
-                                                         tabsetPanel(type="pills",
-                                                                     tabPanel("Differential Expression",
-                                                                              uiOutput("dt.subcluster.markers.heading"),
-                                                                              fluidRow(class="table-area",
-                                                                                       tableDownload("dt.subcluster.markers.dl"),
-                                                                                       column(11,DT::dataTableOutput("dt.subcluster.markers")))),
-                                                                     tabPanel("Independent Components",
-                                                                              uiOutput("dt.components.heading"),
-                                                                              fluidRow(DT::dataTableOutput("dt.components")))))
+                                                         uiOutput("dt.subcluster.markers.heading"),
+                                                         conditionalPanel(
+                                                           'input["current.subcluster"]',
+                                                           fluidRow(class="table-area",
+                                                                    tableDownload("dt.subcluster.markers.dl"),
+                                                                    column(11,DT::dataTableOutput("dt.subcluster.markers")))
+                                                         )
+                                                                  #   tabPanel("Differential Expression",
+                                                                              # ) # ,
+                                                                     ## tabPanel("Independent Components",
+                                                                     ##          uiOutput("dt.components.heading"),
+                                                                     ##          fluidRow(DT::dataTableOutput("dt.components"))))
+                                                         )
                                                 # ,
                                                 # tabPanel("Metacells")
                                     )

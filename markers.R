@@ -140,7 +140,7 @@ output$dt.cluster.markers.heading <- renderUI({
     }
     tags$h4(glue("Differentially Over-Expressed: {target.names} vs {comparison.names}"))
   } else {
-    tags$p(align="center","Choose a target and comparison cluster in the 'Compare' panel to find differentially expressed genes")
+    tags$p(align="center","Choose a target and comparison cluster in the 'Cluster' panel to find differentially expressed genes")
   }
 })
 
@@ -167,7 +167,7 @@ output$dt.subcluster.markers.heading <- renderUI({
     
     tags$h4(glue("Differentially Over-Expressed: {target.names} vs {comparison.names}"))
   } else {
-    tags$p(align="center","Choose a target and comparison subcluster in the 'Compare' panel to find differentially expressed genes")
+    tags$p(align="center","Choose a target and comparison subcluster in the 'Cluster' panel to find differentially expressed genes")
   }
 })
 

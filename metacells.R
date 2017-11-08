@@ -141,7 +141,7 @@ output$gene.expr.scatter.cluster <- renderImage({
                         cluster.markers.selected()$gene, input$expr.filter.opt, input$pval.thresh,
                         input$max.amt.without, input$min.amt.within))
   } else {
-    cluster.scatter.plot <- function(progress) plot.text("Choose a target and comparison cluster in the 'Compare' panel")    
+    cluster.scatter.plot <- function(progress) plot.text("Choose a target and comparison cluster in the 'Cluster' panel")    
     key.str <- 'missing_clusters'
   }
   
@@ -169,7 +169,7 @@ output$gene.expr.scatter.subcluster <- renderImage({
                         subcluster.markers.selected()$gene, input$expr.filter.opt, input$pval.thresh,
                         input$max.amt.without, input$min.amt.within))
   } else {
-    subcluster.scatter.plot <- function(progress) plot.text("Choose a target and comparison subcluster in the 'Compare' panel")    
+    subcluster.scatter.plot <- function(progress) plot.text("Choose a target and comparison subcluster in the 'Cluster' panel")    
     key.str <- 'missing_subclusters'
   }
   
@@ -229,9 +229,9 @@ rank.plot <- function(clusters, kind, genes) {
   )
 
   ggplot(clusters.top, aes(x=target.sum.per.100k, xmin=target.sum.L.per.100k, xmax=target.sum.R.per.100k, y=cx.disp, yend=cx.disp)) + geom_point(size=3) + geom_segment(aes(x=target.sum.L.per.100k,xend=target.sum.R.per.100k)) +
-    ggtitle(glue("Ranked {Kind}s by Gene Expression")) + 
-    xlab(glue("Transcripts Per 100,000 in {Kind}")) + ylab("") + rank.facet_grid 
-  
+    ggtitle(glue("{Kind}s With Highest Expression of {paste0(genes,collapse=' & ')} (top {length(unique(clusters.top$cx.disp))} results)")) + 
+    xlab(glue("Transcripts Per 100,000 in {Kind}\n\nThe reported confidence intervals reflect statistical sampling noise (calculated from the binomial distribution,\nand reflecting total number of UMIs ascertained by cluster) rather than cell-to-cell heterogeneity within a cluster")) + ylab("") + rank.facet_grid + xlim(0, max(clusters.top$target.sum.R.per.100k)) +
+    theme_few() + theme(plot.title=element_text(size=20,face="bold",hjust=0.5), strip.text=element_text(size=16), axis.text.y=element_text(size=16))
 }
 
 
@@ -285,6 +285,28 @@ output$gene.expr.heatmap.subcluster <- DT::renderDataTable({
   expr.heatmap(heatmap.subclusters(),'subcluster')
 })
 
+opt.plot.height <- reactive({
+  if (input$opt.plot.height=='fixed') {
+    500
+  } else {
+    region.mult <- (if (input$opt.rank.by.region) nrow(regions.selected()) else 1)
+    gene.mult <- length(user.genes())
+    max(500, 16 * region.mult * gene.mult * as.integer(input$top.N))
+  }
+})
+
+rank.imageOutput <- function(nm) {
+  span(class="img-center",imageOutput(nm, height=sprintf("%dpx",opt.plot.height())))
+}
+
+output$gene.expr.rank.cluster.output <- renderUI({
+  rank.imageOutput("gene.expr.rank.cluster")
+})
+
+output$gene.expr.rank.subcluster.output <- renderUI({
+  rank.imageOutput("gene.expr.rank.subcluster")
+})
+
 output$gene.expr.rank.cluster <- renderPlot({
   if (isTruthy(user.genes())) {
     if (length(user.genes()) > 2) {
@@ -294,7 +316,7 @@ output$gene.expr.rank.cluster <- renderPlot({
       rank.plot(clusters,'cluster', user.genes())
     }
   } else {
-    plot.text("Enter a gene symbol in the 'Compare' panel\nto display a ranked order of clusters by transcript abundance")    
+    plot.text("Enter a gene symbol in the 'Cluster' panel\nto display a ranked order of clusters by transcript abundance")    
   }
 })
 
@@ -307,6 +329,6 @@ output$gene.expr.rank.subcluster <- renderPlot({
       rank.plot(subclusters, 'subcluster', user.genes())
     }
   } else {
-    plot.text("Enter a gene symbol in the 'Compare' panel\nto display a ranked order of subclusters by transcript abundance")    
+    plot.text("Enter a gene symbol in the 'Cluster' panel\nto display a ranked order of subclusters by transcript abundance")    
   }
 })

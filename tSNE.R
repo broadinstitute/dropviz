@@ -208,7 +208,9 @@ log.reactive("fn: local.xy.selected")
 opt.tx <- reactive({ isTruthy(user.genes()) && !is.null(input$opt.tx) })
 opt.tx.cells <- reactive({ input$opt.tx.cells })
 opt.tx.alpha <- reactive({ opt.tx() && input$opt.tx=='alpha' })
-opt.tx.heat <- reactive({ opt.tx() && (input$opt.tx=='heat' || input$opt.tx=='grey') })
+opt.tx.heat <- reactive({ opt.tx() && (input$opt.tx=='heat') })
+opt.tx.scale <- reactive({ input$opt.tx.scale })
+opt.tx.legend <- reactive({ if (input$opt.tx.legend) 'legend' else 'none' })
 opt.tx.facet2 <- reactive({ opt.tx() && (!input$opt.tx.sum || opt.tx.cells()) && user.genes() > 1 })
 
 # returns the sum of all of the log normal transcript counts for all user.genes
@@ -221,42 +223,34 @@ HEAT.COLOR.N <- 9
 cluster.transcript.amounts <- reactive({
   # If a gene search that includes cell expression for more than one gene, then return amounts
   # per gene. Otherwise, sum the levels across genes
-  if (opt.tx.facet2()) {
-    select(clusters.selected(), exp.label, cx=cluster, ends_with('-log.target.u')) %>%
-      gather(gene, alpha, ends_with('-log.target.u')) %>%
-      separate(gene, 'facet2.gg', sep='-', extra='drop') %>%
-      mutate(heat=cut(alpha, HEAT.COLOR.N))
-  } else {
-    cx <- select(clusters.selected(), exp.label, cx=cluster)
-    amounts <- select(clusters.selected(), ends_with('-log.target.u'))
-    pa <- psum.amounts(cx, amounts)
-    if (input$normalize.expression.by.facet) {
-      ddply(pa, .(exp.label), mutate, alpha=alpha/sum(alpha), heat=as.numeric(cut(alpha,HEAT.COLOR.N))) %>%
-        mutate(heat=as.factor(heat))
+  breaks <- if (opt.tx.scale()=='fixed') seq(0,7) else HEAT.COLOR.N
+  (
+    if (opt.tx.facet2()) {
+      select(clusters.selected(), exp.label, cx=cluster, ends_with('-log.target.u')) %>%
+        gather(gene, alpha, ends_with('-log.target.u')) %>%
+        separate(gene, 'facet2.gg', sep='-', extra='drop')
     } else {
-      mutate(pa, heat=cut(alpha, HEAT.COLOR.N))
+      cx <- select(clusters.selected(), exp.label, cx=cluster)
+      amounts <- select(clusters.selected(), ends_with('-log.target.u'))
+      psum.amounts(cx, amounts)
     }
-    
-  }
+  ) %>% mutate(heat=cut(alpha, breaks))
 })
 
 # TODO: factor into single function
 subcluster.transcript.amounts <- reactive({
+  breaks <- if (opt.tx.scale()=='fixed') seq(0,7) else HEAT.COLOR.N
+
   if (opt.tx.facet2()) {
     select(subclusters.selected(), exp.label, cx=subcluster, ends_with('-log.target.u')) %>%
       gather(gene, alpha, ends_with('-log.target.u')) %>%
       separate(gene, 'facet2.gg', sep='-', extra='drop') %>%
-      mutate(heat=cut(alpha, HEAT.COLOR.N))
+      mutate(heat=cut(alpha, breaks))
   } else {
     cx <- select(subclusters.selected(), exp.label, cluster=cluster, cx=subcluster)
     amounts <- select(subclusters.selected(), ends_with('-log.target.u'))
     pa <- psum.amounts(cx, amounts)
-    (if (input$normalize.expression.by.facet) {
-      ddply(pa, .(exp.label, cluster), mutate, alpha=alpha/sum(alpha), heat=as.numeric(cut(alpha, HEAT.COLOR.N))) %>%
-        mutate(heat=as.factor(heat))
-    } else {
-      mutate(pa, heat=cut(alpha, HEAT.COLOR.N))
-    }) %>% select(-cluster)
+    mutate(pa, heat=cut(alpha, breaks)) %>% select(-cluster)
   }
 })
 
@@ -308,7 +302,7 @@ tsne.disp.opts <- reactive({
 log.reactive("fn: tsne.disp.opts")
   c(input$opt.cluster.disp, input$use.common.name, downsample(), input$opt.downsampling.method, 
     input$opt.region.disp, input$opt.plot.label, input$use.bag.plot, input$opt.expr.size,
-    input$opt.show.bags,input$opt.tx,input$opt.tx.min,input$opt.tx.sum,
+    input$opt.show.bags,input$opt.tx,input$opt.tx.min,input$opt.tx.sum, input$opt.tx.scale, input$opt.tx.legend,
     input$opt.tx.cells, input$opt.cell.display.type, input$opt.expr.size, input$opt.detection.thresh)
 })
 
@@ -318,7 +312,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
   function(progress=NULL) {
     stopifnot(is.global || show.subclusters) # can't show clusters on local tsne
     
-    if (opt.tx() && input$opt.tx %in% c('heat','grey')) {
+    if (opt.tx() && input$opt.tx %in% c('heat')) {
       show.bags <- TRUE
       show.cells <- FALSE
     }
@@ -437,22 +431,21 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     opt.horiz.facet <- nrow(diff.data)>0 || nrow(comp.data)>0 || opt.tx.facet2()
     opt.tx.alpha <- opt.tx.alpha()
     opt.tx.heat <- opt.tx.heat()
-    opt.heat.scale <- ifelse(input$opt.tx=='heat','heat','grey')
+    opt.tx.scale <- opt.tx.scale()
+    opt.tx.legend <- opt.tx.legend()
+
+    if (opt.tx.scale=='gene') showNotification("Scaling Per Gene Not Yet Implemented", duration=15, type='warning')
     
     p.func <- function() {
       require(ggplot2)
       require(ggthemes)
-      
+
       if (opt.tx.heat) {
-        if (opt.heat.scale=="grey") {
-          scale_color <- function(...) scale_color_grey(..., start=1, end=.1)
-          scale_fill <- function(...) scale_fill_grey(..., start=1, end=.1)
-        } else {
-          scale_color <- function(...) scale_color_brewer(..., palette='YlOrRd')
-          scale_fill <- function(...) scale_fill_brewer(..., palette='YlOrRd')
-        }
+        scale_color <- function(...) scale_color_brewer(..., palette='YlOrRd')
+        scale_fill <- function(...) scale_fill_brewer(..., palette='YlOrRd')
       } else {
         if (length(unique(center.data$cx.gg)) <= 20) {
+          # gdocs has a max of 20 discrete colors
           scale_fill <- scale_fill_gdocs
           scale_color <- scale_color_gdocs
         } else {
@@ -469,7 +462,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           scale_color_gradient2(low="blue", mid="lightgrey", high="red", midpoint=0, limits=c(-max(comp.data$weight),max(comp.data$weight)))
         } else {
           if (opt.tx.heat) {
-            scale_color(name="Log Expression", na.value='lightgray')
+            scale_color(guide=opt.tx.legend, name="Log Expression", na.value='lightgray')
           } else {
             scale_color(guide="none", na.value='lightgray') 
           }
@@ -529,7 +522,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       
       if (opt.show.bags & nrow(comp.data)==0) {
         if (opt.tx.alpha) {
-          alpha.range <- scale_alpha_continuous(guide="none", range=c(0,1), limits=c(0,7)) # , trans=scales::trans_new("sqr", function(x) x^2, function(x) sqrt(x)))
+          alpha.limits <- if (opt.tx.scale=='fixed') c(0,7) else NULL
+          alpha.range <- scale_alpha_continuous(guide="none", range=c(0,1), limit=alpha.limits)
           bag.gg <- geom_polygon(data=filter(bag.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
           loop.gg <- geom_polygon(data=filter(loop.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
           center.gg <- geom_point(data=filter(center.data, !is.na(cx.gg)), aes(x=x,y=y, color=cx.gg, alpha=alpha), size=3)
@@ -553,11 +547,11 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       
       facet.label.gg <- (
         if (opt.horiz.facet) {
-          geom_text(data=facet.label.data, aes(x=x, y=y, label=facet2.gg), hjust="left")
+          geom_text(data=facet.label.data, aes(x=x, y=y, label=facet2.gg), hjust="left", show.legend = FALSE)
         } else if (opt.tx.alpha || opt.tx.heat) {
           geom_text(data=tibble(x=min(loop.data$x),
                                 y=max(loop.data$y),
-                                gene=paste(user.genes(), collapse='+')), aes(x=x,y=y,label=gene), hjust="left")
+                                gene=paste(user.genes(), collapse='+')), aes(x=x,y=y,label=gene), hjust="left", show.legend = FALSE)
         } else {
           geom_blank_tsne
         }
@@ -613,7 +607,8 @@ tsne.image.size <- function(facet1, facet2, display.width) {
   if (facet2 > 0 && facet1 <= MAX_REGIONS) {
     # grid: 
     facet.wide = (if (facet1==1) display.width %/% 2 else display.width)
-    facet.high <- if (facet2==1) display.width %/% 2 else facet2 * (display.width %/% 3)
+    each.width <- facet.wide %/% facet1
+    facet.high <- each.width * facet2
   } else {
     # wrap
     facet.wide.count <- min(3, facet1)

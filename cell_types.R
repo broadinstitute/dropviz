@@ -59,7 +59,7 @@ log.reactive("fn: cell.type.options")
 #####################################################################################################
 # OUTPUT - user filter selections on cell types
 output$region <- renderUI({
-  selectizeInput("tissue", "Choose Region", choices=c("Tissue / Region"="",tissue.options()), selected=input$tissue, multiple=TRUE)
+  selectizeInput("tissue", "Limit By Region", choices=c("Tissue / Region"="",tissue.options()), selected=input$tissue, multiple=TRUE)
 })
 
 output$cell.class <- renderUI({

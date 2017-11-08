@@ -86,7 +86,7 @@ output$ic.grid <- renderImage({
   if (length(fn)>0) {
     list(src=glue("{cache.dir}/ic/{fn[1]}"))
   } else {
-    renderCacheImage(function(progress) plot.text("To display ICs for a specific cluster, choose a target cluster in the 'Compare' panel"),
+    renderCacheImage(function(progress) plot.text("To display ICs for a specific cluster, choose a target cluster in the 'Cluster' panel"),
                      "no-ICs", width = 500, height=500)
   }
 }, deleteFile = FALSE)
@@ -107,7 +107,7 @@ output$dt.components.heading <- renderUI({
   if (nrow(component.cluster())==1) {
     tags$h4(glue("ICs for {component.cluster()$cluster.disp}"))
   } else {
-    tags$p(align="center","To display ICs for a specific cluster, choose a target cluster in the 'Compare' panel")
+    tags$p(align="center","To display ICs for a specific cluster, choose a target cluster in the 'Cluster' panel")
   }
 })
 
