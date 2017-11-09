@@ -502,12 +502,12 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
 
       label.gg <- (
         if (nrow(comp.data)>0) {
-          geom_label(data=label.data, aes(x=x,y=y,label=as.character(cx.disp)), color='grey')
+          geom_label(data=label.data, aes(x=x,y=y,label=as.character(cx.disp)), color='grey', show.legend=FALSE)
         } else {
           if (opt.tx.heat) {
-            dv_label(data=label.data, aes(x=x,y=y,color=heat,label=as.character(cx.disp)))
+            dv_label(data=label.data, aes(x=x,y=y,color=heat,label=as.character(cx.disp)), show.legend=FALSE)
           } else {
-            dv_label(data=label.data, aes(x=x,y=y,color=cx.gg,label=as.character(cx.disp)))
+            dv_label(data=label.data, aes(x=x,y=y,color=cx.gg,label=as.character(cx.disp)), show.legend=FALSE)
           }
         }
       )
