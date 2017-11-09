@@ -220,6 +220,11 @@ psum.amounts <- function(cx, amounts) {
   cbind(cx, alpha=amounts$total)
 }
 
+# peg the range to always start at 0 by adding a 0 value and then removing it
+cut0 <- function(x, ...) {
+  cut(c(x,0), ...)[1:length(x)]
+}
+
 HEAT.COLOR.N <- 9
 cluster.transcript.amounts <- reactive({
   # If a gene search that includes cell expression for more than one gene, then return amounts
@@ -235,7 +240,7 @@ cluster.transcript.amounts <- reactive({
       amounts <- select(clusters.selected(), ends_with('-log.target.u'))
       psum.amounts(cx, amounts)
     }
-  ) %>% mutate(heat=cut(alpha, breaks, include.lowest=TRUE))
+  ) %>% mutate(heat=cut0(alpha, breaks, include.lowest=TRUE))
 })
 
 # TODO: factor into single function
@@ -463,7 +468,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           scale_color_gradient2(low="blue", mid="lightgrey", high="red", midpoint=0, limits=c(-max(comp.data$weight),max(comp.data$weight)))
         } else {
           if (opt.tx.heat) {
-            scale_color(guide=opt.tx.legend, name="Log Expression", na.value='lightgray')
+            scale_color(guide=opt.tx.legend, name="Log Expression", na.value='lightgray', limits=levels(center.data$heat))
           } else {
             scale_color(guide="none", na.value='lightgray') 
           }
