@@ -58,7 +58,7 @@ server <- function(input, output, session) {
   # save the latest input for interactive debug
   # load with input <- readRDS("dump.RDS")
   observeEvent(input$dump, {
-    write.log("Dump"); saveRDS(reactiveValuesToList(input), file="dump.RDS")
+    write.log("Dump"); saveRDS(reactiveValuesToList(input), file="www/dump.RDS")
   })
   
   observeEvent(input$clear.cache, {
