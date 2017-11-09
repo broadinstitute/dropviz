@@ -618,7 +618,7 @@ is.filtered <- function() {
 # Set the image size to create square facets. The display is divided into at most 3 facets across when wrapping (e.g. 333x333 for a 1000px region).
 # If there's a second facet, then a facet_grid display is used only if the 2nd facet is less than MAX_REGIONS (otherwise each facet would be too small)
 tsne.image.size <- function(facet1, facet2, display.width) {
-  if (facet2 > 0 && facet1 <= MAX_REGIONS) {
+  if (facet2 > 0) {
     # grid: 
     facet.wide = (if (facet1==1) display.width %/% 2 else display.width)
     each.width <- facet.wide %/% facet1
@@ -671,6 +671,7 @@ output$tsne.global.subcluster.label <- renderImage({
     
     region.count <- nrow(regions.selected())
     gene.or.ic.count <- length(na.omit(c(subcluster.markers.selected()$gene, selected.components()$ic.number)))
+    if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
     
     img.sz <- tsne.image.size(facet1=region.count, facet2=gene.or.ic.count, display.width=img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_width")]]))
     
@@ -701,6 +702,7 @@ output$tsne.local.label <- renderImage({
   
     gene.or.ic.count <- length(na.omit(c(subcluster.markers.selected()$gene, selected.components()$ic.number)))
     cluster.count <- nrow(clusters.selected())
+    if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
     
     img.sz <- tsne.image.size(facet1=cluster.count, facet2=gene.or.ic.count, display.width=img.size.round(session$clientData[[glue("output_tsne.local.label_width")]]))
 

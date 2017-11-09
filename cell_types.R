@@ -236,10 +236,11 @@ setSig <- function(dt, ct.names, start.col, end.col, sig.digits) {
 output$dt.clusters <- DT::renderDataTable({
   ct <- clusters.selected()
   col.idx <- c(
-    which(names(ct) %in% c('region.disp','class.disp','cluster.disp')),
-    lapply(user.genes(), function(g) 
+    sapply(c('region.disp','class.disp','cluster.disp'),
+           function(nm) which(names(ct) %in% nm)),
+    sapply(user.genes(), function(g) 
       which(grepl(paste0('^',g,'-'), names(ct)) & !grepl('target.sum', names(ct)))
-    ) %>% unlist
+    )
   )
   ct <- ct[,col.idx]
   
@@ -262,14 +263,18 @@ output$dt.subclusters <- DT::renderDataTable({
   ct <- subclusters.selected_() %>% gene.cols('subcluster')  # HACK: fixme. The subclusters.selected routines is a mess due to filtering on selected component. Needs to be cleaned up.
   
   col.idx <- c(
-    which(names(ct) %in% c('region.disp','class.disp','cluster.disp','subcluster.disp')),
-    lapply(user.genes(), function(g) grep('.[LR]$', grep(paste0('^',g,'-'), names(ct)), invert=TRUE)) %>% unlist 
+    sapply(c('region.disp','class.disp','cluster.disp','subcluster.disp'),
+           function(nm) which(names(ct) %in% nm)),
+    lapply(user.genes(), function(g) 
+      which(grepl(paste0('^',g,'-'), names(ct)) & !grepl('target.sum', names(ct)))
+    ) %>% unlist 
   )
   ct <- ct[,col.idx]
   
+  write.log(glue("Writing {nrow(ct)} rows to datatable"))
   colnames <- c('Region','Class','Cluster','Sub-Cluster',
                 lapply(user.genes(), function(g) paste(g,c('Amount','P-Val'))) %>% unlist)
-  DT::datatable(ct, 
+  DT::datatable(ct,
                 rownames=FALSE,
                 selection="none",
                 colnames=colnames,
