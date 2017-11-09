@@ -644,7 +644,7 @@ output$tsne.global.cluster.label <- renderImage({
   
   region.count <- nrow(regions.selected())
   gene.count <- nrow(cluster.markers.selected())
-  if (opt.tx.facet2() && gene.count==0) { gene.count <- length(user.genes()) }
+  if (tx.facet2() && gene.count==0) { gene.count <- length(user.genes()) }
 
   img.sz <- tsne.image.size(facet1=region.count, facet2=gene.count, display.width=img.size.round(session$clientData[[glue("output_tsne.global.cluster.label_width")]]))
 
