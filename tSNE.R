@@ -528,14 +528,14 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       
       if (opt.show.bags & nrow(comp.data)==0) {
         if (opt.tx.alpha) {
-          alpha.limits <- if (opt.tx.scale=='fixed') c(0,7) else NULL
+          alpha.limits <- if (opt.tx.scale=='fixed') c(0,7) else c(0,max(center.data$alpha))
           alpha.range <- scale_alpha_continuous(guide="none", range=c(0,1), limit=alpha.limits)
           bag.gg <- geom_polygon(data=filter(bag.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
           loop.gg <- geom_polygon(data=filter(loop.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
           center.gg <- geom_point(data=filter(center.data, !is.na(cx.gg)), aes(x=x,y=y, color=cx.gg, alpha=alpha), size=3)
         } else if (opt.tx.heat) {
-          bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,fill=heat,group=cx), alpha=0.4)
-          loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,fill=heat,group=cx), alpha=0.2)
+          bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,fill=heat,group=cx), alpha=0.8)
+          loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,fill=heat,group=cx), alpha=0.4)
           center.gg <- geom_point(data=center.data, aes(x=x,y=y,color=heat), size=3)
           alpha.range <- scale_alpha()
         } else {
