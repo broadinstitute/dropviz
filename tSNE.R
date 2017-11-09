@@ -16,14 +16,15 @@ downsample <- reactive({
 # Bag Data
 
 # returns all the bag data for all experiments. (generated in prep-tSNE.R)
+# FIXME: hack to exclude clusters with no subclusters
 tsne.cluster.bag.data <- 
-  readRDS(glue("{prep.dir}/tsne/global.clusters.bags.Rdata"))
+  lapply(readRDS(glue("{prep.dir}/tsne/global.clusters.bags.Rdata")), function(df) inner_join(df, unique(select(cell.types,exp.label,cluster)), by=c('exp.label','cluster')))
 
 tsne.subcluster.bag.data <- 
-  readRDS(glue("{prep.dir}/tsne/global.subclusters.bags.Rdata"))
+  lapply(readRDS(glue("{prep.dir}/tsne/global.subclusters.bags.Rdata")), function(df) inner_join(df, unique(select(cell.types,exp.label,subcluster)), by=c('exp.label','subcluster')))
 
 tsne.local.bag.data <- 
-  readRDS(glue("{prep.dir}/tsne/local.subclusters.bags.Rdata")) 
+  lapply(readRDS(glue("{prep.dir}/tsne/local.subclusters.bags.Rdata")), function(df) inner_join(df, cell.types, by=c('exp.label','cluster','subcluster')))
 
 rm.zero <- function(df) {
   filter(df, !(x==0 & y==0))
@@ -234,7 +235,7 @@ cluster.transcript.amounts <- reactive({
       amounts <- select(clusters.selected(), ends_with('-log.target.u'))
       psum.amounts(cx, amounts)
     }
-  ) %>% mutate(heat=cut(alpha, breaks))
+  ) %>% mutate(heat=cut(alpha, breaks, include.lowest=TRUE))
 })
 
 # TODO: factor into single function
