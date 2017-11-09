@@ -14,7 +14,7 @@ LOCAL_STAGED=${LOCAL}/staged
 LOCAL_ATLAS=${LOCAL}/atlas_ica
 LOCAL_ATLAS_W=`cygpath -m ${LOCAL_ATLAS}`
 
-EXPERIMENTS="GRCm38.81.P60Hippocampus GRCm38.81.P60Striatum GRCm38.81.P60Thalamus"
+EXPERIMENTS="GRCm38.81.P60Hippocampus GRCm38.81.P60Striatum GRCm38.81.P60Thalamus GRCm38.81.P60SubstantiaNigra"
 EXPERIMENTS_Q=`perl -e 'print join("\",\"",@ARGV)' \"${EXPERIMENTS}\"`
 
 
