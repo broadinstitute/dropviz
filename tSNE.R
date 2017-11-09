@@ -207,12 +207,12 @@ log.reactive("fn: local.xy.selected")
 })
 
 opt.tx <- reactive({ isTruthy(user.genes()) && !is.null(input$opt.tx) })
-opt.tx.cells <- reactive({ input$opt.tx.cells })
-opt.tx.alpha <- reactive({ opt.tx() && input$opt.tx=='alpha' })
-opt.tx.heat <- reactive({ opt.tx() && (input$opt.tx=='heat') })
-opt.tx.scale <- reactive({ input$opt.tx.scale })
-opt.tx.legend <- reactive({ if (input$opt.tx.legend) 'legend' else 'none' })
-opt.tx.facet2 <- reactive({ opt.tx() && (!input$opt.tx.sum || opt.tx.cells()) && user.genes() > 1 })
+tx.cells <- reactive({ input$opt.tx.cells })
+tx.alpha <- reactive({ opt.tx() && input$opt.tx=='alpha' })
+tx.heat <- reactive({ opt.tx() && (input$opt.tx=='heat') })
+tx.scale <- reactive({ input$opt.tx.scale })
+tx.legend <- reactive({ if (input$opt.tx.legend) 'legend' else 'none' })
+tx.facet2 <- reactive({ opt.tx() && (!input$opt.tx.sum || tx.cells()) && user.genes() > 1 })
 
 # returns the sum of all of the log normal transcript counts for all user.genes
 psum.amounts <- function(cx, amounts) {
@@ -229,9 +229,9 @@ HEAT.COLOR.N <- 9
 cluster.transcript.amounts <- reactive({
   # If a gene search that includes cell expression for more than one gene, then return amounts
   # per gene. Otherwise, sum the levels across genes
-  breaks <- if (opt.tx.scale()=='fixed') seq(0,7) else HEAT.COLOR.N
+  breaks <- if (tx.scale()=='fixed') seq(0,7) else HEAT.COLOR.N
   (
-    if (opt.tx.facet2()) {
+    if (tx.facet2()) {
       select(clusters.selected(), exp.label, cx=cluster, ends_with('-log.target.u')) %>%
         gather(gene, alpha, ends_with('-log.target.u')) %>%
         separate(gene, 'facet2.gg', sep='-', extra='drop')
@@ -245,9 +245,9 @@ cluster.transcript.amounts <- reactive({
 
 # TODO: factor into single function
 subcluster.transcript.amounts <- reactive({
-  breaks <- if (opt.tx.scale()=='fixed') seq(0,7) else HEAT.COLOR.N
+  breaks <- if (tx.scale()=='fixed') seq(0,7) else HEAT.COLOR.N
 
-  if (opt.tx.facet2()) {
+  if (tx.facet2()) {
     select(subclusters.selected(), exp.label, cx=subcluster, ends_with('-log.target.u')) %>%
       gather(gene, alpha, ends_with('-log.target.u')) %>%
       separate(gene, 'facet2.gg', sep='-', extra='drop') %>%
@@ -380,7 +380,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     # alpha is either fixed or set by transcript amounts.
     # if fixed, then alpha range is set by scale further below.
     # if user.genes are specified, then sum all of the amounts per cx and use that as the alpha for colors
-    if (opt.tx.alpha() || opt.tx.heat()) {
+    if (tx.alpha() || tx.heat()) {
       tx.cx <- (
         if (show.subclusters) {
           subcluster.transcript.amounts() 
@@ -399,7 +399,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       loop.data <- mutate(loop.data, alpha=pmax(0,alpha-1))
       xy.data <- mutate(xy.data, alpha=pmax(0,alpha-1))
 
-      label.data <- filter(label.data, (as.integer(heat)/HEAT.COLOR.N)>=(input$opt.tx.min/100))
+      label.data <- filter(label.data, (as.integer(heat)/length(levels(heat)))>=(input$opt.tx.min/100))
 
       if (!is.null(progress)) progress$inc(0.2, detail=glue("Computing alpha for {user.genes()}"))
     }
@@ -434,11 +434,11 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     opt.plot.label <- input$opt.plot.label
     opt.cell.display.type <- input$opt.cell.display.type
     diff.data <- (if (opt.cell.display.type=='detect') filter(diff.genes, transcripts > input$opt.detection.thresh) else diff.genes)
-    opt.horiz.facet <- nrow(diff.data)>0 || nrow(comp.data)>0 || opt.tx.facet2()
-    opt.tx.alpha <- opt.tx.alpha()
-    opt.tx.heat <- opt.tx.heat()
-    opt.tx.scale <- opt.tx.scale()
-    opt.tx.legend <- opt.tx.legend()
+    opt.horiz.facet <- nrow(diff.data)>0 || nrow(comp.data)>0 || tx.facet2()
+    opt.tx.alpha <- tx.alpha()
+    opt.tx.heat <- tx.heat()
+    opt.tx.scale <- tx.scale()
+    opt.tx.legend <- tx.legend()
 
     if (opt.tx.scale=='gene') showNotification("Scaling Per Gene Not Yet Implemented", duration=15, type='warning')
     
@@ -461,8 +461,15 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       }
 
       geom_blank_tsne <- geom_blank(data=data.frame(region.disp=character(),facet.gg=character(),facet2.gg=character()))
-      tsne.gg <- ggplot() + scale_fill(guide="none", na.value='lightgray') + scale_size(guide="none", range=c(0.1,opt.expr.size)) + theme_few() + theme(strip.text.x=element_text(size=20), strip.text.y=element_text(size=14))
 
+      tsne.fill.scale <- (
+        if (opt.tx.heat) {
+          scale_fill(guide="none", na.value='lightgray', limits=levels(center.data$heat))
+        } else {
+          scale_fill(guide="none", na.value='lightgray')
+        }
+      )
+      
       tsne.color.scale <- (
         if (nrow(comp.data)>0) {
           scale_color_gradient2(low="blue", mid="lightgrey", high="red", midpoint=0, limits=c(-max(comp.data$weight),max(comp.data$weight)))
@@ -534,8 +541,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           loop.gg <- geom_polygon(data=filter(loop.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
           center.gg <- geom_point(data=filter(center.data, !is.na(cx.gg)), aes(x=x,y=y, color=cx.gg, alpha=alpha), size=3)
         } else if (opt.tx.heat) {
-          bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,fill=heat,group=cx), alpha=0.8)
-          loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,fill=heat,group=cx), alpha=0.4)
+          bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,fill=heat,group=cx), alpha=0.6)
+          loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,fill=heat,group=cx), alpha=0.2)
           center.gg <- geom_point(data=center.data, aes(x=x,y=y,color=heat), size=3)
           alpha.range <- scale_alpha()
         } else {
@@ -575,7 +582,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       )
 
-      p <- tsne.gg + tsne.color.scale  + center.gg + xy.gg + loop.gg + bag.gg + alpha.range + diff.gg + comp.gg + label.gg + facet.label.gg + xy.limits.gg + xlab("V1") + ylab("V2")
+      tsne.gg <- ggplot() + tsne.color.scale + tsne.fill.scale + scale_size(guide="none", range=c(0.1,opt.expr.size)) + theme_few() + theme(strip.text.x=element_text(size=20), strip.text.y=element_text(size=14))
+      p <- tsne.gg + center.gg + xy.gg + loop.gg + bag.gg + alpha.range + diff.gg + comp.gg + label.gg + facet.label.gg + xy.limits.gg + xlab("V1") + ylab("V2")
       
       if (opt.global) {
         if (opt.horiz.facet) {

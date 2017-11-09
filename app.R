@@ -233,7 +233,7 @@ function(request) {
                                                                                  sliderInput("opt.tx.min", "Show Labels When Expression is Greater than % of Max", 0, 90, value=70, round=TRUE, step=10, post='%'),
                                                                                  checkboxInput("opt.tx.cells","Show Expression Per Cell for Search Genes", value=TRUE),
                                                                                  checkboxInput("opt.tx.legend","Show Expression Legend", value=FALSE),
-                                                                                 selectInput("opt.tx.scale", "Scale transparency or color range: ", choices=c("Fixed"="fixed", "Observed Min/Max Value"="max", "Min/Max Per Gene"="gene"), selected="fixed"),
+                                                                                 selectInput("opt.tx.scale", "Scale transparency or color range: ", choices=c("Fixed"="fixed", "Observed Max Value"="max", "Max Per Gene"="gene"), selected="fixed"),
                                                                                  conditionalPanel("!input['opt.tx.cells'] && input['user.genes'].length > 1", checkboxInput("opt.tx.sum", "Sum Expression of Multiple Search Genes", value=FALSE)))
                                                             ),
                                                             div(style="display:none",
