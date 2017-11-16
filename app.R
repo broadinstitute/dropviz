@@ -162,7 +162,7 @@ function(request) {
                           sidebarPanel(width=3, id="controlpanel",
                                        div(helpIcon("config"), class='top-right'),
                                        tabsetPanel(type="tabs", id='controltabs', selected="controltabs-query",
-                                                   tabPanel("Gene", value="controltabs-query",
+                                                   tabPanel("Query", value="controltabs-query",
                                                             div(class="control-box", style="margin-bottom: 0",
                                                                 fluidRow(
                                                                   column(12, selectizeInput("user.genes", "Gene", choices=c("Symbol"="",top.genes),

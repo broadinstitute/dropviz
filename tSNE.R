@@ -616,11 +616,12 @@ is.filtered <- function() {
 }
 
 # Set the image size to create square facets. The display is divided into at most 3 facets across when wrapping (e.g. 333x333 for a 1000px region).
-# If there's a second facet, then a facet_grid display is used only if the 2nd facet is less than MAX_REGIONS (otherwise each facet would be too small)
+# If there's a second facet, then a facet_grid display is used.
+# If the horizontal facets are greater than 4, then the square facets become too small, so the width grows, too.
 tsne.image.size <- function(facet1, facet2, display.width) {
   if (facet2 > 0) {
     # grid: 
-    facet.wide = (if (facet1==1) display.width %/% 2 else display.width)
+    facet.wide = (if (facet1==1) display.width %/% 2 else if (facet1 > 4) display.width %/% 4 * facet1 else display.width)
     each.width <- facet.wide %/% facet1
     facet.high <- each.width * facet2
   } else {
