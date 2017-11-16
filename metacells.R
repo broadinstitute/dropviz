@@ -192,8 +192,8 @@ rank.plot <- function(clusters, kind, genes) {
   require(tidyr)
   
   Kind <- paste0(toupper(substring(kind,1,1)),substring(kind,2))
-  clusters <- gather(clusters, gene.var, value, contains('-target.sum'))
-  clusters <- separate(clusters, gene.var, c('gene','var'), sep='-')
+  clusters <- gather(clusters, gene.var, value, contains('_target.sum'))
+  clusters <- separate(clusters, gene.var, c('gene','var'), sep='_')
   clusters <- spread(clusters, var, value)
   clusters$cx.disp <- (
     if (input$opt.rank.by.region) {
@@ -236,10 +236,10 @@ rank.plot <- function(clusters, kind, genes) {
 
 
 heatmap.clusters <- reactive({
-  select(clusters.selected(), 'region.abbrev','cluster.disp','c.id', contains('-target.sum.per.100k'), -class.disp) %>% unique
+  select(clusters.selected(), 'region.abbrev','cluster.disp','c.id', contains('_target.sum.per.100k'), -class.disp) %>% unique
 })
 heatmap.subclusters <- reactive({
-  select(subclusters.selected(), 'region.abbrev','subcluster.disp','sc.id', contains('-target.sum.per.100k'), -class.disp) %>% unique
+  select(subclusters.selected(), 'region.abbrev','subcluster.disp','sc.id', contains('_target.sum.per.100k'), -class.disp) %>% unique
 })
 
 observeEvent(input$gene.expr.heatmap.cluster_rows_selected, {

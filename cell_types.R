@@ -174,7 +174,7 @@ gene.cols <- function(df, kind) {
       g.diffexp <- readRDS(g.fn) %>% select(exp.label, cx, log.target.u, pval, target.sum.per.100k, target.sum.L.per.100k, target.sum.R.per.100k)
 
       # prepend gene name on columns
-      lapply(3:7, function(idx) names(g.diffexp)[idx] <<- paste0(g,'-',names(g.diffexp[idx])))
+      lapply(3:7, function(idx) names(g.diffexp)[idx] <<- paste0(g,'_',names(g.diffexp[idx])))
       
       by.names <- c('exp.label','cx') %>% setNames(c('exp.label',kind))
       df <<- left_join(df, g.diffexp, by=by.names)  
@@ -239,7 +239,7 @@ output$dt.clusters <- DT::renderDataTable({
     sapply(c('region.disp','class.disp','cluster.disp'),
            function(nm) which(names(ct) %in% nm)),
     sapply(user.genes(), function(g) 
-      which(grepl(paste0('^',g,'-'), names(ct)) & !grepl('target.sum', names(ct)))
+      which(grepl(paste0('^',g,'_'), names(ct)) & !grepl('target.sum', names(ct)))
     )
   )
   ct <- ct[,col.idx]
@@ -266,7 +266,7 @@ output$dt.subclusters <- DT::renderDataTable({
     sapply(c('region.disp','class.disp','cluster.disp','subcluster.disp'),
            function(nm) which(names(ct) %in% nm)),
     lapply(user.genes(), function(g) 
-      which(grepl(paste0('^',g,'-'), names(ct)) & !grepl('target.sum', names(ct)))
+      which(grepl(paste0('^',g,'_'), names(ct)) & !grepl('target.sum', names(ct)))
     ) %>% unlist 
   )
   ct <- ct[,col.idx]

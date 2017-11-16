@@ -232,12 +232,12 @@ cluster.transcript.amounts <- reactive({
   breaks <- if (tx.scale()=='fixed') seq(0,7) else HEAT.COLOR.N
   (
     if (tx.facet2()) {
-      select(clusters.selected(), exp.label, cx=cluster, ends_with('-log.target.u')) %>%
-        gather(gene, alpha, ends_with('-log.target.u')) %>%
-        separate(gene, 'facet2.gg', sep='-', extra='drop')
+      select(clusters.selected(), exp.label, cx=cluster, ends_with('_log.target.u')) %>%
+        gather(gene, alpha, ends_with('_log.target.u')) %>%
+        separate(gene, 'facet2.gg', sep='_', extra='drop')
     } else {
       cx <- select(clusters.selected(), exp.label, cx=cluster)
-      amounts <- select(clusters.selected(), ends_with('-log.target.u'))
+      amounts <- select(clusters.selected(), ends_with('_log.target.u'))
       psum.amounts(cx, amounts)
     }
   ) %>% mutate(heat=cut0(alpha, breaks, include.lowest=TRUE))
@@ -248,13 +248,13 @@ subcluster.transcript.amounts <- reactive({
   breaks <- if (tx.scale()=='fixed') seq(0,7) else HEAT.COLOR.N
 
   if (tx.facet2()) {
-    select(subclusters.selected(), exp.label, cx=subcluster, ends_with('-log.target.u')) %>%
-      gather(gene, alpha, ends_with('-log.target.u')) %>%
-      separate(gene, 'facet2.gg', sep='-', extra='drop') %>%
+    select(subclusters.selected(), exp.label, cx=subcluster, ends_with('_log.target.u')) %>%
+      gather(gene, alpha, ends_with('_log.target.u')) %>%
+      separate(gene, 'facet2.gg', sep='_', extra='drop') %>%
       mutate(heat=cut(alpha, breaks))
   } else {
     cx <- select(subclusters.selected(), exp.label, cluster=cluster, cx=subcluster)
-    amounts <- select(subclusters.selected(), ends_with('-log.target.u'))
+    amounts <- select(subclusters.selected(), ends_with('_log.target.u'))
     pa <- psum.amounts(cx, amounts)
     mutate(pa, heat=cut(alpha, breaks)) %>% select(-cluster)
   }
