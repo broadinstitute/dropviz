@@ -236,11 +236,6 @@ function(request) {
                                                                                  selectInput("opt.tx.scale", "Scale transparency or color range: ", choices=c("Fixed"="fixed", "Observed Max Value"="max", "Max Per Gene"="gene"), selected="fixed"),
                                                                                  conditionalPanel("!input['opt.tx.cells'] && input['user.genes'].length > 1", checkboxInput("opt.tx.sum", "Sum Expression of Multiple Search Genes", value=FALSE)))
                                                             ),
-                                                            div(style="display:none",
-                                                                selectInput("opt.cluster.disp","Label Clusters", choices=c("Using Annotated Class and Markers"='annotated', "With Numbers"='numbers',"Class, Markers and Numbers"="all"), selected = 'all'),
-                                                                selectInput("opt.region.disp","Label Region", choices=c("Using Region Name"='region',"Using Experiment Name"='experiment')),
-                                                                conditionalPanel("input['opt.cluster.disp']=='annotated' || input['opt.cluster.disp']=='all'",
-                                                                                 checkboxInput("use.common.name", "Use Common Name for Subcluster, If Present", value = TRUE))),
                                                             conditionalPanel('(input["mainpanel"]=="clusters" && input["clusterpanel"]=="tsne") || (input["mainpanel"]=="subclusters" && input["subclusterpanel"]=="tsne")',
                                                                              conditionalPanel('input["opt.tx.cells"]',
                                                                                               div(class="control-box",
@@ -267,6 +262,13 @@ function(request) {
                                                                                  checkboxInput("opt.scatter.gene.labels","Show Gene Labels on Scatter Plots", value=TRUE)
                                                                              )
                                                             ),
+                                                            div(class="control-box",
+                                                                h4("Labels"),
+                                                                div(style="display:none", selectInput("opt.cluster.disp","Label Clusters", choices=c("Using Annotated Class and Markers"='annotated', "With Numbers"='numbers',"Class, Markers and Numbers"="all"), selected = 'all')),
+                                                                div(style="display:none", selectInput("opt.region.disp","Label Region", choices=c("Using Region Name"='region',"Using Experiment Name"='experiment'))),
+                                                                conditionalPanel("input['opt.cluster.disp']=='annotated' || input['opt.cluster.disp']=='all'",
+                                                                                 checkboxInput("use.common.name", "Use Common Name for Subcluster, If Present", value = FALSE)),
+                                                                conditionalPanel("input['use.common.name']", span(h6("(Common names are interpretive best guesses)")))),
                                                             div(style="display:none", selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all')))
                                                    ),
                                                    debug.controls()
