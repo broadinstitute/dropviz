@@ -3,22 +3,32 @@
 # - the mean of normalized counts for all genes in group (where counts are normalized to sum to 1 within cell)  metacell.means
 # where group is each cluster and !cluster
 
-# Also pre-compute all pairwise stats for each cluster/subcluster vs region. This is used by prep-markers to generate
-# fast lookup of differentially expressed genes and also provides quick app response for diffex table because default
-# comparison is the region.
+# Also pre-compute all pairwise stats for each cluster/subcluster vs
+# region. This is used by prep-marker to generate fast lookup of
+# differentially expressed genes and also provides quick app response
+# for diffex table because default comparison is the region. The code
+# that is used is the same code that's used during runtime for
+# arbitrary cx1 vs cx2 computations. These cx vs Ncx calcs are stored
+# in prep.dir by locally reassigning cache.dir here and in
+# prep-marker.R. Later those pre-computed values will be transferred to
+# local cache.dir for each new server instance.
 
-# This is (hopefully) consistent with the statistics used in IcaCluster_Functions.R:diffexp
+# The calculations here are (hopefully) consistent with the statistics used in IcaCluster_Functions.R:diffexp
 
 # scaled DGE: total expression f each cell sum to 1.  Genes X Cells
 # raw DGE: Genes X Cells (raw transcript counts)
 # metacell: sum of raw transcript counts per cluster - Genes x Clusters - same as raw.row.sums in compute_diffexp_mean_and_sum
 # metacell.means: mean of scaled (normalized) transcripts per cluster - Genes x Cluster - same as norm.row.means in compute_diffexp_mean_and_sum
 
+require(Matrix)
 source("global.R")
 source("metacells-shared.R")
 
 meta.dir <- glue('{prep.dir}/metacells')
 suppressWarnings(dir.create(meta.dir, recursive = TRUE))
+
+pairs.dir <- glue("{prep.dir}/pairs")
+suppressWarnings(dir.create(pairs.dir, recursive = TRUE))
 
 mk.neg.cols <- function(mc, mc.sum) {
   cols <- 2:ncol(mc)
@@ -83,50 +93,50 @@ ddply(experiments, .(exp.label), function(exp) {
                                         mk.neg.group(subcluster.cell.assign.tbl))
     
     scaled.fn <- with(exp, glue("{exp.dir}/dge/{base}.filtered.scaled.dge.RDS"))
-    scaled <- readRDS(scaled.fn) # rows genes, cols cells in this major cluster
     
     cluster.means.fn <- glue("{meta.dir}/{exp$exp.label}.cluster.means.RDS")
     if (!file.exists(cluster.means.fn) || !getOption("dropviz.prep.cache", default = TRUE)) {
+      scaled <- readRDS(scaled.fn) # rows genes, cols cells in this major cluster
       cluster.means <- compute.dge.stat(cluster.cell.assign.tbl, scaled, rowMeans)
       saveRDS(cluster.means, file=cluster.means.fn)
-      rm(cluster.means)
+      rm(scaled, cluster.means)
     }
     subcluster.means.fn <- glue("{meta.dir}/{exp$exp.label}.subcluster.means.RDS")
     if (!file.exists(subcluster.means.fn) || !getOption("dropviz.prep.cache", default = TRUE)) {
+      scaled <- readRDS(scaled.fn) # rows genes, cols cells in this major cluster
       subcluster.means <- compute.dge.stat(subcluster.cell.assign.tbl, scaled, rowMeans)
       saveRDS(subcluster.means, file=subcluster.means.fn)
-      rm(subcluster.means)
+      rm(scaled, subcluster.means)
     }
-    rm(scaled)
+
     
     raw.fn <- with(exp, glue("{exp.dir}/dge/{base}.filtered.raw.dge.RDS"))
-    raw <- readRDS(raw.fn) # rows genes, cols cells in this major cluster
     
     cluster.sums.fn <- glue("{meta.dir}/{exp$exp.label}.cluster.sums.RDS")
     if (!file.exists(cluster.sums.fn) || !getOption("dropviz.prep.cache", default = TRUE)) {
+      raw <- readRDS(raw.fn) # rows genes, cols cells in this major cluster
       cluster.sums <- compute.dge.stat(cluster.cell.assign.tbl, raw, rowSums)
       saveRDS(cluster.sums, file=cluster.sums.fn)
-      rm(cluster.sums)
+      rm(raw, cluster.sums)
     }
     subcluster.sums.fn <- glue("{meta.dir}/{exp$exp.label}.subcluster.sums.RDS")
     if (!file.exists(subcluster.sums.fn) || !getOption("dropviz.prep.cache", default = TRUE)) {
+      raw <- readRDS(raw.fn) # rows genes, cols cells in this major cluster
       subcluster.sums <- compute.dge.stat(subcluster.cell.assign.tbl, raw, rowSums)
       saveRDS(subcluster.sums, file=subcluster.sums.fn)
-      rm(subcluster.sums)
+      rm(raw, subcluster.sums)
     }
-    rm(raw)
     
     gc()
     
+    unlink(flag)
   }
-  
-  unlink(flag)
 })
 
 do.pairwise.Ncx <- function(exp.label, groups, kind) {
   lapply(groups, function(cx) {
     cmp.cx <- paste0('N',cx)
-    compute.pair(exp.label, as.character(cx), cmp.cx, kind, use.cached = getOption("dropviz.prep.cache", default = TRUE))
+    compute.pair(exp.label, as.character(cx), exp.label, cmp.cx, kind, use.cached = getOption("dropviz.prep.cache", default = TRUE), pairs.dir=pairs.dir)
   })
 }
 

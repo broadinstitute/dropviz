@@ -40,7 +40,7 @@ expr.subcluster.local.xy <- reactive({
   log.reactive("fn: expr.subcluster.local.xy")
   
   if (nrow(subcluster.markers.selected()) > 0 && nrow(clusters.selected()) > MAX_REGIONS) {
-    showNotification("There are too many clusters to display gene expression. Use the Query panel on the left to highlight a smaller set", duration=60, type="error")
+    showNotification(glue("There are too many separate facets ({nrow(clusters.selected())}) to display gene expression for individual cells.\nUse the Query panel on the left to filter to a smaller set of {MAX_REGIONS} clusters or less."), duration=60, type="error")
     write.log("Error: Too many facets to display. Not including individual cells")
     tibble()
   } else {

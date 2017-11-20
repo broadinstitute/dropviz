@@ -9,7 +9,7 @@
 
 .scroll-area {
   overflow-y:auto;
-  overflow-x:hidden;
+  overflow-x:auto;
   position: relative; /* allows children to be positioned absolute relative to this div */
 }
 .img-center {  /* must be in a div containing img since images don't have text-align */

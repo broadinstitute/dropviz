@@ -8,20 +8,20 @@ library(glue)
 source("global.R")
 markers.dir <- glue("{prep.dir}/markers")
 genes.dir <- glue("{markers.dir}/genes")
-pairs.dir <- glue("{cache.dir}/metacells")
+pairs.dir <- glue("{prep.dir}/pairs")
 meta.dir <- glue('{prep.dir}/metacells')
 
 suppressWarnings(dir.create(genes.dir, recursive = TRUE))
 suppressWarnings(dir.create(glue("{genes.dir}/cluster"), recursive = TRUE))
 suppressWarnings(dir.create(glue("{genes.dir}/subcluster"), recursive = TRUE))
 
-all.pairs <- function(exp.label, cx.fn, lvls) {
+all.pairs <- function(exp, cx.fn, lvls) {
   ldply(cx.fn, function(fn) {
     # read cx from fn
-    m <- glue("^{exp.label}\\.([^\\.]+)")
+    m <- glue("^{exp$exp.abbrev}\\.([^\\.]+)")
     cx <- factor(regmatches(fn, regexec(m, fn))[[1]][2], levels=lvls)
     
-    readRDS(glue("{pairs.dir}/{fn}")) %>% mutate(cx=cx, exp.label=exp.label)
+    readRDS(glue("{pairs.dir}/{fn}")) %>% mutate(cx=cx, exp.label=exp$exp.label)
     
   }) %>% as_tibble
 }
@@ -29,14 +29,14 @@ all.pairs <- function(exp.label, cx.fn, lvls) {
 # store all of the comparison against region in single files and save all gene names
 all.genes <- 
 dlply(experiments, .(exp.label), function(exp) {
-  pairs.fn <- list.files(pairs.dir,glue("^{exp$exp.label}.*\\.N.*\\.RDS"))
+  pairs.fn <- list.files(pairs.dir,glue("^{exp$exp.abbrev}.*\\.N.*\\.RDS"))
   subclusters <- grep('-', pairs.fn, value=TRUE)  # hack: subclusters have dashes in the filename
   clusters <- grep('-', pairs.fn, value=TRUE, invert = TRUE)
   
-  all.cluster.pairs <- all.pairs(exp$exp.label, clusters, levels(cluster.names_$cluster))
+  all.cluster.pairs <- all.pairs(exp, clusters, levels(cluster.names_$cluster))
   write.log(glue("{nrow(all.cluster.pairs)} pairs, {length(unique(all.cluster.pairs$gene))} genes"))
   saveRDS(all.cluster.pairs, glue("{meta.dir}/{exp$exp.label}.gene.clusters.RDS"))
-  all.subcluster.pairs <- all.pairs(exp$exp.label, subclusters, levels(subcluster.names_$subcluster))
+  all.subcluster.pairs <- all.pairs(exp, subclusters, levels(subcluster.names_$subcluster))
   write.log(glue("{nrow(all.subcluster.pairs)} pairs, {length(unique(all.subcluster.pairs$gene))} genes"))
   saveRDS(all.subcluster.pairs, glue("{meta.dir}/{exp$exp.label}.gene.subclusters.RDS"))
   
@@ -58,7 +58,7 @@ lapply(gene.groups, function(group) {
     
     gene.set %>% group_by(gene) %>% do({
       fn <- glue("{genes.dir}/{kind}/{first(.$gene)}.diffexp.RDS")
-      saveRDS(., fn)
+      base::saveRDS(., fn)
       tibble(fn=as.character(fn))
     })
     

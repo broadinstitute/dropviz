@@ -1,5 +1,8 @@
 # save the rows of a DGE file to separate locations for fast access
 # <cachedir>/expr/<region>/gene/<gene>.RDS
+#
+# Each row can be retrieved independently to overlay expression levels
+# of a gene per cell on a t-SNE.
 
 library(plyr)
 library(dplyr)

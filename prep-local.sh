@@ -3,14 +3,18 @@
 # When developing locally, syncronize a subset of the atlas and staged data from a remote host
 # for a subset of the data.
 
-REMOTE=35.193.114.82:/mnt/disks/dropseq
-REMOTE_STAGED=${REMOTE}/staged
-REMOTE_ATLAS=${REMOTE}/atlas_ica
+REMOTE_HOST=104.155.134.4
+REMOTE_DIR=/mnt/disks/dropseq
+REMOTE_STAGED_DIR=${REMOTE_DIR}/staged
+REMOTE_ATLAS_DIR=${REMOTE_DIR}/atlas_ica
+REMOTE_STAGED=${REMOTE_HOST}:${REMOTE_STAGED_DIR}
+REMOTE_ATLAS=${REMOTE_HOST}:${REMOTE_ATLAS_DIR}
 LOCAL=/cygdrive/d/dropviz
 LOCAL_STAGED=${LOCAL}/staged
 LOCAL_ATLAS=${LOCAL}/atlas_ica
+LOCAL_ATLAS_W=`cygpath -m ${LOCAL_ATLAS}`
 
-EXPERIMENTS="GRCm38.81.P60Hippocampus GRCm38.81.P60Striatum"
+EXPERIMENTS="GRCm38.81.P60Hippocampus GRCm38.81.P60Striatum GRCm38.81.P60Thalamus GRCm38.81.P60SubstantiaNigra"
 EXPERIMENTS_Q=`perl -e 'print join("\",\"",@ARGV)' \"${EXPERIMENTS}\"`
 
 
@@ -21,6 +25,7 @@ mkdir -p ${LOCAL_ATLAS}
 
 rsync -v ${REMOTE_STAGED}/expr/gene.map.RDS ${LOCAL_STAGED}/expr/
 rsync -rav ${REMOTE_STAGED}/markers ${LOCAL_STAGED}/
+rsync -rav ${REMOTE_STAGED}/pairs ${LOCAL_STAGED}/
 rsync -v ${REMOTE_STAGED}/tsne/\*.Rdata ${LOCAL_STAGED}/tsne
 rsync -v ${REMOTE_STAGED}/globals.Rdata ${LOCAL_STAGED}/globals-all.Rdata
 
@@ -29,7 +34,7 @@ rsync -v ${REMOTE_STAGED}/globals.Rdata ${LOCAL_STAGED}/globals-all.Rdata
 R --vanilla <<EOF 
 library(dplyr)
 load('${LOCAL_STAGED}/globals-all.Rdata')
-experiments <- filter(experiments, exp.label %in% c(${EXPERIMENTS_Q}))
+experiments <- filter(experiments, exp.label %in% c(${EXPERIMENTS_Q})) %>% mutate(exp.dir=sub('${REMOTE_ATLAS_DIR}','${LOCAL_ATLAS_W}',exp.dir))
 cell.types <- filter(cell.types, exp.label %in% c(${EXPERIMENTS_Q}))
 components <- filter(components, exp.label %in% c(${EXPERIMENTS_Q}))
 cluster.names_ <- filter(cluster.names_, exp.label %in% c(${EXPERIMENTS_Q}))
@@ -49,6 +54,8 @@ for exp in ${EXPERIMENTS}; do
     rsync -rav ${REMOTE_ATLAS}/F_${exp}/components ${LOCAL_ATLAS}/F_${exp}/
     rsync -rav ${REMOTE_ATLAS}/F_${exp}/curation_sheets ${LOCAL_ATLAS}/F_${exp}/
     rsync -rav ${REMOTE_ATLAS}/F_${exp}/cluster_sheets ${LOCAL_ATLAS}/F_${exp}/
+    rsync -rav ${REMOTE_ATLAS}/F_${exp}/assign ${LOCAL_ATLAS}/F_${exp}/
+    rsync -rav ${REMOTE_ATLAS}/F_${exp}/metacells ${LOCAL_ATLAS}/F_${exp}/
 done
 
 # create exp_sets.txt
@@ -63,7 +70,7 @@ EOF
     echo "${exp}	${short}	${abbrev}	${dir}"
 done) >> exp_sets.txt
 
-LOCAL_STAGED_W=`cygpath -w ${LOCAL_STAGED}`
+LOCAL_STAGED_W=`cygpath -m ${LOCAL_STAGED}`
 cat >> options.R <<EOF
 options(dropviz.prep.dir='${LOCAL_STAGED_W}')
 EOF

@@ -1,60 +1,27 @@
 source("global.R")
 
-# allows interactive debugging within RStudio
-# Why does this fail when running shiny?! For now, uncomment manually shorter form during debug. Grr.
-# reactive <- function(x, env=parent.frame(), ...) {
-#   if (is.null(getDefaultReactiveDomain())) {
-#     exprToFunction(x, env=env)
-#   } else {
-#     shiny::reactive(x, env, ...)
-#   }
-# }
-# reactive <- function(x, env=parent.frame(), ...) exprToFunction(x, env=env)
-
-
 server <- function(input, output, session) {
   
+  try(rm(dt.cluster.markers,dt.subcluster.markers))
   if (file.exists("message.txt") && !is.null(getDefaultReactiveDomain())) {
     msg <- readLines("message.txt")
     showNotification(div(h4(msg[1]),msg[2]),duration=NULL,type="warning")
   }
-  
-  # general plot utility functions
-  source("plot.R", local=TRUE)
-  
-  # display labels for regions, clusters, subclusters
-  source("display_labels.R", local=TRUE)
-  
-  # filtering on [sub]clusters
-  source("cell_types.R", local=TRUE)
-  
-  # choosing a current [sub]cluster selection among the filtered options
-  # for marker filtering and plotting
-  source("user_cluster_selection.R", local=TRUE)  
-  
-  # filtering on differentially expressed genes for the current [sub]cluster selection
-  source("markers.R", local=TRUE)    
-  
-  # plots for both cluster and subcluster with overlays for labels, gene expression and components
-  source("tSNE.R", local=TRUE)  
-  
-  # differential expression
-  source("diffex.R", local=TRUE)
-  
-  # metacells - scatter plots, heatmaps
-  source("metacells.R", local=TRUE)
-  
-  # independent components
-  source("components.R", local=TRUE)
+
+  # majority of the reactive functions.
+  source("app-funcs.R", local=TRUE)
   
   # proxy objects for shiny
   source("proxy.R", local=TRUE)
+
+  # output options - do not source when interactive debug
+  source("outputOptions.R", local=TRUE)
   
   #####################################################################################################
   # save the latest input for interactive debug
   # load with input <- readRDS("dump.RDS")
   observeEvent(input$dump, {
-    write.log("Dump"); saveRDS(reactiveValuesToList(input), file="dump.RDS")
+    write.log("Dump"); saveRDS(reactiveValuesToList(input), file="www/dump.RDS")
   })
   
   observeEvent(input$clear.cache, {
@@ -62,7 +29,7 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$select.analysis.tab, {
-    updateNavbarPage(session, "top-nav", selected = "Analysis")
+    updateNavbarPage(session, "top-nav", selected = "Query")
   })  
   
   # dropped this idea of expanding and collapsing the sidebar, but this might be an approach
@@ -188,34 +155,31 @@ function(request) {
                tabPanel("Home",div(column(2), column(8, embed.tags(HTML(readLines("html/landing.html")), 
                                                                    list(actionButton("select.analysis.tab","Get Started", class="btn btn-lg btn-primary")))), column(2)),
                         HTML(readLines("html/featurette.html"))),
-               tabPanel("Analysis",
-                        
+               tabPanel("Query",
                         
                         # Sidebar with a slider input for number of bins 
                         sidebarLayout(
                           sidebarPanel(width=3, id="controlpanel",
                                        div(helpIcon("config"), class='top-right'),
-                                       tabsetPanel(type="tabs", id='controltabs',
-                                                   tabPanel("Query",
+                                       tabsetPanel(type="tabs", id='controltabs', selected="controltabs-query",
+                                                   tabPanel("Query", value="controltabs-query",
                                                             div(class="control-box", style="margin-bottom: 0",
-                                                                h4("Filter"),
                                                                 fluidRow(
-                                                                  column(6, selectizeInput("user.genes", "Gene", choices=c("Symbol"="",top.genes),
-                                                                                           multiple=TRUE, width='100%', options=list(create=TRUE,persist=FALSE))),
-                                                                  column(6, uiOutput("region"))),
-                                                                conditionalPanel("input['user.genes'] && input['opt.show.bags'] && ((input.mainpanel=='clusters' && input.clusterpanel=='tSNE') || (input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'))",
-                                                                                 checkboxInput("opt.tx.alpha",span(style="font-size: small","Show Expression as Transparency in t-SNE"),value = TRUE)),
-                                                                conditionalPanel("input.mainpanel=='subclusters' && input.subclusterpanel=='tSNE'",
-                                                                                 checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE)),
+                                                                  column(12, selectizeInput("user.genes", "Gene", choices=c("Symbol"="",top.genes),
+                                                                                            multiple=TRUE, width='100%', options=list(create=TRUE,persist=FALSE)))
+                                                                ),
                                                                 fluidRow(
-                                                                  column(6, uiOutput("cell.class")),
-                                                                  column(6, uiOutput("cell.cluster")), 
-                                                                  conditionalPanel("input.mainpanel=='subclusters'",
-                                                                                   column(12, uiOutput("cell.type")))
-                                                                )
+                                                                  column(12, uiOutput("region"))),
+                                                                fluidRow(column(12, uiOutput("cell.class"))),
+                                                                fluidRow(column(12, uiOutput("cell.cluster"))), 
+                                                                conditionalPanel("input.mainpanel=='subclusters'",
+                                                                                 fluidRow(column(12, uiOutput("cell.type")))
+                                                                ),
+                                                                conditionalPanel("input.mainpanel=='subclusters' && input.subclusterpanel=='tsne'",
+                                                                                 checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE))
                                                             )
                                                    ),
-                                                   tabPanel("Compare",
+                                                   tabPanel("Cluster", value="controltabs-compare",
                                                             div(class="control-box",
                                                                 conditionalPanel('input.mainpanel=="clusters"',
                                                                                  h4("Compare Clusters"),
@@ -248,27 +212,64 @@ function(request) {
                                                             )
                                                    ),
                                                    tabPanel("Display",
-                                                            # opt.*.label effects how items are displayed in pull-downs, table titles, etc. If these are changed
-                                                            # in real time, then options generally reset. One advantage of different displayed options is that querying
-                                                            # can be more general. E.g. If cluster labels are just a class and marker e.g. Atrocyte.Gja1 instead of
-                                                            # Astrocyte.Gja1 [#4], then you can match the same cluster across different regions. But if these are
-                                                            # changed on the fly, then current selections are lost. And there's no general solution because there
-                                                            # isn't a 1:1 mapping of display options to model values.
-                                                            div(style="display:none",
-                                                                selectInput("opt.cluster.disp","Label Clusters", choices=c("Using Annotated Class and Markers"='annotated', "With Numbers"='numbers',"Class, Markers and Numbers"="all"), selected = 'all'),
-                                                                selectInput("opt.region.disp","Label Region", choices=c("Using Region Name"='region',"Using Experiment Name"='experiment')),
+                                                            conditionalPanel('(input["mainpanel"]=="clusters" && input["clusterpanel"]=="rank") || (input["mainpanel"]=="subclusters" && input["subclusterpanel"]=="rank")',
+                                                                             conditionalPanel('input["user.genes"]==undefined || input["user.genes"].length <= 2',
+                                                                                              div(class="control-box", h4("Level Plot Settings"), 
+                                                                                                  checkboxInput("opt.rank.by.region", "Group Rankings By Region", value=FALSE), 
+                                                                                                  selectInput("top.N","Top N Cluster or Subcluster", choices=c(1,2,3,4,5,10,20,50,200),selected=10),
+                                                                                                  selectInput("opt.plot.height", "Plot Height", choices=c('Fixed'='fixed', 'Adjust'='auto'), selected='auto')
+                                                                                              )),
+                                                                             conditionalPanel('input["user.genes"]!=undefined && input["user.genes"].length > 2',
+                                                                                              div(class="control-box", h4("Heat Map Settings"), 
+                                                                                                  sliderInput("opt.heatmap.max.per100k", "Threshold Max Transcripts (per 100k) in Heatmap Display (lower values increase sensitivity)",
+                                                                                                              0, 1000, value=100, step=10)
+                                                                                              ))
+                                                            ),
+                                                            conditionalPanel("input['user.genes'] && ((input.mainpanel=='clusters' && input.clusterpanel=='tsne') || (input.mainpanel=='subclusters' && input.subclusterpanel=='tsne'))",
+                                                                             div(class="control-box",
+                                                                                 h4("Gene Search Settings"),
+                                                                                 div(style="display:none",checkboxInput("normalize.expression.by.facet","Normalize Expression within Region or Cluster", value=FALSE)),
+                                                                                 selectizeInput("opt.tx", "Show Expression as", choices=c("Transparency"="alpha", "Hot-Cool"="heat"), selected = "heat"),
+                                                                                 sliderInput("opt.tx.min", "Show Labels When Expression is Greater than % of Max", 0, 90, value=70, round=TRUE, step=10, post='%'),
+                                                                                 checkboxInput("opt.tx.cells","Show Expression Per Cell for Search Genes", value=TRUE),
+                                                                                 checkboxInput("opt.tx.legend","Show Expression Legend", value=FALSE),
+                                                                                 selectInput("opt.tx.scale", "Scale transparency or color range: ", choices=c("Fixed"="fixed", "Observed Max Value"="max", "Max Per Gene"="gene"), selected="fixed"),
+                                                                                 conditionalPanel("!input['opt.tx.cells'] && input['user.genes'].length > 1", checkboxInput("opt.tx.sum", "Sum Expression of Multiple Search Genes", value=FALSE)))
+                                                            ),
+                                                            conditionalPanel('(input["mainpanel"]=="clusters" && input["clusterpanel"]=="tsne") || (input["mainpanel"]=="subclusters" && input["subclusterpanel"]=="tsne")',
+                                                                             conditionalPanel('input["opt.tx.cells"]',
+                                                                                              div(class="control-box",
+                                                                                                  h4("Cell Expression Settings"),
+                                                                                                  selectInput("opt.cell.display.type","Display Gene Expression Using", choices=c("Size"="size","Absent/Present"="detect"), selected="size"),
+                                                                                                  conditionalPanel('input["opt.cell.display.type"]=="detect"',
+                                                                                                                   sliderInput("opt.detection.thresh","Observed Transcript Copies (FIXME - currently data is normalized values)", 0, 5, value=0, step=1)),
+                                                                                                  conditionalPanel('input["opt.cell.display.type"]=="size"',
+                                                                                                                   sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=4, step=1))
+                                                                                              )
+                                                                             ),
+                                                                             div(class="control-box",
+                                                                                 h4("t-SNE Plot Settings"),
+                                                                                 selectInput("opt.plot.label", "Plot Labels for Clusters and Subclusters", choices=c("Names"='disp',"Numbers"='number',"None"='none')),
+                                                                                 checkboxInput("opt.show.bags","Display t-SNE using bag plots", value=TRUE),
+                                                                                 selectInput("opt.downsampling.method","Downsample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
+                                                                                 conditionalPanel("input['opt.downsampling.method']!='none'",
+                                                                                                  sliderInput("downsampling", "Downsample Count", 0, 100000, value=2000, step=1000))
+                                                                             )
+                                                            ),
+                                                            conditionalPanel('(input["mainpanel"]=="clusters" && input["clusterpanel"]=="scatter") || (input["mainpanel"]=="subclusters" && input["subclusterpanel"]=="scatter")',
+                                                                             div(class="control-box", 
+                                                                                 h4("Scatter Plot Settings"),
+                                                                                 checkboxInput("opt.scatter.gene.labels","Show Gene Labels on Scatter Plots", value=TRUE)
+                                                                             )
+                                                            ),
+                                                            div(class="control-box",
+                                                                h4("Labels"),
+                                                                div(style="display:none", selectInput("opt.cluster.disp","Label Clusters", choices=c("Using Annotated Class and Markers"='annotated', "With Numbers"='numbers',"Class, Markers and Numbers"="all"), selected = 'all')),
+                                                                div(style="display:none", selectInput("opt.region.disp","Label Region", choices=c("Using Region Name"='region',"Using Experiment Name"='experiment'))),
                                                                 conditionalPanel("input['opt.cluster.disp']=='annotated' || input['opt.cluster.disp']=='all'",
-                                                                                 checkboxInput("use.common.name", "Use Common Name for Subcluster, If Present", value = TRUE))),
-                                                            selectInput("opt.plot.label", "Plot Labels for Clusters and Subclusters", choices=c("Names"='disp',"Numbers"='number',"None"='none')),
-                                                            checkboxInput("opt.show.bags","Display t-SNE using bag plots", value=TRUE),
-                                                            selectInput("opt.downsampling.method","Downsample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
-                                                            conditionalPanel("input['opt.downsampling.method']!='none'",
-                                                                             sliderInput("downsampling", "Downsample Count", 0, 100000, value=2000, step=1000)),
-                                                            selectInput("top.N","Gene Search: Show Top Cluster or Subcluster Matches", choices=c(1,2,3,4,5,10,20),selected=5),
-                                                            
-                                                            sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=3, step=0.5),
-                                                            checkboxInput("opt.scatter.gene.labels","Show Gene Labels on Scatter Plots", value=TRUE),
-                                                            selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all'))
+                                                                                 checkboxInput("use.common.name", "Use Common Name for Subcluster, If Present", value = FALSE)),
+                                                                conditionalPanel("input['use.common.name']", span(h6("(Common names are interpretive best guesses)")))),
+                                                            div(style="display:none", selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all')))
                                                    ),
                                                    debug.controls()
                                        ),
@@ -278,17 +279,21 @@ function(request) {
                           # Show a plot of the generated distribution
                           mainPanel(width=9, 
                                     tabsetPanel(type="tabs", id="mainpanel",
-                                                tabPanel(span("Global Clusters"), value = "clusters",
+                                                tabPanel("Global Clusters", value = "clusters",
                                                          tabsetPanel(type="pills", id="clusterpanel",
-                                                                     tabPanel("tSNE",
+                                                                     tabPanel("Levels By Cluster", value="rank",
+                                                                              div(plotDownload("gene.expr.rank.cluster.dl"), 
+                                                                                  conditionalPanel("input['user.genes']==undefined || input['user.genes'].length <= 2",
+                                                                                                   uiOutput("gene.expr.rank.cluster.output")
+                                                                                                   ),
+                                                                                  conditionalPanel("input['user.genes']!=undefined && input['user.genes'].length > 2",
+                                                                                                   DT::dataTableOutput("gene.expr.heatmap.cluster")
+                                                                                                   ))),
+                                                                     tabPanel("tSNE", value="tsne",
                                                                               fluidRow(div(id="global-expression", class="scroll-area", 
                                                                                            plotDownload("tsne.global.cluster.label.dl"),
                                                                                            span(class="img-center",imageOutput("tsne.global.cluster.label", height="500px"))))),
-                                                                     tabPanel("Rank", 
-                                                                              fluidRow(div(id="global-rank", class="scroll-area",
-                                                                                           plotDownload("gene.expr.rank.cluster.dl"),
-                                                                                           span(class="img-center",plotOutput("gene.expr.rank.cluster", height=500))))),
-                                                                     tabPanel("Scatter", 
+                                                                     tabPanel("Scatter", value="scatter",
                                                                               fluidRow(div(id="global-scatter", class="scroll-area",
                                                                                            plotDownload("gene.expr.scatter.cluster.dl"),
                                                                                            span(class="img-center",imageOutput("gene.expr.scatter.cluster", height=500))))),
@@ -298,7 +303,7 @@ function(request) {
                                                          hr(),
                                                          uiOutput("dt.cluster.markers.heading"),
                                                          conditionalPanel(
-                                                           'true && !$("div[id=\'current.cluster\']").is(":empty")',
+                                                           'input["current.cluster"]',
                                                            fluidRow(class="table-area",
                                                                     tableDownload("dt.cluster.markers.dl"),
                                                                     column(11,DT::dataTableOutput("dt.cluster.markers")))
@@ -306,7 +311,15 @@ function(request) {
                                                 ),
                                                 tabPanel("Subclusters", value = "subclusters",
                                                          tabsetPanel(type="pills", id="subclusterpanel",
-                                                                     tabPanel("tSNE",
+                                                                     tabPanel("Levels By Subcluster", value="rank",
+                                                                              div(plotDownload("gene.expr.rank.subcluster.dl"),
+                                                                                  conditionalPanel("input['user.genes']==undefined || input['user.genes'].length <= 2",
+                                                                                                   uiOutput("gene.expr.rank.subcluster.output")
+                                                                                                   ),
+                                                                                  conditionalPanel("input['user.genes']!=undefined && input['user.genes'].length > 2",
+                                                                                                   DT::dataTableOutput("gene.expr.heatmap.subcluster")
+                                                                                                   ))),
+                                                                     tabPanel("tSNE", value="tsne",
                                                                               fluidRow(div(id="local-expression", class="scroll-area",
                                                                                            conditionalPanel("input.showSubclustersInGlobal",
                                                                                                             plotDownload("tsne.global.subcluster.label.dl"),
@@ -314,30 +327,30 @@ function(request) {
                                                                                            conditionalPanel("!input.showSubclustersInGlobal",
                                                                                                             plotDownload("tsne.local.label.dl"),
                                                                                                             span(class="img-center",imageOutput("tsne.local.label", height=500)))))),
-                                                                     tabPanel("Rank", 
-                                                                              fluidRow(div(id="local-rank", class="scroll-area",
-                                                                                           plotDownload("gene.expr.rank.subcluster.dl"),
-                                                                                           imageOutput("gene.expr.rank.subcluster", height=500)))),
-                                                                     tabPanel("Scatter",
+                                                                     tabPanel("Scatter", value="scatter",
                                                                               fluidRow(div(id="local-scatter", class="scroll-area",
                                                                                            plotDownload("gene.expr.scatter.subcluster.dl"),
                                                                                            span(class="img-center",imageOutput("gene.expr.scatter.subcluster", height=500))))),
-                                                                     tabPanel("Independent Components",
-                                                                              fluidRow(div(id="ic-grid", class="scroll-area",
-                                                                                           #                                                                                           plotDownload("ic.grid.dl"),
-                                                                                           span(class="img-center",plotOutput("ic.grid", height=500))))),
+                                                                     ## tabPanel("Independent Components",
+                                                                     ##          fluidRow(div(id="ic-grid", class="scroll-area",
+                                                                     ##                       #                                                                                           plotDownload("ic.grid.dl"),
+                                                                     ##                       span(class="img-center",plotOutput("ic.grid", height=500))))),
                                                                      tabPanel("Table",  
                                                                               fluidRow(div(id="dt-subclusters", class="scroll-area", DT::dataTableOutput("dt.subclusters"))))),
                                                          hr(),
-                                                         tabsetPanel(type="pills",
-                                                                     tabPanel("Differential Expression",
-                                                                              uiOutput("dt.subcluster.markers.heading"),
-                                                                              fluidRow(class="table-area",
-                                                                                       tableDownload("dt.subcluster.markers.dl"),
-                                                                                       column(11,DT::dataTableOutput("dt.subcluster.markers")))),
-                                                                     tabPanel("Independent Components",
-                                                                              uiOutput("dt.components.heading"),
-                                                                              fluidRow(DT::dataTableOutput("dt.components")))))
+                                                         uiOutput("dt.subcluster.markers.heading"),
+                                                         conditionalPanel(
+                                                           'input["current.subcluster"]',
+                                                           fluidRow(class="table-area",
+                                                                    tableDownload("dt.subcluster.markers.dl"),
+                                                                    column(11,DT::dataTableOutput("dt.subcluster.markers")))
+                                                         )
+                                                                  #   tabPanel("Differential Expression",
+                                                                              # ) # ,
+                                                                     ## tabPanel("Independent Components",
+                                                                     ##          uiOutput("dt.components.heading"),
+                                                                     ##          fluidRow(DT::dataTableOutput("dt.components"))))
+                                                         )
                                                 # ,
                                                 # tabPanel("Metacells")
                                     )

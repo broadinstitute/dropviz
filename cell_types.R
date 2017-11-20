@@ -59,7 +59,7 @@ log.reactive("fn: cell.type.options")
 #####################################################################################################
 # OUTPUT - user filter selections on cell types
 output$region <- renderUI({
-  selectizeInput("tissue", "Choose Region", choices=c("Tissue / Region"="",tissue.options()), selected=input$tissue, multiple=TRUE)
+  selectizeInput("tissue", "Limit By Region", choices=c("Tissue / Region"="",tissue.options()), selected=input$tissue, multiple=TRUE)
 })
 
 output$cell.class <- renderUI({
@@ -171,12 +171,10 @@ gene.cols <- function(df, kind) {
   lapply(user.genes(), function(g) {
     g.fn <- glue("{prep.dir}/markers/genes/{kind}/{g}.diffexp.RDS")
     if (file.exists(g.fn)) {
-      g.diffexp <- readRDS(g.fn) %>% select(exp.label, cx, log.target.u, pval, log.target.u.L, log.target.u.R)
+      g.diffexp <- readRDS(g.fn) %>% select(exp.label, cx, log.target.u, pval, target.sum.per.100k, target.sum.L.per.100k, target.sum.R.per.100k)
 
-      names(g.diffexp)[3] <- paste0(g,'-',names(g.diffexp[3]))
-      names(g.diffexp)[4] <- paste0(g,'-',names(g.diffexp[4]))
-      names(g.diffexp)[5] <- paste0(g,'-',names(g.diffexp[5]))
-      names(g.diffexp)[6] <- paste0(g,'-',names(g.diffexp[6]))
+      # prepend gene name on columns
+      lapply(3:7, function(idx) names(g.diffexp)[idx] <<- paste0(g,'_',names(g.diffexp[idx])))
       
       by.names <- c('exp.label','cx') %>% setNames(c('exp.label',kind))
       df <<- left_join(df, g.diffexp, by=by.names)  
@@ -211,7 +209,7 @@ subclusters.selected <- reactive({
 clusters.selected <- reactive({
 log.reactive("fn: clusters.selected")
   user.selection.changed()
-  select(subclusters.selected__(), region.disp, region.abbrev, class.disp, cluster.disp, exp.label, cluster) %>% unique %>%
+  select(subclusters.selected__(), c.id, region.disp, region.abbrev, class.disp, cluster.disp, exp.label, cluster) %>% unique %>%
     gene.cols('cluster')
 })
 
@@ -220,20 +218,6 @@ log.reactive("fn: regions.selected")
   user.selection.changed()
   select(subclusters.selected(), region.disp, exp.label) %>% unique 
 })
-
-# # The markers are indirect values
-# class.marker.options <- reactive({
-#   user.selection.changed()
-#   (filter.df(cell.types, cell.types.filter.opts, excl='class.marker') %>%
-#      inner_join(class.markers, by='class'))$class_marker.y %>% na.omit() %>% sort
-# })
-# 
-# type.marker.options <- reactive({
-#   user.selection.changed()
-#   (filter.df(cell.types, cell.types.filter.opts, excl='type.marker') %>%
-#      inner_join(type.markers, by='full_name'))$type_marker.y %>% na.omit() %>% sort
-# })
-
 
 
 #####################################################################################################
@@ -252,8 +236,11 @@ setSig <- function(dt, ct.names, start.col, end.col, sig.digits) {
 output$dt.clusters <- DT::renderDataTable({
   ct <- clusters.selected()
   col.idx <- c(
-    which(names(ct) %in% c('region.disp','class.disp','cluster.disp')),
-    lapply(user.genes(), function(g) grep('.[LR]$', grep(paste0('^',g,'-'), names(ct)), invert=TRUE)) %>% unlist
+    sapply(c('region.disp','class.disp','cluster.disp'),
+           function(nm) which(names(ct) %in% nm)),
+    sapply(user.genes(), function(g) 
+      which(grepl(paste0('^',g,'_'), names(ct)) & !grepl('target.sum', names(ct)))
+    )
   )
   ct <- ct[,col.idx]
   
@@ -262,36 +249,40 @@ output$dt.clusters <- DT::renderDataTable({
   
   DT::datatable(ct, 
                 rownames=FALSE,
-                selection="single",
+                selection="none",
                 colnames=colnames,
                 options=list(dom='t', paging=FALSE)) %>% setSig(names(ct), 4, ncol(ct), 3)
 })
 
-observeEvent(input$dt.clusters_rows_selected, {
-  updateSelectInput(session, 'current.cluster', selected=input$dt.clusters_rows_selected)
-})
+## observeEvent(input$dt.clusters_rows_selected, {
+##   updateSelectInput(session, 'current.cluster', selected=input$dt.clusters_rows_selected)
+## })
 
 output$dt.subclusters <- DT::renderDataTable({
   
   ct <- subclusters.selected_() %>% gene.cols('subcluster')  # HACK: fixme. The subclusters.selected routines is a mess due to filtering on selected component. Needs to be cleaned up.
   
   col.idx <- c(
-    which(names(ct) %in% c('region.disp','class.disp','cluster.disp','subcluster.disp')),
-    lapply(user.genes(), function(g) grep('.[LR]$', grep(paste0('^',g,'-'), names(ct)), invert=TRUE)) %>% unlist 
+    sapply(c('region.disp','class.disp','cluster.disp','subcluster.disp'),
+           function(nm) which(names(ct) %in% nm)),
+    lapply(user.genes(), function(g) 
+      which(grepl(paste0('^',g,'_'), names(ct)) & !grepl('target.sum', names(ct)))
+    ) %>% unlist 
   )
   ct <- ct[,col.idx]
   
+  write.log(glue("Writing {nrow(ct)} rows to datatable"))
   colnames <- c('Region','Class','Cluster','Sub-Cluster',
                 lapply(user.genes(), function(g) paste(g,c('Amount','P-Val'))) %>% unlist)
-  DT::datatable(ct, 
+  DT::datatable(ct,
                 rownames=FALSE,
-                selection="single",
+                selection="none",
                 colnames=colnames,
                 options=list(dom='t', paging=FALSE)) %>% setSig(names(ct), 4, ncol(ct), 3)
 })
 
-observeEvent(input$dt.subclusters_rows_selected, {
-  updateSelectInput(session, 'current.subcluster', selected=input$dt.subclusters_rows_selected)
-})
+## observeEvent(input$dt.subclusters_rows_selected, {
+##   updateSelectInput(session, 'current.subcluster', selected=input$dt.subclusters_rows_selected)
+## })
 
 
