@@ -140,29 +140,23 @@ log.reactive("fn: global.xy")
   }) %>% as_tibble
 })
 
+# the global.xy limited to clusters.selected()
 global.xy.cluster.selected <- reactive({
-log.reactive("fn: global.xy.cluster.selected")
+  log.reactive("fn: global.xy.cluster.selected")
   left_join(select(clusters.selected(),exp.label, cluster), global.xy(), by=c('exp.label','cluster')) %>%
     inner_join(region.names(), by='exp.label') %>%
     dplyr::rename(cx=cluster)
 })
-global.xy.subcluster.selected <- reactive({
-log.reactive("fn: global.xy.subcluster.selected")
-  left_join(select(subclusters.selected(),exp.label, subcluster), global.xy(), by=c('exp.label','subcluster')) %>%
-    inner_join(region.names(), by='exp.label') %>% 
-    select(-cluster) %>% dplyr::rename(cx='subcluster')
-})
 
-# returns the xys for the region corresponding with the currently selected cluster
-global.xy.current.cluster <- reactive({
-log.reactive("fn: global.xy.current.cluster")
-  filter(global.xy.cluster.selected(), exp.label==current.cluster()$exp.label & cx==clusters.selected()$cluster[current.cluster()])
-}) 
-global.xy.current.subcluster <- reactive({
-log.reactive("fn: global.xy.current.subcluster")
-  filter(global.xy.subcluster.selected(), 
-         exp.label==current.subcluster()$exp.label & 
-           cx==current.subcluster()$subcluster)
+# All the xy for the the current subclusters.selected() and all non-assigned cells for the clusters.selected().
+# Unassigned are displayed in grey. All cells are shown in the cluster because only a subset of the assigned cells
+# were used in the subclustering.
+global.xy.subcluster.selected <- reactive({
+  log.reactive("fn: global.xy.subcluster.selected")
+  bind_rows(left_join(select(subclusters.selected(), exp.label, subcluster), global.xy(), by=c('exp.label','subcluster')),
+            (left_join(select(clusters.selected(), exp.label, cluster), global.xy(), by=c('exp.label','cluster')) %>% filter(is.na(subcluster)))) %>%
+    inner_join(region.names(), by='exp.label') %>% 
+    select(-cluster) %>% dplyr::rename(cx='subcluster') 
 })
 
 # local XY of all selected clusters
