@@ -58,38 +58,12 @@ log.reactive("fn: subcluster.markers")
 # If user.genes exist and option to display cells in gene search, but there is no comparison, yet, then return a stub with user.genes
 cluster.markers.selected <- reactive({
   log.reactive("fn: cluster.markers.selected")
-  if (is.null(input$dt.cluster.markers_rows_selected) || !isTruthy(current.cluster.i())) {
-    if (isTruthy(user.genes()) && input$opt.tx.cells) {
-      tibble(gene=user.genes())
-    } else {
-      tibble(gene=character(0))
-    }
-  } else {
-    user.rows <- c()
-    if (input$opt.tx.cells) {
-      # force "selection" of user.genes 
-      user.rows <- which(cluster.markers()$gene %in% user.genes())
-    }
-    cluster.markers()[c(user.rows, input$dt.cluster.markers_rows_selected),]
-  }
+  cluster.markers()[input$dt.cluster.markers_rows_selected,]
 })
 
 subcluster.markers.selected <- reactive({
-log.reactive("fn: subcluster.markers.selected")
-  if (is.null(input$dt.subcluster.markers_rows_selected) || !isTruthy(current.subcluster.i())) {
-    if (isTruthy(user.genes()) && input$opt.tx.cells) {
-      tibble(gene=user.genes())
-    } else {
-      tibble(gene=character(0))
-    }
-  } else {
-    user.rows <- c()
-    if (input$opt.tx.cells) {
-      # force "selection" of user.genes 
-      user.rows <- which(subcluster.markers()$gene %in% user.genes())
-    }
-    subcluster.markers()[c(user.rows, input$dt.subcluster.markers_rows_selected),]
-  }
+  log.reactive("fn: subcluster.markers.selected")
+  subcluster.markers()[input$dt.subcluster.markers_rows_selected,]
 })
 
 #####################################################################################################

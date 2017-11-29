@@ -10,7 +10,7 @@ cx.pairwise <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind) {
          fc.thresh=( if (input$expr.filter.opt %in% 'fc') { (abs(fc) > log(input$fold.change)) } else { fc > log(input$fold.change) } ),
          pval.thresh=pval < 10^input$pval.thresh,
          amt.thresh=( (log.target.u > input$min.amt.within) & (log.comparison.u < input$max.amt.without) ),
-         user.selected=gene %in% user.genes(),
+         user.selected=gene %in% user.manual.genes(),
          expr.pass = (if (input$expr.filter.opt == 'either') { (fc.thresh & pval.thresh) | amt.thresh } else {
            if (input$expr.filter.opt=='both') { fc.thresh & pval.thresh & amt.thresh } else {
              if (input$expr.filter.opt == 'fc') { fc.thresh & pval.thresh } else { amt.thresh } 
@@ -252,7 +252,7 @@ observeEvent(input$gene.expr.heatmap.subcluster_rows_selected, {
   updateSelectInput(session, "current.subcluster", selected=heatmap.subclusters()$sc.id[input$gene.expr.heatmap.subcluster_rows_selected])  
 })
 
-expr.heatmap <- function(cx, kind, genes=input$user.genes, opt.heatmap.max=input$opt.heatmap.max.per100k) {
+expr.heatmap <- function(cx, kind, genes=user.genes(), opt.heatmap.max=input$opt.heatmap.max.per100k) {
   Kind <- paste0(toupper(substring(kind,1,1)),substring(kind,2))
 
   gene.cols.idx <- 4:ncol(cx)
@@ -316,7 +316,7 @@ output$gene.expr.rank.cluster <- renderPlot({
       rank.plot(clusters,'cluster', user.genes())
     }
   } else {
-    plot.text("Enter a gene symbol in the 'Cluster' panel\nto display a ranked order of clusters by transcript abundance")    
+    plot.text("Enter a gene symbol in the 'Query' panel\nto display a ranked order of clusters by transcript abundance")    
   }
 })
 
@@ -329,6 +329,6 @@ output$gene.expr.rank.subcluster <- renderPlot({
       rank.plot(subclusters, 'subcluster', user.genes())
     }
   } else {
-    plot.text("Enter a gene symbol in the 'Cluster' panel\nto display a ranked order of subclusters by transcript abundance")    
+    plot.text("Enter a gene symbol in the 'Query' panel\nto display a ranked order of subclusters by transcript abundance")    
   }
 })

@@ -140,29 +140,23 @@ log.reactive("fn: global.xy")
   }) %>% as_tibble
 })
 
+# the global.xy limited to clusters.selected()
 global.xy.cluster.selected <- reactive({
-log.reactive("fn: global.xy.cluster.selected")
+  log.reactive("fn: global.xy.cluster.selected")
   left_join(select(clusters.selected(),exp.label, cluster), global.xy(), by=c('exp.label','cluster')) %>%
     inner_join(region.names(), by='exp.label') %>%
     dplyr::rename(cx=cluster)
 })
-global.xy.subcluster.selected <- reactive({
-log.reactive("fn: global.xy.subcluster.selected")
-  left_join(select(subclusters.selected(),exp.label, subcluster), global.xy(), by=c('exp.label','subcluster')) %>%
-    inner_join(region.names(), by='exp.label') %>% 
-    select(-cluster) %>% dplyr::rename(cx='subcluster')
-})
 
-# returns the xys for the region corresponding with the currently selected cluster
-global.xy.current.cluster <- reactive({
-log.reactive("fn: global.xy.current.cluster")
-  filter(global.xy.cluster.selected(), exp.label==current.cluster()$exp.label & cx==clusters.selected()$cluster[current.cluster()])
-}) 
-global.xy.current.subcluster <- reactive({
-log.reactive("fn: global.xy.current.subcluster")
-  filter(global.xy.subcluster.selected(), 
-         exp.label==current.subcluster()$exp.label & 
-           cx==current.subcluster()$subcluster)
+# All the xy for the the current subclusters.selected() and all non-assigned cells for the clusters.selected().
+# Unassigned are displayed in grey. All cells are shown in the cluster because only a subset of the assigned cells
+# were used in the subclustering.
+global.xy.subcluster.selected <- reactive({
+  log.reactive("fn: global.xy.subcluster.selected")
+  bind_rows(left_join(select(subclusters.selected(), exp.label, subcluster), global.xy(), by=c('exp.label','subcluster')),
+            (left_join(select(clusters.selected(), exp.label, cluster), global.xy(), by=c('exp.label','cluster')) %>% filter(is.na(subcluster)))) %>%
+    inner_join(region.names(), by='exp.label') %>% 
+    select(-cluster) %>% dplyr::rename(cx='subcluster') 
 })
 
 # local XY of all selected clusters
@@ -644,12 +638,11 @@ output$tsne.global.cluster.label <- renderImage({
   tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=FALSE, show.cells=downsample()>0, show.bags = input$opt.show.bags, diff.genes=expr.xy())
   
   region.count <- nrow(regions.selected())
-  gene.count <- nrow(cluster.markers.selected())
-  if (tx.facet2() && gene.count==0) { gene.count <- length(user.genes()) }
+  gene.count <- length(user.genes())
 
   img.sz <- tsne.image.size(facet1=region.count, facet2=gene.count, display.width=img.size.round(session$clientData[[glue("output_tsne.global.cluster.label_width")]]))
 
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,cluster.markers.selected()$gene,user.genes(),input$top.N))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,user.genes(),input$top.N))
 
   renderCacheImage(tsne.plot, glue("tsne_global_cluster_label_{key.str}"), img.sz$width, img.sz$height, progress=progress)
 }, deleteFile = FALSE)
@@ -671,7 +664,7 @@ output$tsne.global.subcluster.label <- renderImage({
     tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=TRUE, show.cells=(downsample()>0), show.bags = input$opt.show.bags, diff.genes=expr.subcluster.xy())
     
     region.count <- nrow(regions.selected())
-    gene.or.ic.count <- length(na.omit(c(subcluster.markers.selected()$gene, selected.components()$ic.number)))
+    gene.or.ic.count <- length(na.omit(c(user.genes(), selected.components()$ic.number)))
     if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
     
     img.sz <- tsne.image.size(facet1=region.count, facet2=gene.or.ic.count, display.width=img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_width")]]))
@@ -681,7 +674,7 @@ output$tsne.global.subcluster.label <- renderImage({
     h <- img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_height")]])
     img.sz <- list(height=h,width=h)
   } 
-key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,subcluster.markers.selected()$gene,user.genes(),input$top.N))
+key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,user.genes(),input$top.N))
   
   renderCacheImage(tsne.plot, glue("tsne_global_subcluster_label_{key.str}"), img.sz$width, img.sz$height, progress=progress)
 }, deleteFile = FALSE)
@@ -701,7 +694,7 @@ output$tsne.local.label <- renderImage({
   if (is.filtered()) {
     tsne.plot <- tsne.label(is.global=FALSE, show.subclusters = TRUE, show.cells=TRUE, show.bags=input$opt.show.bags, diff.genes = expr.subcluster.local.xy(), comps=selected.component.cell.weights.xy())
   
-    gene.or.ic.count <- length(na.omit(c(subcluster.markers.selected()$gene, selected.components()$ic.number)))
+    gene.or.ic.count <- length(na.omit(c(user.genes(), selected.components()$ic.number)))
     cluster.count <- nrow(clusters.selected())
     if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
     
@@ -712,7 +705,7 @@ output$tsne.local.label <- renderImage({
     h <- img.size.round(session$clientData[[glue("output_tsne.local.label_height")]])
     img.sz <- list(height=h,width=h)
   }
-  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, subcluster.markers.selected()$gene, selected.components()$ic.number,user.genes(),input$top.N))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster, selected.components()$ic.number,user.genes(),input$top.N))
   
   renderCacheImage(tsne.plot, glue("tsne_local_label_{key.str}"), img.sz$width, img.sz$height, progress=progress)
 }, deleteFile = FALSE)

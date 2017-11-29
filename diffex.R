@@ -4,10 +4,10 @@
 # for the selected marker (from the differentially expressed gene list)
 # return the cells, expression levels, global X, Y coordinates in the comparison region
 expr.xy <- reactive({
-log.reactive("fn: expr.xy")
-  ddply(cluster.markers.selected(), .(gene), function(g) {
+  log.reactive("fn: expr.xy")
+  ldply(user.genes(), function(g) {
     ddply(regions.selected(), .(exp.label), function(r) {
-      expr.fn <- glue("{prep.dir}/expr/{first(r$exp.label)}/gene/{first(g$gene)}.RDS")
+      expr.fn <- glue("{prep.dir}/expr/{first(r$exp.label)}/gene/{g}.RDS")
       if (file.exists(expr.fn)) {
         readRDS(expr.fn) %>% mutate(exp.label=r$exp.label) %>% inner_join(region.names(), by='exp.label')
       } else {
@@ -19,37 +19,33 @@ log.reactive("fn: expr.xy")
 
 # for the selected subcluster markers 
 # return the cells, expression levels, global X, Y limited to selected subclusters
-expr.subcluster.xy <- reactive({
-log.reactive("fn: expr.subcluster.xy")
+## expr.subcluster.xy <- reactive({
+##   stop("expr.xy and expr.subcluster.xy are now identical. merge?")
+##   log.reactive("fn: expr.subcluster.xy")
   
-  ddply(subcluster.markers.selected(), .(gene), function(g) {
-    ddply(regions.selected(), .(exp.label), function(r) {
-      expr.fn <- glue("{prep.dir}/expr/{first(r$exp.label)}/gene/{first(g$gene)}.RDS")
-      if (file.exists(expr.fn)) {
-        readRDS(expr.fn) %>% mutate(exp.label=r$exp.label) %>% inner_join(region.names(), by='exp.label')
-      } else {
-        tibble()
-      }
-    })
-  })
-})
+##   ldply(user.genes(), function(g) {
+##     ddply(regions.selected(), .(exp.label), function(r) {
+##       expr.fn <- glue("{prep.dir}/expr/{first(r$exp.label)}/gene/{first(g$gene)}.RDS")
+##       if (file.exists(expr.fn)) {
+##         readRDS(expr.fn) %>% mutate(exp.label=r$exp.label) %>% inner_join(region.names(), by='exp.label')
+##       } else {
+##         tibble()
+##       }
+##     })
+##   })
+## })
+expr.subcluster.xy <- reactive({ expr.xy() })
 
 # for the selected subcluster markers
 # return the cells, expression levels and local X, Y limited to selected subclusters
 expr.subcluster.local.xy <- reactive({
   log.reactive("fn: expr.subcluster.local.xy")
   
-  if (nrow(subcluster.markers.selected()) > 0 && nrow(clusters.selected()) > MAX_REGIONS) {
-    showNotification(glue("There are too many separate facets ({nrow(clusters.selected())}) to display gene expression for individual cells.\nUse the Query panel on the left to filter to a smaller set of {MAX_REGIONS} clusters or less."), duration=60, type="error")
-    write.log("Error: Too many facets to display. Not including individual cells")
-    tibble()
+  xy <- expr.subcluster.xy()
+  if (nrow(xy)>0) {
+    inner_join(xy %>% select(-V1, -V2, -region.disp),            # replace x,y with local ones
+               local.xy.selected(), by=c('cell','exp.label')) %>% as_tibble()
   } else {
-    xy <- expr.subcluster.xy()
-    if (nrow(xy)>0) {
-      inner_join(xy %>% select(-V1, -V2, -region.disp),            # replace x,y with local ones
-                 local.xy.selected(), by=c('cell','exp.label')) %>% as_tibble()
-    } else {
-      xy
-    }
+    xy
   }
 })
