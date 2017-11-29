@@ -149,7 +149,7 @@ limit.by.components <- function(df, comps) {
 }
 
 # returns a list of gene symbols from input$user.genes
-user.genes <- reactive({
+user.manual.genes <- reactive({
   if (isTruthy(input$user.genes)) {
     genes <- gene.symbol(input$user.genes)
     if (any(genes=='')) {
@@ -164,6 +164,18 @@ user.genes <- reactive({
   } else {
     input$user.genes
   }
+})
+
+# return a list of genes combining user.manual.genes and any rows selected from markers tables
+user.genes <- reactive({
+  ug <- user.manual.genes()
+  if (isTruthy(current.cluster.i())) {
+    ug <- c(ug, cluster.markers.selected()$gene)
+  }
+  if (isTruthy(current.subcluster.i())) {
+    ug <- c(ug, subcluster.markers.selected()$gene) 
+  }
+  ug
 })
 
 # adds columns for each user gene and sorts on the first
@@ -189,6 +201,8 @@ gene.cols <- function(df, kind) {
 
 # returns a tibble of only the rows that match the user selection
 # HACK: FIX ME. This is a mess because of limit.by.components. Get rid of limit.by.components and remove subclusters.selected_
+# This is even more of a mess because some calls to (sub)clusters.selected() cannot include the gene.cols. It probably needs
+# to stay even after the components kruft is removed.
 subclusters.selected_ <- reactive({
   log.reactive("fn: subclusters.selected_")
   user.selection.changed()
@@ -201,16 +215,23 @@ subclusters.selected__ <- reactive({
 })
 
 
+# add gene.cols
 subclusters.selected <- reactive({
   gene.cols(subclusters.selected__(),'subcluster')
 })
 
 # returns a smaller tibble with a row per cluster from subclusters.selected()
-clusters.selected <- reactive({
-log.reactive("fn: clusters.selected")
+clusters.selected_ <- reactive({
+  log.reactive("fn: clusters.selected_")
   user.selection.changed()
-  select(subclusters.selected__(), c.id, region.disp, region.abbrev, class.disp, cluster.disp, exp.label, cluster) %>% unique %>%
-    gene.cols('cluster')
+  select(subclusters.selected__(), c.id, region.disp, region.abbrev, class.disp, cluster.disp, exp.label, cluster) %>% unique
+})
+
+# adds gene.cols
+clusters.selected <- reactive({
+  log.reactive("fn: clusters.selected")
+
+  gene.cols(clusters.selected_(), 'cluster')
 })
 
 regions.selected <- reactive({
@@ -240,7 +261,7 @@ output$dt.clusters <- DT::renderDataTable({
            function(nm) which(names(ct) %in% nm)),
     sapply(user.genes(), function(g) 
       which(grepl(paste0('^',g,'_'), names(ct)) & !grepl('target.sum', names(ct)))
-    )
+    ) %>% unlist
   )
   ct <- ct[,col.idx]
   
@@ -265,7 +286,7 @@ output$dt.subclusters <- DT::renderDataTable({
   col.idx <- c(
     sapply(c('region.disp','class.disp','cluster.disp','subcluster.disp'),
            function(nm) which(names(ct) %in% nm)),
-    lapply(user.genes(), function(g) 
+    sapply(user.genes(), function(g) 
       which(grepl(paste0('^',g,'_'), names(ct)) & !grepl('target.sum', names(ct)))
     ) %>% unlist 
   )
