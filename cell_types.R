@@ -36,7 +36,7 @@ log.reactive("fn: cell.cluster.options")
   cell.cluster.opt <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='cell.cluster')
   
   # prefix region abbrev if more than one region to distinguish, e.g. "Neuron [#2]" => "STR Neuron [#2]"
-  if (nrow(regions.selected()) > 1) {
+  if (length(input$tissue) != 1) {
     cco <- arrange(unique(select(cell.cluster.opt, region.abbrev, cluster.disp)), cluster.disp)
     return(setNames(cco$cluster.disp, glue("{cco$region.abbrev} {cco$cluster.disp}")))
   } else {
@@ -81,7 +81,6 @@ output$cell.type <- renderUI({
 #
 # the name of the variable is the name in the input list
 # the value is the name of the column in cell.types
-#cell.types.filter.opts <- c(tissue='exp.label', cell.class='class', cell.cluster='cluster', cell.type='subcluster')
 cell.types.filter.opts <- c(tissue='region.disp', cell.class='class.disp', cell.cluster='cluster.disp', cell.type='subcluster.disp')
 
 # generate query on df using filter.opts 
@@ -103,14 +102,6 @@ filter.df <- function(df, filter.opts, excl=NULL, only=NULL) {
   } else {
     user.input <- input
   }
-  
-  # replace the value of class.marker with the corresponding multi-value fields 
-  # if (!is.null(user.input$class.marker)) {
-  #   user.input$class.marker <- unique(filter(class.markers, class_marker %in% user.input$class.marker))$class_markers
-  # }
-  # if (!is.null(user.input$type.marker)) {
-  #   user.input$type.marker <- unique(filter(type.markers, type_marker %in% user.input$type.marker))$type_markers
-  # }
   
   # there are different ways of doing this, but this is the easiest, particularly because
   # I'm piecing together an unknown number of different filter_ calls. 
