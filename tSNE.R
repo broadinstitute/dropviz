@@ -640,7 +640,8 @@ output$tsne.global.cluster.label <- renderImage({
   region.count <- nrow(regions.selected())
   gene.count <- length(user.genes())
 
-  img.sz <- tsne.image.size(facet1=region.count, facet2=gene.count, display.width=img.size.round(session$clientData[[glue("output_tsne.global.cluster.label_width")]]))
+  display.width <- img.size.round(session$clientData[[glue("output_tsne.global.cluster.label_width")]])
+  img.sz <- tsne.image.size(facet1=region.count, facet2=gene.count, display.width=display.width)
 
   key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,clusters.selected()$cluster,user.genes(),input$top.N))
 
@@ -667,14 +668,15 @@ output$tsne.global.subcluster.label <- renderImage({
     gene.or.ic.count <- length(na.omit(c(user.genes(), selected.components()$ic.number)))
     if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
     
-    img.sz <- tsne.image.size(facet1=region.count, facet2=gene.or.ic.count, display.width=img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_width")]]))
+    display.width <- img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_width")]])
+    img.sz <- tsne.image.size(facet1=region.count, facet2=gene.or.ic.count, display.width=display.width)
     
   } else {
     tsne.plot <- function(progress) plot.text("Highlight one or more regions, classes or clusters to begin subcluster analysis")
     h <- img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_height")]])
     img.sz <- list(height=h,width=h)
   } 
-key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,user.genes(),input$top.N))
+  key.str <- digest(c(tsne.disp.opts(),regions.selected()$exp.label,subclusters.selected()$subcluster,user.genes(),input$top.N))
   
   renderCacheImage(tsne.plot, glue("tsne_global_subcluster_label_{key.str}"), img.sz$width, img.sz$height, progress=progress)
 }, deleteFile = FALSE)
@@ -698,7 +700,8 @@ output$tsne.local.label <- renderImage({
     cluster.count <- nrow(clusters.selected())
     if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
     
-    img.sz <- tsne.image.size(facet1=cluster.count, facet2=gene.or.ic.count, display.width=img.size.round(session$clientData[[glue("output_tsne.local.label_width")]]))
+    display.width <- img.size.round(session$clientData[[glue("output_tsne.local.label_width")]])
+    img.sz <- tsne.image.size(facet1=cluster.count, facet2=gene.or.ic.count, display.width=display.width)
 
   } else {
     tsne.plot <- function(progress) plot.text("Highlight one or more regions, classes or clusters to begin subcluster analysis")

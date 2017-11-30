@@ -290,12 +290,12 @@ function(request) {
                                                                                                    DT::dataTableOutput("gene.expr.heatmap.cluster")
                                                                                                    ))),
                                                                      tabPanel("tSNE", value="tsne",
+                                                                              plotDownload("tsne.global.cluster.label.dl"),
                                                                               fluidRow(div(id="global-expression", class="scroll-area", 
-                                                                                           plotDownload("tsne.global.cluster.label.dl"),
-                                                                                           span(class="img-center",imageOutput("tsne.global.cluster.label", height="500px"))))),
+                                                                                           span(class="img-center",imageOutput("tsne.global.cluster.label",height="500px"))))),
                                                                      tabPanel("Scatter", value="scatter",
+                                                                              plotDownload("gene.expr.scatter.cluster.dl"),
                                                                               fluidRow(div(id="global-scatter", class="scroll-area",
-                                                                                           plotDownload("gene.expr.scatter.cluster.dl"),
                                                                                            span(class="img-center",imageOutput("gene.expr.scatter.cluster", height=500))))),
                                                                      tabPanel("Table",
                                                                               fluidRow(div(id="dt-clusters", class="scroll-area", 
@@ -320,16 +320,18 @@ function(request) {
                                                                                                    DT::dataTableOutput("gene.expr.heatmap.subcluster")
                                                                                                    ))),
                                                                      tabPanel("tSNE", value="tsne",
+                                                                              conditionalPanel("input.showSubclustersInGlobal",
+                                                                                               plotDownload("tsne.global.subcluster.label.dl")),
+                                                                              conditionalPanel("!input.showSubclustersInGlobal",
+                                                                                               plotDownload("tsne.local.label.dl")),
                                                                               fluidRow(div(id="local-expression", class="scroll-area",
                                                                                            conditionalPanel("input.showSubclustersInGlobal",
-                                                                                                            plotDownload("tsne.global.subcluster.label.dl"),
                                                                                                             span(class="img-center",imageOutput("tsne.global.subcluster.label", height=500))),
                                                                                            conditionalPanel("!input.showSubclustersInGlobal",
-                                                                                                            plotDownload("tsne.local.label.dl"),
                                                                                                             span(class="img-center",imageOutput("tsne.local.label", height=500)))))),
                                                                      tabPanel("Scatter", value="scatter",
-                                                                              fluidRow(div(id="local-scatter", class="scroll-area",
                                                                                            plotDownload("gene.expr.scatter.subcluster.dl"),
+                                                                              fluidRow(div(id="local-scatter", class="scroll-area",
                                                                                            span(class="img-center",imageOutput("gene.expr.scatter.subcluster", height=500))))),
                                                                      ## tabPanel("Independent Components",
                                                                      ##          fluidRow(div(id="ic-grid", class="scroll-area",
@@ -366,8 +368,8 @@ function(request) {
                         h3("Contact"), p(a(href="mailto:asaunders@genetics.med.harvard.edu","A. Saunders"),"and",p(href="mailto:emacosko@broadinstitute.org","E. Macosko")),
                         h3("Funding"), p("A.S is funded through a post-doctoral fellowship from the Helen Hay Whitney foundation."))
     ),
-    tags$script(src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js"),
-    tags$script("jQuery(function (){ $('.scroll-area').resizable(); });")
+    tags$script(src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js")## ,
+    ## tags$script("jQuery(function (){ $('.scroll-area').resizable(); });")
   )
 }
 
