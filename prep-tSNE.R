@@ -191,7 +191,7 @@ bagdata <- mk.subc.bag.data()
 # some sub-classes have no data. Create an indicator of a center of (0,0)
 # the chance that a true center is exactly (0,0) is probably infinitesimally small
 add.zero <- function(df) {
-  right_join(df, select(cell.types, -class), by=c('exp.label','cluster','subcluster')) %>% 
+  right_join(df, cell.types, by=c('exp.label','cluster','subcluster')) %>% 
     mutate(x=ifelse(is.na(x),0,x),y=ifelse(is.na(y),0,y))
 }
 
