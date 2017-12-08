@@ -433,6 +433,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     opt.tx.heat <- tx.heat()
     opt.tx.scale <- tx.scale()
     opt.tx.legend <- tx.legend()
+    opt.xy.cell.size <- xy.cell.size()
 
     if (opt.tx.scale=='gene') showNotification("Scaling Per Gene Not Yet Implemented", duration=15, type='warning')
     
@@ -479,14 +480,14 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       xy.gg <- (
         if (opt.show.cells) {
           if (nrow(comp.data)>0) {
-            geom_point(data=xy.data, aes(x=V1,y=V2), color='grey', alpha=0.25, size=xy.cell.size()) 
+            geom_point(data=xy.data, aes(x=V1,y=V2), color='grey', alpha=0.25, size=opt.xy.cell.size) 
           } else {
             if (opt.tx.alpha) {
-              geom_point(data=xy.data, aes(x=V1,y=V2,color=cx, alpha=alpha), size=xy.cell.size()) 
+              geom_point(data=xy.data, aes(x=V1,y=V2,color=cx, alpha=alpha), size=opt.xy.cell.size) 
             } else if (opt.tx.heat) {
               geom_point(data=xy.data, aes(x=V1,y=V2,color=heat), alpha=0.25, size=CELL.MIN.SIZE)
             } else {
-              geom_point(data=xy.data, aes(x=V1,y=V2,color=cx), alpha=0.25, size=xy.cell.size()) 
+              geom_point(data=xy.data, aes(x=V1,y=V2,color=cx), alpha=0.25, size=opt.xy.cell.size) 
             }
           }
         } else {
