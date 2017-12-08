@@ -1,5 +1,3 @@
-source("dv_label.R")
-
 #############################################
 # tSNE plot related functions
 
@@ -438,8 +436,28 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     if (opt.tx.scale=='gene') showNotification("Scaling Per Gene Not Yet Implemented", duration=15, type='warning')
     
     p.func <- function() {
-      require(ggplot2)
-      require(ggthemes)
+      # DropViz - tSNE plot
+      #
+      #   This R code along with the .Rdata bundled in the zip file is
+      #   used to generate the tSNE plots. There are many options, but
+      #   the parameters in the .Rdata file correspond to those set a
+      #   the time of download. 
+      #
+      #   To execute the code, (1) set your working directory to the
+      #   directory containing this file, (2) load the data with
+      #   load("tsne.Rdata") or you may be able to double-click the
+      #   file to load the data into your working environment, (3)
+      #   source this file, i.e. source('tsne.R') (4) print, display
+      #   or save the ggplot object called plot.gg,
+      #   e.g. print(plot.gg) should display the tSNE plot on your
+      #   current graphics device.
+      #
+      #   If you are familiar with ggplot then it should be fairly
+      #   straightforward to tweak the plot to your preferences. If
+      #   you have questions, email dkulp@broadinstitute.org.
+      require(ggplot2)                             # install from CRAN
+      require(ggthemes)                            # install from CRAN
+      if (!exists('dv_label')) source("dv_label.R") # custom ggplot include in zip
 
       if (opt.tx.heat) {
         scale_color <- function(...) scale_color_brewer(..., palette='YlOrRd')
@@ -653,7 +671,7 @@ output$tsne.global.cluster.label <- renderImage({
 output$tsne.global.cluster.label.dl <- downloadHandler(filename="tsne.zip", 
                                                        content= function(file) {
                                                          tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=FALSE, show.cells=(downsample()>0), show.bags = input$opt.show.bags, diff.genes=expr.xy(), return.closure = TRUE)()
-                                                         send.zip(tsne.plot, 'tsne', file)
+                                                         send.zip(tsne.plot, 'tsne', file, 'dv_label.R')
                                                        })
 
 #########################################################
@@ -685,7 +703,7 @@ output$tsne.global.subcluster.label <- renderImage({
 output$tsne.global.subcluster.label.dl <- downloadHandler(filename="tsne.zip", 
                                                           content= function(file) {
                                                             tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=TRUE, show.cells=(downsample()>0), show.bags = input$opt.show.bags, diff.genes=expr.subcluster.xy(), return.closure = TRUE)()
-                                                            send.zip(tsne.plot, 'tsne', file)
+                                                            send.zip(tsne.plot, 'tsne', file, 'dv_label.R')
                                                           })
 
 
@@ -717,5 +735,5 @@ output$tsne.local.label <- renderImage({
 output$tsne.local.label.dl <- downloadHandler(filename="tsne.zip", 
                                               content= function(file) {
                                                 tsne.plot <- tsne.label(is.global=FALSE, show.subclusters = TRUE, show.cells=TRUE, show.bags=input$opt.show.bags, diff.genes = expr.subcluster.local.xy(), comps=selected.component.cell.weights.xy(), return.closure = TRUE)()
-                                                send.zip(tsne.plot, 'tsne', file)
+                                                send.zip(tsne.plot, 'tsne', file, 'dv_label.R')
                                               })

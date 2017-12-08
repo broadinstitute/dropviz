@@ -61,8 +61,8 @@ scatter.plot <- function(target, comparison, cx.metacells, cx.markers, cx.select
     
     cell.pairs <- mutate(cx.metacells, 
                          pval=ifelse(pval==0, .Machine$double.xmin, pval),  # to allow taking log
-                         target.region=paste(target$region.disp, collapse=' + '),
-                         compare.region=paste(comparison$region.disp, collapse=' + ')
+                         target.region=paste(unique(target$region.disp), collapse=' + '),
+                         compare.region=paste(unique(comparison$region.disp), collapse=' + ')
     )
 
 
@@ -75,7 +75,36 @@ scatter.plot <- function(target, comparison, cx.metacells, cx.markers, cx.select
     
     opt.scatter.gene.labels <- input$opt.scatter.gene.labels
     opt.expr.size <- input$opt.expr.size
+    opt.expr.filter <- input$expr.filter.opt
+    opt.fold.change <- input$fold.change
+    opt.max.amt.without <- input$max.amt.without
+    opt.min.amt.within <- input$min.amt.within
     p.func <- function() {
+      # DropViz - scatter plot
+      #
+      #   This R code along with the .Rdata bundled in the zip file is
+      #   used to generate the scatter plots.
+      #
+      #   To execute the code, (1) set your working directory to the
+      #   directory containing this file, (2) load the data with
+      #   load("scatter.Rdata") or you may be able to double-click the file
+      #   to load the data into your working environment, (3) source
+      #   this file, i.e. source('scatter.R') (4) print, display or save
+      #   the ggplot object called plot.gg, e.g. print(plot.gg) should
+      #   display the scatter plot on your current graphics device.
+      #
+      #   The primary object used for the plot is called cell.pairs.
+      #   It is a tibble containing metacell gene expression in the
+      #   target and comparison (sub)cluster(s) for each gene. There
+      #   are also columns indicating whether a gene passed criteria,
+      #   was selected by the user, etc.  Other parameters, prefixed
+      #   with "opt" represent the display settings at the time of
+      #   download.
+      #
+      #   If you are familiar with ggplot then it should be fairly
+      #   straightforward to tweak the plot to your preferences. If
+      #   you have questions, email dkulp@broadinstitute.org.
+
       require(ggplot2); require(dplyr)
       
       gene.labels <- (
@@ -86,20 +115,20 @@ scatter.plot <- function(target, comparison, cx.metacells, cx.markers, cx.select
         }
       )
       
-      if (input$expr.filter.opt %in% c('both','fc','either')) {
-        if (input$expr.filter.opt == 'fc') {
-          fc.line1 <- geom_abline(intercept=log(input$fold.change), slope=1, alpha=0.5, color='grey') 
+      if (opt.expr.filter %in% c('both','fc','either')) {
+        if (opt.expr.filter == 'fc') {
+          fc.line1 <- geom_abline(intercept=log(opt.fold.change), slope=1, alpha=0.5, color='grey') 
         } else {
           fc.line1 <- geom_blank()
         }
-        fc.line2 <- geom_abline(intercept=-log(input$fold.change), slope=1, alpha=0.5, color='grey')
+        fc.line2 <- geom_abline(intercept=-log(opt.fold.change), slope=1, alpha=0.5, color='grey')
       } else {
         fc.line1 <- fc.line2 <- geom_blank()
       }
       
-      if (input$expr.filter.opt %in% c('both','amt','either')) {
-        amt.line1 <- geom_hline(yintercept = input$max.amt.without, color='grey') 
-        amt.line2 <- geom_vline(xintercept = input$min.amt.within, color='grey')
+      if (opt.expr.filter %in% c('both','amt','either')) {
+        amt.line1 <- geom_hline(yintercept = opt.max.amt.without, color='grey') 
+        amt.line2 <- geom_vline(xintercept = opt.min.amt.within, color='grey')
       } else {
         amt.line1 <- amt.line2 <- geom_blank()
       }
@@ -188,7 +217,7 @@ output$gene.expr.scatter.subcluster.dl <- downloadHandler(filename="scatter.zip"
 
 # Creates a dot plot showing the relative normalized expression for the top.N clusters or subclusters.
 # Doesn't work well for multiple genes, because the topN are different and the order also varies.
-rank.plot <- function(clusters, kind, genes) {
+rank.plot <- function(clusters, kind, genes, return.closure=FALSE) {
   require(tidyr)
   
   Kind <- paste0(toupper(substring(kind,1,1)),substring(kind,2))
@@ -219,7 +248,7 @@ rank.plot <- function(clusters, kind, genes) {
   )
   gene.description <- paste(clusters.top$gene,"-",gene.desc(clusters.top$gene))
   clusters.top$gene.description <- factor(gene.description, levels=unique(gene.description[order(clusters.top$gene)]))
-
+  
   rank.facet_grid <- (
     if (input$opt.rank.by.region) {
       facet_grid(region.disp~gene.description, scales="free_y")
@@ -227,11 +256,37 @@ rank.plot <- function(clusters, kind, genes) {
       facet_grid(~gene.description, scales="free_y")
     }
   )
-
-  ggplot(clusters.top, aes(x=target.sum.per.100k, xmin=target.sum.L.per.100k, xmax=target.sum.R.per.100k, y=cx.disp, yend=cx.disp)) + geom_point(size=3) + geom_segment(aes(x=target.sum.L.per.100k,xend=target.sum.R.per.100k)) +
-    ggtitle(glue("{Kind}s With Highest Expression of {paste0(genes,collapse=' & ')} (top {length(unique(clusters.top$cx.disp))} results)")) + 
-    xlab(glue("Transcripts Per 100,000 in {Kind}\n\nThe reported confidence intervals reflect statistical sampling noise (calculated from the binomial distribution,\nand reflecting total number of UMIs ascertained by cluster) rather than cell-to-cell heterogeneity within a cluster")) + ylab("") + rank.facet_grid + xlim(0, max(clusters.top$target.sum.R.per.100k)) +
-    theme_few() + theme(plot.title=element_text(size=20,face="bold",hjust=0.5), strip.text=element_text(size=16), axis.text.y=element_text(size=16))
+  
+  p.func <- function() {
+    # DropViz - rank plot
+    #
+    #   This R code along with the .Rdata bundled in the zip file is
+    #   used to generate a rank plot of the N (sub)clusters that have
+    #   the highest expression for the genes of interest.
+    #
+    #   To execute the code, (1) set your working directory to the
+    #   directory containing this file, (2) load the data with
+    #   load("rank.Rdata") or you may be able to double-click the file
+    #   to load the data into your working environment, (3) source
+    #   this file, i.e. source('rank.R') (4) print, display or save
+    #   the ggplot object called plot.gg, e.g. print(plot.gg) should
+    #   display the scatter plot on your current graphics device.
+    
+    require(ggplot2)
+    require(glue)
+    
+    plot.gg <- ggplot(clusters.top, aes(x=target.sum.per.100k, xmin=target.sum.L.per.100k, xmax=target.sum.R.per.100k, y=cx.disp, yend=cx.disp)) + geom_point(size=3) + geom_segment(aes(x=target.sum.L.per.100k,xend=target.sum.R.per.100k)) +
+      ggtitle(glue("{Kind}s With Highest Expression of {paste0(genes,collapse=' & ')} (top {length(unique(clusters.top$cx.disp))} results)")) + 
+      xlab(glue("Transcripts Per 100,000 in {Kind}\n\nThe reported confidence intervals reflect statistical sampling noise (calculated from the binomial distribution,\nand reflecting total number of UMIs ascertained by cluster) rather than cell-to-cell heterogeneity within a cluster")) + ylab("") + rank.facet_grid + xlim(0, max(clusters.top$target.sum.R.per.100k)) +
+      theme_few() + theme(plot.title=element_text(size=20,face="bold",hjust=0.5), strip.text=element_text(size=16), axis.text.y=element_text(size=16))
+    plot.gg
+  }
+  
+  if (return.closure) {
+    p.func
+  } else {
+    p.func()
+  }
 }
 
 
@@ -332,3 +387,17 @@ output$gene.expr.rank.subcluster <- renderPlot({
     plot.text("Enter a gene symbol in the 'Query' panel\nto display a ranked order of subclusters by transcript abundance")    
   }
 })
+
+output$gene.expr.rank.cluster.dl <- downloadHandler(filename="rank.zip", 
+                                                    content= function(file) {
+                                                      req(isTruthy(user.genes()))
+                                                      rank.plot.func <- rank.plot(select(clusters.selected(), -class.disp) %>% unique, 'cluster', user.genes(), return.closure=TRUE)
+                                                      send.zip(rank.plot.func, 'rank', file)
+                                                    })
+
+output$gene.expr.rank.subcluster.dl <- downloadHandler(filename="rank.zip", 
+                                                       content= function(file) {
+                                                         req(isTruthy(user.genes()))
+                                                         rank.plot.func <- rank.plot(select(subclusters.selected(), -class.disp) %>% unique, 'subcluster', user.genes(), return.closure=TRUE)
+                                                         send.zip(rank.plot.func, 'rank', file)
+                                                       })

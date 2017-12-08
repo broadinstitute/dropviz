@@ -245,7 +245,7 @@ setSig <- function(dt, ct.names, start.col, end.col, sig.digits) {
   }
 }
 
-output$dt.clusters <- DT::renderDataTable({
+dt.clusters.fmt <- reactive({
   ct <- clusters.selected()
   col.idx <- c(
     sapply(c('region.disp','class.disp','cluster.disp'),
@@ -256,22 +256,31 @@ output$dt.clusters <- DT::renderDataTable({
   )
   ct <- ct[,col.idx]
   
-  colnames <- c('Region','Class','Cluster',
-                 lapply(user.genes(), function(g) paste(g,c('Amount','P-Val'))) %>% unlist)
+  setNames(ct,c('Region','Class','Cluster',
+                lapply(user.genes(), function(g) paste(g,c('Amount','P-Val'))) %>% unlist))
+
+})
+
+output$dt.clusters <- DT::renderDataTable({
   
+  ct <- dt.clusters.fmt()
   DT::datatable(ct, 
                 rownames=FALSE,
                 selection="none",
-                colnames=colnames,
+                colnames=names(ct),
                 options=list(dom='t', paging=FALSE)) %>% setSig(names(ct), 4, ncol(ct), 3)
 })
+
+output$dt.clusters.dl <- downloadHandler(filename="clusters.csv",
+                                         content=function(file) {
+                                           write.csv(dt.clusters.fmt(), file=file)
+                                         })
 
 ## observeEvent(input$dt.clusters_rows_selected, {
 ##   updateSelectInput(session, 'current.cluster', selected=input$dt.clusters_rows_selected)
 ## })
 
-output$dt.subclusters <- DT::renderDataTable({
-  
+dt.subclusters.fmt <- reactive({
   ct <- subclusters.selected_() %>% gene.cols('subcluster')  # HACK: fixme. The subclusters.selected routines is a mess due to filtering on selected component. Needs to be cleaned up.
   
   col.idx <- c(
@@ -283,16 +292,25 @@ output$dt.subclusters <- DT::renderDataTable({
   )
   ct <- ct[,col.idx]
   
-  write.log(glue("Writing {nrow(ct)} rows to datatable"))
-  colnames <- c('Region','Class','Cluster','Sub-Cluster',
-                lapply(user.genes(), function(g) paste(g,c('Amount','P-Val'))) %>% unlist)
+  setNames(ct, c('Region','Class','Cluster','Sub-Cluster',
+                 lapply(user.genes(), function(g) paste(g,c('Amount','P-Val'))) %>% unlist))
+
+})
+
+output$dt.subclusters <- DT::renderDataTable({
+  
+  ct <- dt.subclusters.fmt()
   DT::datatable(ct,
                 rownames=FALSE,
                 selection="none",
-                colnames=colnames,
+                colnames=names(ct),
                 options=list(dom='t', paging=FALSE)) %>% setSig(names(ct), 4, ncol(ct), 3)
 })
 
+output$dt.subclusters.dl <- downloadHandler(filename="subclusters.csv",
+                                            content=function(file) {
+                                              write.csv(dt.subclusters.fmt(), file=file)
+                                         })
 ## observeEvent(input$dt.subclusters_rows_selected, {
 ##   updateSelectInput(session, 'current.subcluster', selected=input$dt.subclusters_rows_selected)
 ## })

@@ -107,7 +107,7 @@ output$dt.cluster.markers.dl <- downloadHandler(filename="cluster-markers.csv",
 output$dt.cluster.markers.heading <- renderUI({
   if (isTruthy(current.cluster.i())) {
     target.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label%in%current.cluster()$exp.label]} {current.cluster()$cluster.disp}"),collapse='+')
-    if (comparison.cluster()$cluster=='global') {
+    if (nrow(comparison.cluster())==1 && comparison.cluster()$cluster=='global') {
       comparison.names <- comparison.cluster()$cluster.disp
     } else {
       comparison.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label%in%comparison.cluster()$exp.label]} {comparison.cluster()$cluster.disp}"),collapse='+')
