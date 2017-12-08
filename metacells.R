@@ -336,9 +336,14 @@ expr.heatmap <- function(cx, kind, genes=user.genes(), opt.heatmap.max=input$opt
 output$gene.expr.heatmap.cluster <- DT::renderDataTable({
   expr.heatmap(heatmap.clusters(),'cluster')
 })
+output$gene.expr.heatmap.cluster.dl <- downloadHandler(filename="cluster_heatmap.csv",
+                                                       content=function(file) { write.csv(heatmap.clusters(), file=file, row.names=FALSE) })
+
 output$gene.expr.heatmap.subcluster <- DT::renderDataTable({
   expr.heatmap(heatmap.subclusters(),'subcluster')
 })
+output$gene.expr.heatmap.subcluster.dl <- downloadHandler(file="subcluster_heatmap.csv",
+                                                          content=function(file) { write.csv(heatmap.subclusters(), file=file, row.names=FALSE) })
 
 opt.plot.height <- reactive({
   if (input$opt.plot.height=='fixed') {
@@ -391,6 +396,7 @@ output$gene.expr.rank.subcluster <- renderPlot({
 output$gene.expr.rank.cluster.dl <- downloadHandler(filename="rank.zip", 
                                                     content= function(file) {
                                                       req(isTruthy(user.genes()))
+                                                      
                                                       rank.plot.func <- rank.plot(select(clusters.selected(), -class.disp) %>% unique, 'cluster', user.genes(), return.closure=TRUE)
                                                       send.zip(rank.plot.func, 'rank', file)
                                                     })

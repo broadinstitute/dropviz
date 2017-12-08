@@ -282,11 +282,12 @@ function(request) {
                                                 tabPanel("Global Clusters", value = "clusters",
                                                          tabsetPanel(type="pills", id="clusterpanel",
                                                                      tabPanel("Levels By Cluster", value="rank",
-                                                                              div(plotDownload("gene.expr.rank.cluster.dl"), 
-                                                                                  conditionalPanel("input['user.genes']==undefined || input['user.genes'].length <= 2",
+                                                                              div(conditionalPanel("input['user.genes']==undefined || input['user.genes'].length <= 2",
+                                                                                                   plotDownload("gene.expr.rank.cluster.dl"),
                                                                                                    uiOutput("gene.expr.rank.cluster.output")
                                                                                                    ),
                                                                                   conditionalPanel("input['user.genes']!=undefined && input['user.genes'].length > 2",
+                                                                                                   tableDownload("gene.expr.heatmap.cluster.dl"),
                                                                                                    DT::dataTableOutput("gene.expr.heatmap.cluster")
                                                                                                    ))),
                                                                      tabPanel("tSNE", value="tsne",
@@ -313,11 +314,12 @@ function(request) {
                                                 tabPanel("Subclusters", value = "subclusters",
                                                          tabsetPanel(type="pills", id="subclusterpanel",
                                                                      tabPanel("Levels By Subcluster", value="rank",
-                                                                              div(plotDownload("gene.expr.rank.subcluster.dl"),
-                                                                                  conditionalPanel("input['user.genes']==undefined || input['user.genes'].length <= 2",
+                                                                              div(conditionalPanel("input['user.genes']==undefined || input['user.genes'].length <= 2",
+                                                                                                   plotDownload("gene.expr.rank.subcluster.dl"),
                                                                                                    uiOutput("gene.expr.rank.subcluster.output")
                                                                                                    ),
                                                                                   conditionalPanel("input['user.genes']!=undefined && input['user.genes'].length > 2",
+                                                                                                   tableDownload("gene.expr.heatmap.subcluster.dl"),
                                                                                                    DT::dataTableOutput("gene.expr.heatmap.subcluster")
                                                                                                    ))),
                                                                      tabPanel("tSNE", value="tsne",

@@ -101,7 +101,7 @@ output$dt.cluster.markers <- DT::renderDataTable( {
 
 output$dt.cluster.markers.dl <- downloadHandler(filename="cluster-markers.csv", 
                                                 content= function(file) {
-                                                  write.csv(cluster.markers(), file=file)
+                                                  write.csv(cluster.markers(), file=file, row.names=FALSE)
                                                 })
 
 output$dt.cluster.markers.heading <- renderUI({
@@ -128,7 +128,7 @@ output$dt.subcluster.markers <- DT::renderDataTable( {
 
 output$dt.subcluster.markers.dl <- downloadHandler(filename="subcluster-markers.csv", 
                                                    content= function(file) {
-                                                     write.csv(subcluster.markers(), file=file)
+                                                     write.csv(subcluster.markers(), file=file, row.names=FALSE)
                                                    })
 
 output$dt.subcluster.markers.heading <- renderUI({

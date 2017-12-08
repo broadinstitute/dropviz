@@ -273,7 +273,7 @@ output$dt.clusters <- DT::renderDataTable({
 
 output$dt.clusters.dl <- downloadHandler(filename="clusters.csv",
                                          content=function(file) {
-                                           write.csv(dt.clusters.fmt(), file=file)
+                                           write.csv(dt.clusters.fmt(), file=file, row.names=FALSE)
                                          })
 
 ## observeEvent(input$dt.clusters_rows_selected, {
@@ -309,7 +309,7 @@ output$dt.subclusters <- DT::renderDataTable({
 
 output$dt.subclusters.dl <- downloadHandler(filename="subclusters.csv",
                                             content=function(file) {
-                                              write.csv(dt.subclusters.fmt(), file=file)
+                                              write.csv(dt.subclusters.fmt(), file=file, row.names=FALSE)
                                          })
 ## observeEvent(input$dt.subclusters_rows_selected, {
 ##   updateSelectInput(session, 'current.subcluster', selected=input$dt.subclusters_rows_selected)
