@@ -106,11 +106,13 @@ output$dt.cluster.markers.dl <- downloadHandler(filename="cluster-markers.csv",
 
 output$dt.cluster.markers.heading <- renderUI({
   if (isTruthy(current.cluster.i())) {
-    target.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label%in%current.cluster()$exp.label]} {current.cluster()$cluster.disp}"),collapse='+')
+    target.names.tbl <- select(inner_join(experiments, current.cluster(), by='exp.label'), exp.abbrev, cluster.disp)
+    target.names <- paste(glue("{target.names.tbl$exp.abbrev} {target.names.tbl$cluster.disp}"),collapse='+')
     if (nrow(comparison.cluster())==1 && comparison.cluster()$cluster=='global') {
       comparison.names <- comparison.cluster()$cluster.disp
     } else {
-      comparison.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label%in%comparison.cluster()$exp.label]} {comparison.cluster()$cluster.disp}"),collapse='+')
+      comparison.names.tbl <- select(inner_join(experiments, comparison.cluster(), by='exp.label'), exp.abbrev, cluster.disp)
+      comparison.names <- paste(glue("{comparison.names.tbl$exp.abbrev} {comparison.names.tbl$cluster.disp}"),collapse='+')
     }
     tags$h4(glue("Differentially Over-Expressed: {target.names} vs {comparison.names}"))
   } else {
