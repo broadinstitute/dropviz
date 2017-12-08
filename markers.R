@@ -133,11 +133,13 @@ output$dt.subcluster.markers.dl <- downloadHandler(filename="subcluster-markers.
 
 output$dt.subcluster.markers.heading <- renderUI({
   if (isTruthy(current.subcluster.i())) {
-    target.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label %in% current.subcluster()$exp.label]} {current.subcluster()$subcluster.disp}"),collapse=' + ')
+    target.names.tbl <- select(inner_join(experiments, current.subcluster(), by='exp.label'), exp.abbrev, subcluster.disp)
+    target.names <- paste(glue("{target.names.tbl$exp.abbrev} {target.names.tbl$subcluster.disp}"),collapse='+')
     if (comparison.subcluster()$subcluster=='global') {
       comparison.names <- comparison.subcluster()$subcluster.disp
     } else {
-      comparison.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label %in% comparison.subcluster()$exp.label]} {comparison.subcluster()$subcluster.disp}"),collapse=' + ')
+      comparison.names.tbl <- select(inner_join(experiments, comparison.subcluster(), by='exp.label'), exp.abbrev, subcluster.disp)
+      comparison.names <- paste(glue("{comparison.names.tbl$exp.abbrev} {comparison.names.tbl$subcluster.disp}"),collapse='+')
     }
     
     
