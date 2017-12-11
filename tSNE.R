@@ -314,7 +314,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       show.bags <- TRUE
       show.cells <- FALSE
     }
-    stopifnot(show.bags || show.cells)
+    if (!(show.bags || show.cells)) return(plot.text("No data to display."))
     
     # for both global.xy (the positions of each cell) and global.[sub]cluster.avg.xy (the center position of each [sub]cluster),
     # limit to selected [sub]clusters and add pretty region name
