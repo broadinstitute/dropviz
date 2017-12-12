@@ -166,7 +166,7 @@ user.genes <- reactive({
   if (isTruthy(current.subcluster.i())) {
     ug <- c(ug, subcluster.markers.selected()$gene) 
   }
-  ug
+  unique(ug)
 })
 
 # adds columns for each user gene and sorts on the first
