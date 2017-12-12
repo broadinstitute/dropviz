@@ -259,10 +259,13 @@ subcluster.transcript.amounts <- reactive({
 
 alpha.na2zero <- function(df) mutate(df, alpha=ifelse(is.na(alpha),0,alpha))
 
-# just a short hand to join with alpha only if lhs has data and then replace all NA alphas with zero
-left_join_alpha_heat <- function(lhs, rhs, by) {
+# join with alpha only if lhs has data and then replace all NA alphas with zero
+left_join_alpha_heat <- function(lhs, rhs) {
   if (nrow(lhs) > 0) {
-    left_join(lhs, rhs, by=by) %>% alpha.na2zero()
+    # add a facet2.gg (i.e. a gene name) for every (sub)cluster
+    # then include the alpha and heat values. this is a bit of hack
+    # so that the unselected clusters display in grey for gene searches
+    full_join(lhs, select(rhs, exp.label, facet2.gg), by=c('exp.label')) %>%
   } else {
     mutate(lhs, alpha=double())
   }
@@ -270,7 +273,7 @@ left_join_alpha_heat <- function(lhs, rhs, by) {
 
 # When comps are selected in plot, then data is automatically limited to corresponding cluster
 limit.cluster <- function(df, comps) {
-  return(df)
+  return(df)   # FIXME: placeholder if/when ICs return
   # if (nrow(comps)>0) {
   #   filter(df, cluster==first(comps$cluster) & exp.label==first(comps$exp.label))
   # } else {
@@ -382,11 +385,11 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       )
 
-      label.data <- left_join_alpha_heat(label.data, tx.cx, by=c('exp.label','cx')) 
-      center.data <- left_join_alpha_heat(center.data, tx.cx, by=c('exp.label','cx')) 
-      bag.data <- left_join_alpha_heat(bag.data, tx.cx, by=c('exp.label','cx'))
-      loop.data <- left_join_alpha_heat(loop.data, tx.cx, by=c('exp.label','cx'))
-      xy.data <- left_join_alpha_heat(xy.data, tx.cx, by=c('exp.label','cx'))
+      label.data <- left_join_alpha_heat(label.data, tx.cx) 
+      center.data <- left_join_alpha_heat(center.data, tx.cx) 
+      bag.data <- left_join_alpha_heat(bag.data, tx.cx)
+      loop.data <- left_join_alpha_heat(loop.data, tx.cx)
+      xy.data <- left_join_alpha_heat(xy.data, tx.cx)
       
       bag.data <- mutate(bag.data, alpha=pmax(0,alpha-0.5))
       loop.data <- mutate(loop.data, alpha=pmax(0,alpha-1))
