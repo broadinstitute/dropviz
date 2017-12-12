@@ -205,6 +205,7 @@ tx.heat <- reactive({ opt.tx() && (input$opt.tx=='heat') })
 tx.scale <- reactive({ input$opt.tx.scale })
 tx.legend <- reactive({ if (input$opt.tx.legend) 'legend' else 'none' })
 tx.facet2 <- reactive({ opt.tx() && (!input$opt.tx.sum || tx.cells()) && user.genes() > 1 })
+facet2.count <- reactive({ (if ((length(user.genes())>0 && tx.cells()) || tx.facet2()) length(user.genes()) else 0) }) # FIXME: clean up logic
 
 # returns the sum of all of the log normal transcript counts for all user.genes
 psum.amounts <- function(cx, amounts) {
@@ -379,7 +380,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         } else {
           cluster.transcript.amounts()
         }
-      ) 
+      )
 
       label.data <- left_join_alpha_heat(label.data, tx.cx, by=c('exp.label','cx')) 
       center.data <- left_join_alpha_heat(center.data, tx.cx, by=c('exp.label','cx')) 
@@ -391,7 +392,12 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       loop.data <- mutate(loop.data, alpha=pmax(0,alpha-1))
       xy.data <- mutate(xy.data, alpha=pmax(0,alpha-1))
 
-      label.data <- filter(label.data, (as.integer(heat)/length(levels(heat)))>=(input$opt.tx.min/100))
+      # only show labels where the cluster level is greater than thresh, or there's no data
+      # if no data, then set heat and alpha to NA
+      label.data$pass <- with(label.data, (as.integer(heat)/length(levels(heat)))>=(input$opt.tx.min/100))
+      label.data <- filter(label.data, cx.disp=='No Data' | pass)
+      label.data <- mutate(label.data, alpha=ifelse(cx.disp=='No Data', NA, alpha),
+                           heat=factor(ifelse(cx.disp=='No Data', NA, as.character(heat)), levels=levels(heat))) # ugh, show me a cleaner way.
 
       if (!is.null(progress)) progress$inc(0.2, detail=glue("Computing alpha for {user.genes()}"))
     }
@@ -426,7 +432,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     opt.plot.label <- input$opt.plot.label
     opt.cell.display.type <- input$opt.cell.display.type
     diff.data <- (if (opt.cell.display.type=='detect') filter(diff.genes, transcripts > input$opt.detection.thresh) else diff.genes)
-    opt.horiz.facet <- nrow(diff.data)>0 || nrow(comp.data)>0 || tx.facet2()
+    opt.horiz.facet <- (nrow(diff.data)>0 && tx.cells()) || nrow(comp.data)>0 || tx.facet2()
+    opt.tx.cells <- tx.cells()
     opt.tx.alpha <- tx.alpha()
     opt.tx.heat <- tx.heat()
     opt.tx.scale <- tx.scale()
@@ -507,6 +514,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       )
 
+      # xy.data is (possibly sub-sampled) points of all cells
       xy.gg <- (
         if (opt.show.cells) {
           if (nrow(comp.data)>0) {
@@ -525,6 +533,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       )
 
+      # label.data are the names of (sub)clusters, positioned at the centroid of each (sub)clusters
       label.gg <- (
         if (nrow(comp.data)>0) {
           geom_label(data=label.data, aes(x=x,y=y,label=as.character(cx.disp)), color='grey', show.legend=FALSE)
@@ -537,8 +546,9 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       )
       
+      # diff.data is expression data on specific genes, either entered by user or selected rows from diff exp table
       diff.gg <- (
-        if (nrow(diff.data)>0) {
+        if (nrow(diff.data)>0 && opt.tx.cells) {
           if (opt.cell.display.type=='size') {
             geom_point(data=diff.data, aes(x=V1, y=V2, size=transcripts), color='black', alpha=0.2)
           } else {
@@ -550,6 +560,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       )
 
+      # comp.data are the ICs.
       comp.gg <- (
         if (nrow(comp.data)>0) {
           geom_point(data=comp.data, aes(x=V1, y=V2, color=weight), size=0.75, alpha=1)
@@ -557,7 +568,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           geom_blank_tsne
         }
       )      
-      
+
+      # bag.data, loop.data and center.data are the polygon and point data associated with each (sub)cluster
       if (opt.show.bags & nrow(comp.data)==0) {
         if (opt.tx.alpha) {
           alpha.limits <- if (opt.tx.scale=='fixed') c(0,7) else c(0,max(center.data$alpha))
@@ -582,7 +594,11 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         center.gg <- geom_blank_tsne
         alpha.range <- scale_alpha()
       }
-      
+
+      # the facet.label.gg is a text label in the top left of each faceted plot.
+      # Usually this is the name of the selected gene, a repeat of the facet label on the far right.
+      # If there is no horizontal faceting because expression levels of selected genes are summed, then
+      # the label is the name of all the genes.
       facet.label.gg <- (
         if (opt.horiz.facet) {
           geom_text(data=facet.label.data, aes(x=x, y=y, label=facet2.gg), hjust="left", show.legend = FALSE)
@@ -609,7 +625,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
 
       tsne.gg <- ggplot() + tsne.color.scale + tsne.fill.scale + scale_size(guide="none", range=c(0.1,opt.expr.size)) + theme_few() + theme(strip.text.x=element_text(size=20), strip.text.y=element_text(size=14))
       p <- tsne.gg + center.gg + xy.gg + loop.gg + bag.gg + alpha.range + diff.gg + comp.gg + label.gg + facet.label.gg + xy.limits.gg + xlab("V1") + ylab("V2")
-      
+
       if (opt.global) {
         if (opt.horiz.facet) {
           plot.gg <- p + facet_grid(facet2.gg~region.disp)
@@ -669,7 +685,7 @@ output$tsne.global.cluster.label <- renderImage({
   tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=FALSE, show.cells=downsample()>0, show.bags = input$opt.show.bags, diff.genes=expr.xy())
   
   region.count <- nrow(regions.selected())
-  gene.count <- length(user.genes())
+  gene.count <- facet2.count()
 
   display.width <- img.size.round(session$clientData[[glue("output_tsne.global.cluster.label_width")]])
   img.sz <- tsne.image.size(facet1=region.count, facet2=gene.count, display.width=display.width)
@@ -696,11 +712,12 @@ output$tsne.global.subcluster.label <- renderImage({
     tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=TRUE, show.cells=(downsample()>0), show.bags = input$opt.show.bags, diff.genes=expr.subcluster.xy())
     
     region.count <- nrow(regions.selected())
-    gene.or.ic.count <- length(na.omit(c(user.genes(), selected.components()$ic.number)))
-    if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
+    #    gene.or.ic.count <- length(na.omit(c(user.genes(), selected.components()$ic.number)))
+    gene.count <- facet2.count()
+    #    if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
     
     display.width <- img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_width")]])
-    img.sz <- tsne.image.size(facet1=region.count, facet2=gene.or.ic.count, display.width=display.width)
+    img.sz <- tsne.image.size(facet1=region.count, facet2=gene.count, display.width=display.width)
     
   } else {
     tsne.plot <- function(progress) plot.text("Highlight one or more regions, classes or clusters to begin subcluster analysis")
@@ -727,12 +744,13 @@ output$tsne.local.label <- renderImage({
   if (is.filtered()) {
     tsne.plot <- tsne.label(is.global=FALSE, show.subclusters = TRUE, show.cells=TRUE, show.bags=input$opt.show.bags, diff.genes = expr.subcluster.local.xy(), comps=selected.component.cell.weights.xy())
   
-    gene.or.ic.count <- length(na.omit(c(user.genes(), selected.components()$ic.number)))
+    gene.count <- facet2.count()
+    #    gene.or.ic.count <- length(na.omit(c(user.genes(), selected.components()$ic.number)))
     cluster.count <- nrow(clusters.selected())
-    if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
+    #    if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
     
     display.width <- img.size.round(session$clientData[[glue("output_tsne.local.label_width")]])
-    img.sz <- tsne.image.size(facet1=cluster.count, facet2=gene.or.ic.count, display.width=display.width)
+    img.sz <- tsne.image.size(facet1=cluster.count, facet2=gene.count, display.width=display.width)
 
   } else {
     tsne.plot <- function(progress) plot.text("Highlight one or more regions, classes or clusters to begin subcluster analysis")
