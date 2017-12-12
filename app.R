@@ -393,5 +393,5 @@ function(request) {
 }
 
 
-shinyApp(ui, server, enableBookmarking = "url")
+shinyApp(ui, server, enableBookmarking = "server")
 
