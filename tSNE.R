@@ -266,6 +266,7 @@ left_join_alpha_heat <- function(lhs, rhs) {
     # then include the alpha and heat values. this is a bit of hack
     # so that the unselected clusters display in grey for gene searches
     full_join(lhs, select(rhs, exp.label, facet2.gg), by=c('exp.label')) %>%
+      left_join(rhs, by=c('exp.label','facet2.gg','cx')) %>% alpha.na2zero()
   } else {
     mutate(lhs, alpha=double())
   }
