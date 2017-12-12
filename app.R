@@ -28,10 +28,20 @@ server <- function(input, output, session) {
     unlink("www/cache/*.png")
   })
   
+  # click events on landing page
   observeEvent(input$select.analysis.tab, {
     updateNavbarPage(session, "top-nav", selected = "Query")
   })  
-  
+  observeEvent(input$select.go.1, {
+    updateNavbarPage(session, "top-nav", selected = "Query")
+  })  
+  observeEvent(input$select.go.2, {
+    updateNavbarPage(session, "top-nav", selected = "Query")
+  })  
+  observeEvent(input$select.go.3, {
+    updateNavbarPage(session, "top-nav", selected = "Query")
+  })  
+
   # dropped this idea of expanding and collapsing the sidebar, but this might be an approach
   # observe({
   #   if (input$wideside1) {
@@ -168,7 +178,10 @@ function(request) {
     navbarPage("DropViz", id="top-nav",
                tabPanel("Home",div(column(2), column(8, embed.tags(HTML(readLines("html/landing.html")), 
                                                                    list(actionButton("select.analysis.tab","Get Started", class="btn btn-lg btn-primary")))), column(2)),
-                        HTML(readLines("html/featurette.html"))),
+                        embed.tags(HTML(readLines("html/featurette.html")),
+                                   list(actionButton("select.go.1", HTML("Explore Cell Clusters &raquo;"), class="btn btn-default"),
+                                        actionButton("select.go.2", HTML("Discover Genes &raquo;"), class="btn btn-default"),
+                                        actionButton("select.go.3", HTML("Search &raquo;"), class="btn btn-default")))),
                tabPanel("Query",
                         
                         # Sidebar with a slider input for number of bins 
