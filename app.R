@@ -206,7 +206,7 @@ function(request) {
                                                                                  checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE))
                                                             )
                                                    ),
-                                                   tabPanel("Compare Clusters", value="controltabs-compare",
+                                                   tabPanel("Clusters", value="controltabs-compare",
                                                             div(class="control-box",
                                                                 conditionalPanel('input.mainpanel=="clusters"',
                                                                                  h4("Compare Clusters"),
