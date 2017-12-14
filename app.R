@@ -34,6 +34,7 @@ server <- function(input, output, session) {
   })  
   observeEvent(input$select.go.1, {
     updateNavbarPage(session, "top-nav", selected = "Query")
+    updateTabsetPanel(session, "clusterpanel", selected = "tsne")
   })  
   observeEvent(input$select.go.2, {
     updateNavbarPage(session, "top-nav", selected = "Query")
