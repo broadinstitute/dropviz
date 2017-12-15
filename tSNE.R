@@ -1,5 +1,3 @@
-source("dv_label.R")
-
 #############################################
 # tSNE plot related functions
 
@@ -207,6 +205,7 @@ tx.heat <- reactive({ opt.tx() && (input$opt.tx=='heat') })
 tx.scale <- reactive({ input$opt.tx.scale })
 tx.legend <- reactive({ if (input$opt.tx.legend) 'legend' else 'none' })
 tx.facet2 <- reactive({ opt.tx() && (!input$opt.tx.sum || tx.cells()) && user.genes() > 1 })
+facet2.count <- reactive({ (if ((length(user.genes())>0 && tx.cells()) || tx.facet2()) length(user.genes()) else 0) }) # FIXME: clean up logic
 
 # returns the sum of all of the log normal transcript counts for all user.genes
 psum.amounts <- function(cx, amounts) {
@@ -260,10 +259,14 @@ subcluster.transcript.amounts <- reactive({
 
 alpha.na2zero <- function(df) mutate(df, alpha=ifelse(is.na(alpha),0,alpha))
 
-# just a short hand to join with alpha only if lhs has data and then replace all NA alphas with zero
-left_join_alpha_heat <- function(lhs, rhs, by) {
+# join with alpha only if lhs has data and then replace all NA alphas with zero
+left_join_alpha_heat <- function(lhs, rhs) {
   if (nrow(lhs) > 0) {
-    left_join(lhs, rhs, by=by) %>% alpha.na2zero()
+    # add a facet2.gg (i.e. a gene name) for every (sub)cluster
+    # then include the alpha and heat values. this is a bit of hack
+    # so that the unselected clusters display in grey for gene searches
+    full_join(lhs, select(rhs, exp.label, facet2.gg), by=c('exp.label')) %>%
+      left_join(rhs, by=c('exp.label','facet2.gg','cx')) %>% alpha.na2zero()
   } else {
     mutate(lhs, alpha=double())
   }
@@ -271,7 +274,7 @@ left_join_alpha_heat <- function(lhs, rhs, by) {
 
 # When comps are selected in plot, then data is automatically limited to corresponding cluster
 limit.cluster <- function(df, comps) {
-  return(df)
+  return(df)   # FIXME: placeholder if/when ICs return
   # if (nrow(comps)>0) {
   #   filter(df, cluster==first(comps$cluster) & exp.label==first(comps$exp.label))
   # } else {
@@ -316,7 +319,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       show.bags <- TRUE
       show.cells <- FALSE
     }
-    stopifnot(show.bags || show.cells)
+    if (!(show.bags || show.cells)) return(plot.text("No data to display."))
     
     # for both global.xy (the positions of each cell) and global.[sub]cluster.avg.xy (the center position of each [sub]cluster),
     # limit to selected [sub]clusters and add pretty region name
@@ -381,19 +384,24 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         } else {
           cluster.transcript.amounts()
         }
-      ) 
+      )
 
-      label.data <- left_join_alpha_heat(label.data, tx.cx, by=c('exp.label','cx')) 
-      center.data <- left_join_alpha_heat(center.data, tx.cx, by=c('exp.label','cx')) 
-      bag.data <- left_join_alpha_heat(bag.data, tx.cx, by=c('exp.label','cx'))
-      loop.data <- left_join_alpha_heat(loop.data, tx.cx, by=c('exp.label','cx'))
-      xy.data <- left_join_alpha_heat(xy.data, tx.cx, by=c('exp.label','cx'))
+      label.data <- left_join_alpha_heat(label.data, tx.cx) 
+      center.data <- left_join_alpha_heat(center.data, tx.cx) 
+      bag.data <- left_join_alpha_heat(bag.data, tx.cx)
+      loop.data <- left_join_alpha_heat(loop.data, tx.cx)
+      xy.data <- left_join_alpha_heat(xy.data, tx.cx)
       
       bag.data <- mutate(bag.data, alpha=pmax(0,alpha-0.5))
       loop.data <- mutate(loop.data, alpha=pmax(0,alpha-1))
       xy.data <- mutate(xy.data, alpha=pmax(0,alpha-1))
 
-      label.data <- filter(label.data, (as.integer(heat)/length(levels(heat)))>=(input$opt.tx.min/100))
+      # only show labels where the cluster level is greater than thresh, or there's no data
+      # if no data, then set heat and alpha to NA
+      label.data$pass <- with(label.data, (as.integer(heat)/length(levels(heat)))>=(input$opt.tx.min/100))
+      label.data <- filter(label.data, cx.disp=='No Data' | pass)
+      label.data <- mutate(label.data, alpha=ifelse(cx.disp=='No Data', NA, alpha),
+                           heat=factor(ifelse(cx.disp=='No Data', NA, as.character(heat)), levels=levels(heat))) # ugh, show me a cleaner way.
 
       if (!is.null(progress)) progress$inc(0.2, detail=glue("Computing alpha for {user.genes()}"))
     }
@@ -428,17 +436,51 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
     opt.plot.label <- input$opt.plot.label
     opt.cell.display.type <- input$opt.cell.display.type
     diff.data <- (if (opt.cell.display.type=='detect') filter(diff.genes, transcripts > input$opt.detection.thresh) else diff.genes)
-    opt.horiz.facet <- nrow(diff.data)>0 || nrow(comp.data)>0 || tx.facet2()
+    opt.horiz.facet <- (nrow(diff.data)>0 && tx.cells()) || nrow(comp.data)>0 || tx.facet2()
+    opt.tx.cells <- tx.cells()
     opt.tx.alpha <- tx.alpha()
     opt.tx.heat <- tx.heat()
     opt.tx.scale <- tx.scale()
     opt.tx.legend <- tx.legend()
+    opt.xy.cell.size <- xy.cell.size()
 
     if (opt.tx.scale=='gene') showNotification("Scaling Per Gene Not Yet Implemented", duration=15, type='warning')
     
     p.func <- function() {
-      require(ggplot2)
-      require(ggthemes)
+      # DropViz - tSNE plot
+      #
+      #   This R code along with the .Rdata bundled in the zip file is
+      #   used to generate the tSNE plots. There are many options, but
+      #   the parameters in the .Rdata file correspond to those set a
+      #   the time of download. 
+      #
+      #   To execute the code, (1) set your working directory to the
+      #   directory containing this file, (2) load the data with
+      #   load("tsne.Rdata") or you may be able to double-click the
+      #   file to load the data into your working environment, (3)
+      #   source this file, i.e. source('tsne.R') (4) print, display
+      #   or save the ggplot object called plot.gg,
+      #   e.g. print(plot.gg) should display the tSNE plot on your
+      #   current graphics device.
+      #
+      #   If you are familiar with ggplot then it should be fairly
+      #   straightforward to tweak the plot to your preferences. If
+      #   you have questions, email dkulp@broadinstitute.org.
+      require(ggplot2)                             # install from CRAN
+      require(ggthemes)                            # install from CRAN
+      if (!exists('dv_label')) source("dv_label.R") # custom ggplot include in zip
+
+      # randomly, but reproducibly, permute the levels of fctr.
+      # fctr is either a cluster or subcluster. Without permutation
+      # then ggplot uses similar colors for subclusters that are
+      # adjacent in order, e.g. 4-1, 4-2, etc.
+      cx.permute <- function(fctr) {
+        seed.save <- if (exists('.Random.seed')) .Random.seed else NULL
+        set.seed(10)
+        fctr <- factor(fctr, levels=sample(levels(fctr)))
+        .Random.seed <- seed.save
+        fctr
+      }
 
       if (opt.tx.heat) {
         scale_color <- function(...) scale_color_brewer(..., palette='YlOrRd')
@@ -476,17 +518,18 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       )
 
+      # xy.data is (possibly sub-sampled) points of all cells
       xy.gg <- (
         if (opt.show.cells) {
           if (nrow(comp.data)>0) {
-            geom_point(data=xy.data, aes(x=V1,y=V2), color='grey', alpha=0.25, size=xy.cell.size()) 
+            geom_point(data=xy.data, aes(x=V1,y=V2), color='grey', alpha=0.25, size=opt.xy.cell.size) 
           } else {
             if (opt.tx.alpha) {
-              geom_point(data=xy.data, aes(x=V1,y=V2,color=cx, alpha=alpha), size=xy.cell.size()) 
+              geom_point(data=xy.data, aes(x=V1,y=V2,color=cx.permute(cx), alpha=alpha), size=opt.xy.cell.size) 
             } else if (opt.tx.heat) {
               geom_point(data=xy.data, aes(x=V1,y=V2,color=heat), alpha=0.25, size=CELL.MIN.SIZE)
             } else {
-              geom_point(data=xy.data, aes(x=V1,y=V2,color=cx), alpha=0.25, size=xy.cell.size()) 
+              geom_point(data=xy.data, aes(x=V1,y=V2,color=cx.permute(cx)), alpha=0.25, size=opt.xy.cell.size) 
             }
           }
         } else {
@@ -494,6 +537,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       )
 
+      # label.data are the names of (sub)clusters, positioned at the centroid of each (sub)clusters
       label.gg <- (
         if (nrow(comp.data)>0) {
           geom_label(data=label.data, aes(x=x,y=y,label=as.character(cx.disp)), color='grey', show.legend=FALSE)
@@ -501,13 +545,14 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           if (opt.tx.heat) {
             dv_label(data=label.data, aes(x=x,y=y,color=heat,label=as.character(cx.disp)), show.legend=FALSE)
           } else {
-            dv_label(data=label.data, aes(x=x,y=y,color=cx.gg,label=as.character(cx.disp)), show.legend=FALSE)
+            dv_label(data=label.data, aes(x=x,y=y,color=cx.permute(cx.gg),label=as.character(cx.disp)), show.legend=FALSE)
           }
         }
       )
       
+      # diff.data is expression data on specific genes, either entered by user or selected rows from diff exp table
       diff.gg <- (
-        if (nrow(diff.data)>0) {
+        if (nrow(diff.data)>0 && opt.tx.cells) {
           if (opt.cell.display.type=='size') {
             geom_point(data=diff.data, aes(x=V1, y=V2, size=transcripts), color='black', alpha=0.2)
           } else {
@@ -519,6 +564,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         }
       )
 
+      # comp.data are the ICs.
       comp.gg <- (
         if (nrow(comp.data)>0) {
           geom_point(data=comp.data, aes(x=V1, y=V2, color=weight), size=0.75, alpha=1)
@@ -526,23 +572,24 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           geom_blank_tsne
         }
       )      
-      
+
+      # bag.data, loop.data and center.data are the polygon and point data associated with each (sub)cluster
       if (opt.show.bags & nrow(comp.data)==0) {
         if (opt.tx.alpha) {
           alpha.limits <- if (opt.tx.scale=='fixed') c(0,7) else c(0,max(center.data$alpha))
           alpha.range <- scale_alpha_continuous(guide="none", range=c(0,1), limit=alpha.limits)
-          bag.gg <- geom_polygon(data=filter(bag.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
-          loop.gg <- geom_polygon(data=filter(loop.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.gg, group=cx, alpha=alpha))
-          center.gg <- geom_point(data=filter(center.data, !is.na(cx.gg)), aes(x=x,y=y, color=cx.gg, alpha=alpha), size=3)
+          bag.gg <- geom_polygon(data=filter(bag.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.permute(cx.gg), group=cx, alpha=alpha))
+          loop.gg <- geom_polygon(data=filter(loop.data, !is.na(cx.gg)), aes(x=x,y=y,fill=cx.permute(cx.gg), group=cx, alpha=alpha))
+          center.gg <- geom_point(data=filter(center.data, !is.na(cx.gg)), aes(x=x,y=y, color=cx.permute(cx.gg), alpha=alpha), size=3)
         } else if (opt.tx.heat) {
           bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,fill=heat,group=cx), alpha=0.6)
           loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,fill=heat,group=cx), alpha=0.2)
           center.gg <- geom_point(data=center.data, aes(x=x,y=y,color=heat), size=3)
           alpha.range <- scale_alpha()
         } else {
-          bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,fill=cx.gg,group=cx), alpha=0.4)
-          loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,fill=cx.gg,group=cx), alpha=0.2)
-          center.gg <- geom_point(data=center.data, aes(x=x,y=y,color=cx.gg), size=3)
+          bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,fill=cx.permute(cx.gg),group=cx), alpha=0.4)
+          loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,fill=cx.permute(cx.gg),group=cx), alpha=0.2)
+          center.gg <- geom_point(data=center.data, aes(x=x,y=y,color=cx.permute(cx.gg)), size=3)
           alpha.range <- scale_alpha()
         }
       } else {
@@ -551,7 +598,11 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         center.gg <- geom_blank_tsne
         alpha.range <- scale_alpha()
       }
-      
+
+      # the facet.label.gg is a text label in the top left of each faceted plot.
+      # Usually this is the name of the selected gene, a repeat of the facet label on the far right.
+      # If there is no horizontal faceting because expression levels of selected genes are summed, then
+      # the label is the name of all the genes.
       facet.label.gg <- (
         if (opt.horiz.facet) {
           geom_text(data=facet.label.data, aes(x=x, y=y, label=facet2.gg), hjust="left", show.legend = FALSE)
@@ -578,7 +629,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
 
       tsne.gg <- ggplot() + tsne.color.scale + tsne.fill.scale + scale_size(guide="none", range=c(0.1,opt.expr.size)) + theme_few() + theme(strip.text.x=element_text(size=20), strip.text.y=element_text(size=14))
       p <- tsne.gg + center.gg + xy.gg + loop.gg + bag.gg + alpha.range + diff.gg + comp.gg + label.gg + facet.label.gg + xy.limits.gg + xlab("V1") + ylab("V2")
-      
+
       if (opt.global) {
         if (opt.horiz.facet) {
           plot.gg <- p + facet_grid(facet2.gg~region.disp)
@@ -638,7 +689,7 @@ output$tsne.global.cluster.label <- renderImage({
   tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=FALSE, show.cells=downsample()>0, show.bags = input$opt.show.bags, diff.genes=expr.xy())
   
   region.count <- nrow(regions.selected())
-  gene.count <- length(user.genes())
+  gene.count <- facet2.count()
 
   display.width <- img.size.round(session$clientData[[glue("output_tsne.global.cluster.label_width")]])
   img.sz <- tsne.image.size(facet1=region.count, facet2=gene.count, display.width=display.width)
@@ -652,7 +703,7 @@ output$tsne.global.cluster.label <- renderImage({
 output$tsne.global.cluster.label.dl <- downloadHandler(filename="tsne.zip", 
                                                        content= function(file) {
                                                          tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=FALSE, show.cells=(downsample()>0), show.bags = input$opt.show.bags, diff.genes=expr.xy(), return.closure = TRUE)()
-                                                         send.zip(tsne.plot, 'tsne', file)
+                                                         send.zip(tsne.plot, 'tsne', file, 'dv_label.R')
                                                        })
 
 #########################################################
@@ -665,11 +716,12 @@ output$tsne.global.subcluster.label <- renderImage({
     tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=TRUE, show.cells=(downsample()>0), show.bags = input$opt.show.bags, diff.genes=expr.subcluster.xy())
     
     region.count <- nrow(regions.selected())
-    gene.or.ic.count <- length(na.omit(c(user.genes(), selected.components()$ic.number)))
-    if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
+    #    gene.or.ic.count <- length(na.omit(c(user.genes(), selected.components()$ic.number)))
+    gene.count <- facet2.count()
+    #    if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
     
     display.width <- img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_width")]])
-    img.sz <- tsne.image.size(facet1=region.count, facet2=gene.or.ic.count, display.width=display.width)
+    img.sz <- tsne.image.size(facet1=region.count, facet2=gene.count, display.width=display.width)
     
   } else {
     tsne.plot <- function(progress) plot.text("Highlight one or more regions, classes or clusters to begin subcluster analysis")
@@ -684,7 +736,7 @@ output$tsne.global.subcluster.label <- renderImage({
 output$tsne.global.subcluster.label.dl <- downloadHandler(filename="tsne.zip", 
                                                           content= function(file) {
                                                             tsne.plot <- tsne.label(is.global=TRUE, show.subclusters=TRUE, show.cells=(downsample()>0), show.bags = input$opt.show.bags, diff.genes=expr.subcluster.xy(), return.closure = TRUE)()
-                                                            send.zip(tsne.plot, 'tsne', file)
+                                                            send.zip(tsne.plot, 'tsne', file, 'dv_label.R')
                                                           })
 
 
@@ -696,12 +748,13 @@ output$tsne.local.label <- renderImage({
   if (is.filtered()) {
     tsne.plot <- tsne.label(is.global=FALSE, show.subclusters = TRUE, show.cells=TRUE, show.bags=input$opt.show.bags, diff.genes = expr.subcluster.local.xy(), comps=selected.component.cell.weights.xy())
   
-    gene.or.ic.count <- length(na.omit(c(user.genes(), selected.components()$ic.number)))
+    gene.count <- facet2.count()
+    #    gene.or.ic.count <- length(na.omit(c(user.genes(), selected.components()$ic.number)))
     cluster.count <- nrow(clusters.selected())
-    if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
+    #    if (tx.facet2() && gene.or.ic.count==0) { gene.or.ic.count <- length(user.genes()) }
     
     display.width <- img.size.round(session$clientData[[glue("output_tsne.local.label_width")]])
-    img.sz <- tsne.image.size(facet1=cluster.count, facet2=gene.or.ic.count, display.width=display.width)
+    img.sz <- tsne.image.size(facet1=cluster.count, facet2=gene.count, display.width=display.width)
 
   } else {
     tsne.plot <- function(progress) plot.text("Highlight one or more regions, classes or clusters to begin subcluster analysis")
@@ -716,5 +769,5 @@ output$tsne.local.label <- renderImage({
 output$tsne.local.label.dl <- downloadHandler(filename="tsne.zip", 
                                               content= function(file) {
                                                 tsne.plot <- tsne.label(is.global=FALSE, show.subclusters = TRUE, show.cells=TRUE, show.bags=input$opt.show.bags, diff.genes = expr.subcluster.local.xy(), comps=selected.component.cell.weights.xy(), return.closure = TRUE)()
-                                                send.zip(tsne.plot, 'tsne', file)
+                                                send.zip(tsne.plot, 'tsne', file, 'dv_label.R')
                                               })

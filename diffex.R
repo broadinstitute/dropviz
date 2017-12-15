@@ -1,7 +1,7 @@
 # Displaying differentially expressed genes
 
 
-# for the selected marker (from the differentially expressed gene list)
+# for the selected marker (from the differentially expressed gene list) or a user-supplied gene(s),
 # return the cells, expression levels, global X, Y coordinates in the comparison region
 expr.xy <- reactive({
   log.reactive("fn: expr.xy")
@@ -17,7 +17,7 @@ expr.xy <- reactive({
   })
 })
 
-# for the selected subcluster markers 
+# for the selected subcluster markers or user-supplied gene(s),
 # return the cells, expression levels, global X, Y limited to selected subclusters
 ## expr.subcluster.xy <- reactive({
 ##   stop("expr.xy and expr.subcluster.xy are now identical. merge?")
@@ -36,7 +36,7 @@ expr.xy <- reactive({
 ## })
 expr.subcluster.xy <- reactive({ expr.xy() })
 
-# for the selected subcluster markers
+# for the selected subcluster markers or user-supplied gene(s)
 # return the cells, expression levels and local X, Y limited to selected subclusters
 expr.subcluster.local.xy <- reactive({
   log.reactive("fn: expr.subcluster.local.xy")
