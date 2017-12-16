@@ -6,5 +6,5 @@
 
 
 $(document).on('shiny:inputchanged', function(event) {
-    gtag('event', 'input', { name: event.name, value: event.value } );
+    gtag('event', 'search', { 'event_category': event.name, 'event_label': event.value } );
 });
