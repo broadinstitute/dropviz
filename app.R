@@ -397,13 +397,14 @@ function(request) {
                           #    tabPanel("Community Annotations", p("A wiki-like editable annotation of cell type"))
                         )
                ),
-               tabPanel("Data",
-                        p("Data sets will be released concurrently with the publication of our manuscript. Please check back soon.")),
-               tabPanel("Credits",
+               tabPanel("Team",
                         h3("Contributors"),
                         p("A list of people and perhaps their roles"),
-                        h3("Contact"), p(a(href="mailto:asaunders@genetics.med.harvard.edu","A. Saunders"),"and",p(href="mailto:emacosko@broadinstitute.org","E. Macosko")),
-                        h3("Funding"), p("A.S is funded through a post-doctoral fellowship from the Helen Hay Whitney foundation."))
+                        h3("Contact"), p(a(href="mailto:asaunders@genetics.med.harvard.edu","A. Saunders"),"and",a(href="mailto:emacosko@broadinstitute.org","E. Macosko")),
+                        h3("Funding"), p("A.S is funded through a post-doctoral fellowship from the Helen Hay Whitney foundation.")),
+               tabPanel("Feedback",
+                        h3("Feedback"),
+                        p("We welcome any comments, bug reports, and feature requests. Please send all feedback to ",a(href="mailto:mouse.dropviz@gmail.com","mouse.dropviz@gmail.com"),"."))
     ),
     tags$script(src="http://code.jquery.com/ui/1.12.1/jquery-ui.min.js")## ,
     ## tags$script("jQuery(function (){ $('.scroll-area').resizable(); });")

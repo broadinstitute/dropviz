@@ -34,13 +34,14 @@
       <hr class="featurette-divider">
 
       <div class="row featurette">
-          <h2 class="featurette-heading">Methods Summary<span class="text-muted"></span></h2>
+          <h2 class="featurette-heading">Drop-seq<span class="text-muted"></span></h2>
           <div class="col-md-7">
-          <p>Region-specific, single-cell suspensions were generated from acute male mouse brain (P60-70; C57/Blk6). Libraries were prepared with Drop-seq. 5-8K cells were sequenced an Illumina NexSeq 500, yielding an average of 17.5K reads, 2.2K transcripts and 1.2K genes per cell. To determine sources of gene expression variability, Independent Components Analysis (ICA) was used to reduce the dimensionality of digital gene expression matrices from each region. Independent components (ICs) encoding cell types, cell states and spatial information were distinguished from ICs related to replicate or digest. To identify similar cells, ICs describing relevant, non-technical biological information were then grouped with Louvain Modularity clustering. Clustering parameters were evaluated to maximize the frequency of each IC representing its own cluster.</p>
+	    <p><a href="http://mccarrolllab.com/dropseq/">Drop-seq</a> is a technology we developed for highly parallel analysis of RNA expression in thousands of individual cells.  Drop-seq works by encapsulating individual cells into vast numbers of nanoliter-sized droplets, together with DNA-barcoded beads that uniquely identify the droplets.  We described Drop-seq in <a href="http://www.cell.com/abstract/S0092-8674(15)00549-8">a paper in 2015</a>, and subsequent commercial technologies have been built on this approach. We have made Drop-seq open-source, and hundreds of labs have adopted it; detailed protocols and software are available on the <a href="http://mccarrolllab.com/dropseq/">Drop-seq web site</a>.</p>
           </div>
+	  <!--
           <div class="col-md-5">
           <p><a class="btn btn-default" href="#" role="button">Download data &raquo;</a></p>
-          </div>
+          </div> -->
       </div>  
        <div class="row featurette">
           <h2 class="featurette-heading">Paper Abstract</h2>
@@ -53,15 +54,15 @@ unbiased assessment of gene expression from thousands of individual cells, to ge
 profiles from 690,000 cells in nine tissues of the adult mouse brain: frontal cortex
 (156,000), posterior cortex (99,000), striatum (77,000), cerebellum (26,000),
 hippocampus (113,000), substantia nigra/ventral tegmental area (44,000), globus
-pallidus externus/nucleus basalis (66,000), thalamus (89,000), and entopeduncular nucleus (19,000). To identify distinct patterns of co-expression, we performed independent component analysis (ICA) on each of the nine individual tissue datasets. ICA identified both biologically derived signals—including those corresponding to canonical cell type distinctions and those with spatially graded patterns—as well as to technical signals—including those that were
-highly replicate-dependent, defined cell “doublets”, or were correlated with tissue
+pallidus externus/nucleus basalis (66,000), thalamus (89,000), and entopeduncular nucleus (19,000). To identify distinct patterns of co-expression, we performed independent component analysis (ICA) on each of the nine individual tissue datasets. ICA identified both biologically derived signals &mdash; including those corresponding to canonical cell type distinctions and those with spatially graded patterns&mdash;as well as to technical signals&mdash;including those that were
+highly replicate-dependent, defined cell "doublets", or were correlated with tissue
 processing. We retained 601 non-technical ICs for use in graph-based clustering<sup>2</sup>,
 partitioning cells into 548 distinct groups. These populations encompassed all known
 major cell classes in the nervous system, including neurons, astrocytes, microglia,
 oligodendrocytes and polydendrocytes, endothelial cells, and cells of the choroid plexus.
 Our analysis uncovers numerous undescribed cell types and states across the nervous
 system. For example, in striatum, we identify a novel class of spiny projection neuron
-(SPN), constituting just 4.7% of all SPNs (“Eccentric SPNs”). Like conventional SPNs,
+(SPN), constituting just 4.7% of all SPNs ("Eccentric SPNs"). Like conventional SPNs,
 this minority population can be further divided by their expression of either the D1
 dopamine receptor (Drd1a), or the D2 receptor (Drd2). Fluorescence in situ hybridization
 to unique Eccentric SPN markers suggests Eccentric SPNs are interspersed with
@@ -77,7 +78,7 @@ Saunders, A.*, Macosko, E.*, Wysoker, A., Goldman, M., Krienen, F., Bien, E., Ba
 </p>
         </div>
         <div class="col-md-5">
-                    <p><a class="btn btn-default" href="#" role="button">Manuscript &raquo;</a></p>
+<!--                    <p><a class="btn btn-default" href="#" role="button">Manuscript &raquo;</a></p> -->
         </div>
       </div>
 
@@ -86,12 +87,14 @@ Saunders, A.*, Macosko, E.*, Wysoker, A., Goldman, M., Krienen, F., Bien, E., Ba
       <div class="row featurette">
         <div class="col-md-7 col-md-push-5">
           <h2 class="featurette-heading">Funding and Support<span class="text-muted"></span></h2>
-          <p class="lead">This research was performed at the <a href="https://www.broadinstitute.org/stanley">Stanley Center for Psychiatric Research</a>, part of the <a href="https://www.broadinstitute.org/">Broad Institute</a>.</p>
+          <p class="lead">This research was performed in the <a href="http://mccarrolllab.com/">McCarroll</a> and <a href="http://macoskolab.com/">Macosko</a> Labs and the Broad Institute's <a href="https://www.broadinstitute.org/stanley">Stanley Center for Psychiatric Research</a>.</p>
+	  <p class="lead">This work was supported by the Broad Institute's Stanley Center.</p>
         </div>
         <div class="col-md-5 col-md-pull-7">
           <img class="featurette-image img-responsive center-block" src="https://www.broadinstitute.org/sites/all/themes/custom/at_broad/logo.png" alt="Broad Institute">
           <img class="featurette-image img-responsive center-block" src="https://www.broadinstitute.org/files/styles/landing_page/public/landing-page/featured/image/StanleyCenter-web.png" alt="Stanley Center">
-        </div>
+          <img width="400" class="featurette-image img-responsive center-block" src="http://dev.silver.med.harvard.edu/wordpress/wp-content/uploads/2015/05/logo.png" alt="Harvard Medical School">
+	</div>
       </div>
 
       <hr class="featurette-divider">
