@@ -47,8 +47,6 @@ send.zip <- function(fn, fname, zipfile) {
   setwd(cwd)
 }
 
-MAX_REGIONS <- 10
-
 if (file.exists(glue("{prep.dir}/markers/top_genes.RDS"))) {
   top.genes <<- sort(readRDS(glue("{prep.dir}/markers/top_genes.RDS")))
 }
@@ -78,8 +76,5 @@ gene.desc <- function(name) {
   gene.lookup(name, 2)
 }
 
-if (!file.exists(glue("{prep.dir}/globals.Rdata"))) {
-  source("prep-global.R")
-}
 stopifnot(file.exists(glue("{prep.dir}/globals.Rdata")))
 load(glue("{prep.dir}/globals.Rdata"))
