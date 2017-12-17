@@ -1,3 +1,6 @@
+# dkulp@broadinstitute.org
+# dv_label - a geom_label with text and border alpha
+
 library(grid)
 ggname <- function (prefix, grob) {
   grob$name <- grid::grobName(grob, prefix)

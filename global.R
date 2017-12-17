@@ -31,14 +31,18 @@ write.func.body <- function(fn, file) {
   writeLines(fn.lines[2:(length(fn.lines)-2)], file)
 }
 
-send.zip <- function(fn, fname, zipfile) {
+# take the environment and variables in the function fn and save to fname.Rdata
+# write the function body to fname.R
+# add others and zip them all up.
+send.zip <- function(fn, fname, zipfile, others=character(0)) {
   require(utils)
   zip.dir <- tempdir()
   fn.env <- environment(fn)
   vars <- ls(environment(fn))
+  file.copy(others, zip.dir)
   cwd <- getwd()
   setwd(zip.dir)
-  zip.files <- paste0(fname, c(".Rdata", ".R"))
+  zip.files <- c(paste0(fname, c(".Rdata", ".R")), basename(others))
   attach(fn.env)
   save(list=vars, file=zip.files[1])
   detach()

@@ -101,16 +101,18 @@ output$dt.cluster.markers <- DT::renderDataTable( {
 
 output$dt.cluster.markers.dl <- downloadHandler(filename="cluster-markers.csv", 
                                                 content= function(file) {
-                                                  write.csv(cluster.markers(), file=file)
+                                                  write.csv(cluster.markers(), file=file, row.names=FALSE)
                                                 })
 
 output$dt.cluster.markers.heading <- renderUI({
   if (isTruthy(current.cluster.i())) {
-    target.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label%in%current.cluster()$exp.label]} {current.cluster()$cluster.disp}"),collapse='+')
-    if (comparison.cluster()$cluster=='global') {
+    target.names.tbl <- select(inner_join(experiments, current.cluster(), by='exp.label'), exp.abbrev, cluster.disp)
+    target.names <- paste(glue("{target.names.tbl$exp.abbrev} {target.names.tbl$cluster.disp}"),collapse='+')
+    if (nrow(comparison.cluster())==1 && comparison.cluster()$cluster=='global') {
       comparison.names <- comparison.cluster()$cluster.disp
     } else {
-      comparison.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label%in%comparison.cluster()$exp.label]} {comparison.cluster()$cluster.disp}"),collapse='+')
+      comparison.names.tbl <- select(inner_join(experiments, comparison.cluster(), by='exp.label'), exp.abbrev, cluster.disp)
+      comparison.names <- paste(glue("{comparison.names.tbl$exp.abbrev} {comparison.names.tbl$cluster.disp}"),collapse='+')
     }
     tags$h4(glue("Differentially Over-Expressed: {target.names} vs {comparison.names}"))
   } else {
@@ -126,16 +128,18 @@ output$dt.subcluster.markers <- DT::renderDataTable( {
 
 output$dt.subcluster.markers.dl <- downloadHandler(filename="subcluster-markers.csv", 
                                                    content= function(file) {
-                                                     write.csv(subcluster.markers(), file=file)
+                                                     write.csv(subcluster.markers(), file=file, row.names=FALSE)
                                                    })
 
 output$dt.subcluster.markers.heading <- renderUI({
   if (isTruthy(current.subcluster.i())) {
-    target.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label %in% current.subcluster()$exp.label]} {current.subcluster()$subcluster.disp}"),collapse=' + ')
+    target.names.tbl <- select(inner_join(experiments, current.subcluster(), by='exp.label'), exp.abbrev, subcluster.disp)
+    target.names <- paste(glue("{target.names.tbl$exp.abbrev} {target.names.tbl$subcluster.disp}"),collapse='+')
     if (comparison.subcluster()$subcluster=='global') {
       comparison.names <- comparison.subcluster()$subcluster.disp
     } else {
-      comparison.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label %in% comparison.subcluster()$exp.label]} {comparison.subcluster()$subcluster.disp}"),collapse=' + ')
+      comparison.names.tbl <- select(inner_join(experiments, comparison.subcluster(), by='exp.label'), exp.abbrev, subcluster.disp)
+      comparison.names <- paste(glue("{comparison.names.tbl$exp.abbrev} {comparison.names.tbl$subcluster.disp}"),collapse='+')
     }
     
     

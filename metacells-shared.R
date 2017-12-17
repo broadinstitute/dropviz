@@ -41,8 +41,10 @@ compute.pair <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind, use.cached=
   targets <- tibble(exp.label=exp.label, cx=cx)
   comparisons <- tibble(exp.label=cmp.exp.label, cx=cmp.cx)
 
-  target.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label%in%targets$exp.label]}.{targets$cx}"),collapse='+')
-  comparison.names <- paste(glue("{experiments$exp.abbrev[experiments$exp.label%in%comparisons$exp.label]}.{comparisons$cx}"),collapse='+')
+  target.names.tbl <- select(inner_join(experiments, targets, by='exp.label'), exp.abbrev, cx)
+  target.names <- paste(glue("{target.names.tbl$exp.abbrev}.{target.names.tbl$cx}"),collapse='+')
+  comparison.names.tbl <- select(inner_join(experiments, comparisons, by='exp.label'), exp.abbrev, cx)
+  comparison.names <- paste(glue("{comparison.names.tbl$exp.abbrev}.{comparison.names.tbl$cx}"),collapse='+')
   
   cache.file <- glue("{pairs.dir}/{target.names}.vs.{comparison.names}.RDS")
   
