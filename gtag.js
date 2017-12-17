@@ -2,7 +2,7 @@
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'UA-111320548-1');
+  gtag('config', 'UA-111320548-2');
 
 
 $(document).on('shiny:inputchanged', function(event) {
