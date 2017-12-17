@@ -146,6 +146,7 @@ debug.controls <- function() {
 ui <-
 function(request) {
   require(shinyjs)
+  
   fluidPage(
     useShinyjs(),
     #    extendShinyjs(text = jsCode),
