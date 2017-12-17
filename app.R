@@ -171,9 +171,13 @@ debug.controls <- function() {
 ui <-
 function(request) {
   require(shinyjs)
+  
   fluidPage(
     useShinyjs(),
     #    extendShinyjs(text = jsCode),
+    tags$head(HTML('<script async src="https://www.googletagmanager.com/gtag/js?id=UA-111320548-1"></script>
+')),
+    tags$head(includeScript("gtag.js")),
     includeCSS("styles.css"),
     tags$link(type="text/css", rel="stylesheet", href="http://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css"),
     navbarPage("DropViz", id="top-nav",
