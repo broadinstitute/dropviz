@@ -398,10 +398,7 @@ function(request) {
                         )
                ),
                tabPanel("Team",
-                        h3("Contributors"),
-                        p("A list of people and perhaps their roles"),
-                        h3("Contact"), p(a(href="mailto:asaunders@genetics.med.harvard.edu","A. Saunders"),"and",a(href="mailto:emacosko@broadinstitute.org","E. Macosko")),
-                        h3("Funding"), p("A.S is funded through a post-doctoral fellowship from the Helen Hay Whitney foundation.")),
+                        HTML(readLines("html/team.html"))),
                tabPanel("Feedback",
                         h3("Feedback"),
                         p("We welcome any comments, bug reports, and feature requests. Please send all feedback to ",a(href="mailto:mouse.dropviz@gmail.com","mouse.dropviz@gmail.com"),"."))

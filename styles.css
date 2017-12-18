@@ -1,5 +1,12 @@
 @import url('https://fonts.googleapis.com/css?family=Josefin+Slab|Oswald');
 
+.staff-member-photo {
+    width: 150px;
+}
+.tc-gallery-style {
+    text-align: center;
+}
+
 .control-box {
   border: 2px solid #dddddd; 
   border-radius: 5px; 
