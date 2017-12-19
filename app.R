@@ -274,9 +274,9 @@ function(request) {
                                                                                               div(class="control-box",
                                                                                                   h4("Cell Expression Settings"),
                                                                                                   selectInput("opt.cell.display.type","Display Gene Expression Using", choices=c("Size"="size","Absent/Present"="detect"), selected="size"),
-                                                                                                  conditionalPanel('input["opt.cell.display.type"]=="detect" && FALSE',
-                                                                                                                   sliderInput("opt.detection.thresh","Observed Transcript Copies (FIXME - currently data is normalized values)", 0, 5, value=0, step=1)),
-                                                                                                  conditionalPanel('input["opt.cell.display.type"]=="size"',
+                                                                                                  conditionalPanel('input["opt.cell.display.type"]=="detect"',
+                                                                                                                   div(style="display:none",sliderInput("opt.detection.thresh","Observed Transcript Copies (FIXME - currently data is normalized values)", 0, 5, value=0, step=1))),
+                                                                                                  conditionalPanel("input['opt.cell.display.type']!='detect'",
                                                                                                                    sliderInput("opt.expr.size", "Point Size of Maximum Expression", 1, 10, value=4, step=1))
                                                                                               )
                                                                              ),
