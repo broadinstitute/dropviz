@@ -303,8 +303,7 @@ function(request) {
                                                                                  checkboxInput("use.common.name", "Use Common Name for Subcluster, If Present", value = FALSE)),
                                                                 conditionalPanel("input['use.common.name']", span(h6("(Common names are interpretive best guesses)")))),
                                                             div(style="display:none", selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all')))
-                                                   ),
-                                                   debug.controls()
+                                                   )
                                        ),
                                        div(style="margin-top:20px", bookmarkButton())
                           ),
