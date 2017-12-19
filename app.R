@@ -155,16 +155,14 @@ embed.tags <- function(markup, tag) {
 
 debug.controls <- function() {
   if (getOption("dropviz.debug", default=FALSE)) {
-    tabPanel("X",
-             div(class="control-box",
-                 h4("Debug"),
-                 actionButton("dump","Save State"),
-                 fluidRow(column(7,checkboxInput("opt.use.cache", "Use Cached Plot Images", value=TRUE)), 
-                          column(2,actionButton("clear.cache","Clear Cache"))),
-                 p(glue("Hostname: {system2('hostname', stdout=TRUE)}")))
-    )
+    div(class="control-box",
+        h4("Debug"),
+        actionButton("dump","Save State"),
+        fluidRow(column(7,checkboxInput("opt.use.cache", "Use Cached Plot Images", value=TRUE)), 
+                 column(2,actionButton("clear.cache","Clear Cache"))),
+        p(glue("Hostname: {system2('hostname', stdout=TRUE)}")))
   } else {
-    HTML('')
+    span()
   }
 }
 
@@ -305,7 +303,8 @@ function(request) {
                                                             div(style="display:none", selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all')))
                                                    )
                                        ),
-                                       div(style="margin-top:20px", bookmarkButton())
+                                       div(style="margin-top:20px", bookmarkButton()),
+                                       debug.controls()
                           ),
                           
                           # Show a plot of the generated distribution
