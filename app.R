@@ -164,7 +164,7 @@ debug.controls <- function() {
                  p(glue("Hostname: {system2('hostname', stdout=TRUE)}")))
     )
   } else {
-    span()
+    HTML('')
   }
 }
 
