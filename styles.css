@@ -62,8 +62,9 @@
 
 /* Main marketing message and sign up button */
 .jumbotron {
-  text-align: center;
-  border-bottom: 1px solid #e5e5e5;
+    padding: 15px;
+    text-align: center;
+    border-bottom: 1px solid #e5e5e5;
 }
 
 .jumbotron .heading {
@@ -71,11 +72,11 @@
 }
 
 .jumbotron .lead {
-  margin: 20px 30px 60px;
+  margin: 10px 0px 50px;
   font-family: 'Oswald', sans-serif;
 }
 .jumbotron .btn {
-  padding: 14px 24px;
+  padding: 10px 10px;
   font-size: 21px;
 }
 
