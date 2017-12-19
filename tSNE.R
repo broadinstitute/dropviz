@@ -631,13 +631,13 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       p <- tsne.gg + center.gg + xy.gg + loop.gg + bag.gg + alpha.range + diff.gg + comp.gg + label.gg + facet.label.gg + xy.limits.gg + xlab("V1") + ylab("V2")
 
       if (opt.global) {
-        if (opt.horiz.facet) {
+        if (opt.horiz.facet && length(facet2.vals)>1) {
           plot.gg <- p + facet_grid(facet2.gg~region.disp)
         } else {
           plot.gg <- p + facet_wrap(~region.disp, ncol=3)
         }
       } else {
-        if (opt.horiz.facet) {
+        if (opt.horiz.facet && length(facet2.vals)>1) {
           plot.gg <- p + facet_grid(facet2.gg~region.disp+facet.gg)
         } else {
           plot.gg <- p + facet_wrap(~region.disp+facet.gg, ncol=3)
@@ -664,7 +664,7 @@ is.filtered <- function() {
 # If there's a second facet, then a facet_grid display is used.
 # If the horizontal facets are greater than 4, then the square facets become too small, so the width grows, too.
 tsne.image.size <- function(facet1, facet2, display.width) {
-  if (facet2 > 0) {
+  if (facet2 > 1) {
     # grid: 
     facet.wide = (if (facet1==1) display.width %/% 2 else if (facet1 > 4) display.width %/% 4 * facet1 else display.width)
     each.width <- facet.wide %/% facet1
