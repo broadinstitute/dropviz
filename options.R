@@ -1,6 +1,6 @@
 # override defaults for development
 #
-# options(dropviz.debug=TRUE) # displays 'X' config tab for saving state, managing run-time cache
+# options(dropviz.debug=TRUE) # displays UI for saving state, managing run-time cache
 # options(log.reactive=TRUE) # produce verbose trace of reactives
 
 # examples for local development:
