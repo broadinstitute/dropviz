@@ -265,7 +265,7 @@ left_join_alpha_heat <- function(lhs, rhs) {
     # add a facet2.gg (i.e. a gene name) for every (sub)cluster
     # then include the alpha and heat values. this is a bit of hack
     # so that the unselected clusters display in grey for gene searches
-    full_join(lhs, select(rhs, exp.label, facet2.gg), by=c('exp.label')) %>%
+    full_join(lhs, unique(select(rhs, exp.label, facet2.gg)), by=c('exp.label')) %>%
       left_join(rhs, by=c('exp.label','facet2.gg','cx')) %>% alpha.na2zero()
   } else {
     mutate(lhs, alpha=double())
@@ -574,6 +574,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       )      
 
       # bag.data, loop.data and center.data are the polygon and point data associated with each (sub)cluster
+      alpha.limits <- if (opt.tx.scale=='fixed') c(0,7) else c(0,max(center.data$alpha))
       if (opt.show.bags & nrow(comp.data)==0) {
         if (opt.tx.alpha) {
           alpha.limits <- if (opt.tx.scale=='fixed') c(0,7) else c(0,max(center.data$alpha))
@@ -596,7 +597,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,group=cx), fill='grey', alpha=0.2) 
         loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,group=cx), fill='grey', alpha=0.1) 
         center.gg <- geom_blank_tsne
-        alpha.range <- scale_alpha()
+        alpha.range <- scale_alpha_continuous(guide="none", range=c(0,1), limit=alpha.limits)
       }
 
       # the facet.label.gg is a text label in the top left of each faceted plot.
