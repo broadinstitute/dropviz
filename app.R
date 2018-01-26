@@ -112,7 +112,7 @@ help.doc <- list(tsne.local.label.dl=withTags(span(h4("Help for t-SNE plot of su
 # draw download icon
 downloadIcon <- function(label, title, ...) {
   div(class="top-right",
-      downloadLink(label, span(class="glyphicon glyphicon-download-alt"), 'data-toggle'="tooltip", title=title), ...)
+      downloadLink(label, span(class="glyphicon glyphicon-download-alt" , style="color:#31419a"), 'data-toggle'="tooltip", title=title), ...)
 }
 
 helpIcon <- function(label, help.text=NULL) {
@@ -126,7 +126,7 @@ helpIcon <- function(label, help.text=NULL) {
   }
   
   div(class="xtooltip",
-      span(class="glyphicon glyphicon-question-sign", style="color:#428BCA"),
+      span(class="glyphicon glyphicon-question-sign", style="color:#31419a"),
       tooltip.span)
 }
 
@@ -186,10 +186,10 @@ function(request) {
                                         actionButton("select.go.2", HTML("Discover Genes &raquo;"), class="btn btn-default"),
                                         actionButton("select.go.3", HTML("Search &raquo;"), class="btn btn-default")))),
                tabPanel("Query",
-                        
                         # Sidebar with a slider input for number of bins 
                         sidebarLayout(
                           sidebarPanel(width=3, id="controlpanel",
+                                       h2('Parameters', class="Param"),
                                        div(helpIcon("config"), class='top-right'),
                                        tabsetPanel(type="tabs", id='controltabs', selected="controltabs-query",
                                                    tabPanel("Query", value="controltabs-query",
