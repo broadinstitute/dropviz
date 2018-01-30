@@ -346,10 +346,6 @@ label{
     
 }
 
-.well ul li:last-child{
-    display:none;
-}
-
 .col-sm-9>div.tabbable>.tab-content{
     border-top: 2px solid #31419a;
     margin-top: -2px;
