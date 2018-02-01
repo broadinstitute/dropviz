@@ -259,13 +259,13 @@ function(request) {
                                                                              div(class="control-box",
                                                                                  h4("Gene Search Settings"),
                                                                                  div(style="display:none",checkboxInput("normalize.expression.by.facet","Normalize Expression within Region or Cluster", value=FALSE)),
-                                                                                 selectizeInput("opt.tx", "Show Expression as", choices=c("Overlay"="alpha", "Hot-Cool"="heat"), selected = "alpha"),
-                                                                                 sliderInput("opt.tx.min", "Show Labels When Expression is Greater than % of Max", 0, 90, value=70, round=TRUE, step=10, post='%'),
-                                                                                 div(style="display:none",checkboxInput("opt.tx.cells","Show Expression Per Cell for Search Genes", value=TRUE)),
+                                                                                 selectizeInput("opt.tx", "Show Metacell Expression as", choices=c("Overlay"="alpha", "Hot-Cool"="heat"), selected = "alpha"),
+                                                                                 sliderInput("opt.tx.min", "Show Labels When Metacell Expression is Greater than % of Max", 0, 90, value=70, round=TRUE, step=10, post='%'),
                                                                                  conditionalPanel("input['opt.tx']=='heat'",
-                                                                                                  checkboxInput("opt.tx.legend","Show Expression Legend", value=FALSE)),
+                                                                                                  checkboxInput("opt.tx.legend","Show Metacell Expression Legend", value=FALSE)),
                                                                                  selectInput("opt.tx.scale", "Scale transparency or color range: ", choices=c("Fixed"="fixed", "Observed Max Value"="max"), selected="fixed"),
-                                                                                 conditionalPanel("!input['opt.tx.cells'] && input['user.genes'].length > 1", checkboxInput("opt.tx.sum", "Sum Expression of Multiple Search Genes", value=FALSE)))
+                                                                                 checkboxInput("opt.tx.cells","Show Expression Per Cell", value=TRUE),
+                                                                                 div(style="display:none",conditionalPanel("!input['opt.tx.cells'] && input['user.genes'].length > 1", checkboxInput("opt.tx.sum", "Sum Expression of Multiple Search Genes", value=FALSE))))
                                                             ),
                                                             conditionalPanel('(input["mainpanel"]=="clusters" && input["clusterpanel"]=="tsne") || (input["mainpanel"]=="subclusters" && input["subclusterpanel"]=="tsne")',
                                                                              conditionalPanel('input["opt.tx.cells"]',
