@@ -158,6 +158,14 @@
     }
 }
 
+div.tab-pane.active > div > div.col-sm-8{
+    width: 80%
+}
+
+div.tab-pane.active > div > div.col-sm-2{
+    width: 10%
+}
+
 /* Example menu
 -------------------------------------------------- */
 
@@ -192,6 +200,14 @@ div.container.marketing{
     clear:left;
 }
 
+p.note{
+    font-family: 'Libre Baskerville', serif;
+    color: #2a3377;
+    font-size:13px;
+    margin-left:0;
+    text-align: center; 
+    margin-bottom: -20px;
+}
 /* Featurette
 -------------------------------------------------- */
 
@@ -232,6 +248,7 @@ div.funding-section img{
     width: 205px;
     float: left;
     margin-bottom: 15px;
+    margin-left: 15px;
 }
 
 div.crop img{
