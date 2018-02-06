@@ -379,6 +379,56 @@ hr{
     width: 500px;
 }
 
+
+
+/* Team Page
+-------------------------------------------------- */
+h1{
+    color: #2a3377;
+     font-family: 'Libre Baskerville', serif;
+}
+
+h3{
+    color: #2a3377;
+    font-size: 160%;
+}
+
+div.staff-member-info-wrap, div.staff-thumb{
+    text-align: center;
+}
+
+div.col-md-2 {
+    width: 8%;
+}
+
+div.staff-thumb{
+    height: 200px;
+}
+
+div.staff-thumb.sara{
+    height: inherit;
+}
+
+div.col-md-3{
+    margin-bottom: 40px
+}
+
+div.staff-summary{
+    width: 200px;
+}
+
+div.staff-summary.leader{
+    width: 300px;
+}
+
+p.staff-position{
+    min-height: 2em;
+    margin:0;
+}
+
+hr.featurette-divider.half{
+    border-top: white;
+}
 /* CUSTOMIZE THE CAROUSEL
 -------------------------------------------------- */
 
