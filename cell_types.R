@@ -132,7 +132,8 @@ log.reactive("fn: subclusters.labeled")
 })
 
 limit.by.components <- function(df, comps) {
-  if (nrow(comps)>0) {
+  # FIXME: further filtering based on component selection is obsolete
+  if (FALSE && nrow(comps)>0) {
     filter(df, cluster==first(comps$cluster) & exp.label==first(comps$exp.label))
   } else {
     df

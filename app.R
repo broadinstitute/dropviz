@@ -325,9 +325,10 @@ function(request) {
                                                                     div(style="display:none", selectInput("opt.region.disp","Label Region", choices=c("Using Region Name"='region',"Using Experiment Name"='experiment'))),
                                                                     conditionalPanel("input['opt.cluster.disp']=='annotated' || input['opt.cluster.disp']=='all'",
                                                                                      checkboxInput("use.common.name", "Use Common Name for Subcluster, If Present", value = FALSE)),
-                                                                    conditionalPanel("input['use.common.name']", span(h6("(Common names are interpretive best guesses)")))),
-                                                                div(style="display:none", selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all')))
-                                                            ),
+                                                                    conditionalPanel("input['use.common.name']", span(h6("(Common names are interpretive best guesses)"))))#,
+                                                                ## conditionalPanel('input["mainpanel"]=="IC"',
+                                                                ##                  div(class="control-box", selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all'))))
+                                                                ),
                                                             actionButton("resetDisplay", style="margin-top: 5px", "Reset Display Parameters"))
                                                             
                                        ),
@@ -392,37 +393,33 @@ function(request) {
                                                                                            conditionalPanel("!input.showSubclustersInGlobal",
                                                                                                             span(class="img-center",imageOutput("tsne.local.label", height=500)))))),
                                                                      tabPanel("Scatter", value="scatter",
-                                                                                           plotDownload("gene.expr.scatter.subcluster.dl"),
+                                                                              plotDownload("gene.expr.scatter.subcluster.dl"),
                                                                               fluidRow(div(id="local-scatter", class="scroll-area",
                                                                                            span(class="img-center",imageOutput("gene.expr.scatter.subcluster", height=500))))),
-                                                                     ## tabPanel("Independent Components",
-                                                                     ##          fluidRow(div(id="ic-grid", class="scroll-area",
-                                                                     ##                       #                                                                                           plotDownload("ic.grid.dl"),
-                                                                     ##                       span(class="img-center",plotOutput("ic.grid", height=500))))),
                                                                      tabPanel("Table",
                                                                               tableDownload("dt.subclusters.dl"),
                                                                               fluidRow(div(id="dt-subclusters", class="scroll-area", DT::dataTableOutput("dt.subclusters"))))),
                                                          hr(),
-                                                         uiOutput("dt.subcluster.markers.heading"),
-                                                         conditionalPanel(
-                                                           'input["current.subcluster"]',
-                                                           fluidRow(class="table-area",
-                                                                    tableDownload("dt.subcluster.markers.dl"),
-                                                                    column(11,DT::dataTableOutput("dt.subcluster.markers")))
+                                                         conditionalPanel('input["subclusterpanel"]!="IC"',
+                                                                          uiOutput("dt.subcluster.markers.heading"),
+                                                                          conditionalPanel(
+                                                                            'input["current.subcluster"]',
+                                                                            fluidRow(class="table-area",
+                                                                                     tableDownload("dt.subcluster.markers.dl"),
+                                                                                     column(11,DT::dataTableOutput("dt.subcluster.markers")))))
+                                                         ),
+                                                tabPanel("Independent Components", value="IC",
+                                                         fluidRow(div(id="ic-grid", class="scroll-area",
+                                                                      uiOutput("ic.grid"))),
+                                                         hr(),
+                                                         uiOutput("dt.components.heading"),
+                                                         fluidRow(DT::dataTableOutput("dt.components"))
                                                          )
-                                                                  #   tabPanel("Differential Expression",
-                                                                              # ) # ,
-                                                                     ## tabPanel("Independent Components",
-                                                                     ##          uiOutput("dt.components.heading"),
-                                                                     ##          fluidRow(DT::dataTableOutput("dt.components"))))
-                                                         )
-                                                # ,
-                                                # tabPanel("Metacells")
-                                    )
-                          )
+                                                )
                           #    tabPanel("Community Annotations", p("A wiki-like editable annotation of cell type"))
+                                    )
                         )
-               ),
+                        ),
                tabPanel("Team",
                         HTML(readLines("html/team.html"))),
                tabPanel("Feedback",
