@@ -15,6 +15,7 @@ source("cell_types.R", local=TRUE)
 source("user_cluster_selection.R", local=TRUE)  
 source("tSNE.R", local=TRUE)  
 source("components.R", local=TRUE)
+source("markers.R", local=TRUE)
 write.log("Sources loaded")
 
 dir.create(glue("{cache.dir}/ic"), recursive = TRUE, showWarnings=FALSE)
