@@ -101,8 +101,12 @@ output$dt.IC.genes <- DT::renderDataTable({
 
 output$dt.IC.subclusters <- DT::renderDataTable({
   req(nrow(selected.component.cell.weights.xy()))
-  IC.subc.tbl <- selected.component.cell.weights.xy() %>% group_by(cx) %>% summarize(weight=mean(weight)) %>% arrange(-weight) %>% rename("subcluster"="cx", "weight"="weight")
-  DT::datatable(IC.subc.tbl, rownames=FALSE, selection="none", options=list(dom="tp")) %>%
+  IC.subc.tbl <- selected.component.cell.weights.xy() %>% group_by(exp.label, cx) %>% 
+    summarize(weight=mean(weight)) %>% 
+    arrange(-weight) %>% 
+    rename("subcluster"="cx", "weight"="weight") %>%
+    inner_join(subcluster.names(), by=c('exp.label','subcluster'))
+  DT::datatable(IC.subc.tbl[,c("subcluster.disp","weight")], colnames = c("Subcluster","Weight"), rownames=FALSE, selection="none", options=list(dom="tp")) %>%
     DT::formatSignif('weight')
 })
 
