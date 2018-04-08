@@ -47,9 +47,14 @@ compute.pair <- function(exp.label, cx, cmp.exp.label, cmp.cx, kind, use.cached=
   comparison.names <- paste(glue("{comparison.names.tbl$exp.abbrev}.{comparison.names.tbl$cx}"),collapse='+')
   
   cache.file <- glue("{pairs.dir}/{target.names}.vs.{comparison.names}.RDS")
+  alt.cache.file <- glue("{prep.dir}/pairs/{target.names}.vs.{comparison.names}.RDS") # check for pre-computed
   
-  if (use.cached && file.exists(cache.file)) {
-    x <- readRDS(cache.file)
+  if (use.cached && (file.exists(cache.file) || file.exists(alt.cache.file))) {
+    if (file.exists(cache.file)) {
+      x <- readRDS(cache.file)
+    } else {
+      x <- readRDS(alt.cache.file)
+    }
   } else {
     progress <- shiny.progress(glue("{kind} pairwise - {target.names} vs {comparison.names}"))
     if (!is.null(progress)) on.exit(progress$close())
