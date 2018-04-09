@@ -53,6 +53,11 @@ send.zip <- function(fn, fname, zipfile, others=character(0)) {
 
 if (file.exists(glue("{prep.dir}/markers/top_genes.RDS"))) {
   top.genes <<- sort(readRDS(glue("{prep.dir}/markers/top_genes.RDS")))
+  if (!file.exists(file.path('www/top.genes.json'))) {
+    writeLines(paste('{ "genes": [\n',
+                     paste0('{ "value": "', top.genes, '", "label": "', top.genes, '" }', collapse=",\n"),
+                     '\n]}'), "www/top.genes.json")
+  }
 }
 
 ## read gene symbols and descriptions
