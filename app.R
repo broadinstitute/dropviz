@@ -425,6 +425,23 @@ function(request) {
                ),
                tabPanel("Team",
                         HTML(readLines("html/team.html"))),
+               tabPanel("Data",
+                        h1("Data Downloads"),hr(),
+                        tags$dl(tags$dt("Metacells"),
+                                tags$dd(p("Gene expression profiles of the 565 transcriptionally distinct cell populations identified across nine regions in the adult mouse brain. Each column is a \"metacell.\" There is one metacell for every subcluster, which contains the aggregate UMI counts for all the single-cells that belong to that subcluster."),
+                                        p(a(href="http://dropviz.org/downloads/metacells.BrainCellAtlas_Saunders_version_2018.04.01.csv","Excel: metacells.BrainCellAtlas_Saunders_version_2018.04.01.csv (40M)")),
+                                        p(a(href="http://dropviz.org/downloads/metacells.BrainCellAtlas_Saunders_version_2018.04.01.RDS","R Data: metacells.BrainCellAtlas_Saunders_version_2018.04.01.rds (15M)"))),
+                                tags$dt("Annotations"),
+                                tags$dd(p("Annotation file for the 565 atlas cell populations. Provides the tissue of origin, cell class, formal markers, formal full name and common name (anatomical best guess) for each metacell."),
+                                        p(a(href="http://dropviz.org/downloads/annotation.BrainCellAtlas_Saunders_version_2018.04.01.csv","Excel: annotation.BrainCellAtlas_Saunders_version_2018.04.01.csv (54K)")),
+                                        p(a(href="http://dropviz.org/downloads/annotation.BrainCellAtlas_Saunders_version_2018.04.01.RDS","R Data: annotation.BrainCellAtlas_Saunders_version_2018.04.01.rds (12K)"))))
+                        ),
+               tabPanel("Tutorial",
+                        h1("Video Tutorials"), hr(),
+                        div(style="text-align: center;width: 100%;vertical-align: middle;height: 100%;",
+                            tags$iframe(width="640", height="385", src="https://www.youtube.com/embed/videoseries?list=PLRL1w4IELl9j0SuViEj3Zj6HmsBULZbbs",
+                                        frameborder="0", allow="autoplay; encrypted-media", allowfullscreen="true"))
+                        ),
                tabPanel("Feedback",
                         h3("Feedback"),
                         p("We welcome any comments, bug reports, and feature requests. Please send all feedback to ",a(href="mailto:mouse.dropviz@gmail.com","mouse.dropviz@gmail.com"),"."))
