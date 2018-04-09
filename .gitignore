@@ -43,3 +43,4 @@ vignettes/*.pdf
 .Rproj.user
 dump.RDS
 *.bak
+www/top.genes.json
