@@ -58,12 +58,20 @@ log.reactive("fn: subcluster.markers")
 # If user.genes exist and option to display cells in gene search, but there is no comparison, yet, then return a stub with user.genes
 cluster.markers.selected <- reactive({
   log.reactive("fn: cluster.markers.selected")
-  cluster.markers()[input$dt.cluster.markers_rows_selected,]
+  if (isTruthy(input$dt.cluster.markers_rows_selected)) {
+    cluster.markers()[input$dt.cluster.markers_rows_selected,]
+  } else {
+    tibble(gene=character(0))
+  }
 })
 
 subcluster.markers.selected <- reactive({
   log.reactive("fn: subcluster.markers.selected")
-  subcluster.markers()[input$dt.subcluster.markers_rows_selected,]
+  if (isTruthy(input$dt.subcluster.markers_rows_selected)) {
+    subcluster.markers()[input$dt.subcluster.markers_rows_selected,]
+  } else {
+    tibble(gene=character(0))
+  }
 })
 
 #####################################################################################################

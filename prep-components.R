@@ -6,66 +6,75 @@
 library(ggplot2)
 
 # create an environment similar to running a shiny app
-output <- list()
 source("global.R", local=TRUE)
-reactive <- function(expr, env=parent.frame()) exprToFunction(expr, env=env)
 source("plot.R", local=TRUE)
 source("display_labels.R", local=TRUE)
 source("cell_types.R", local=TRUE)
 source("user_cluster_selection.R", local=TRUE)  
 source("tSNE.R", local=TRUE)  
 source("components.R", local=TRUE)
+source("markers.R", local=TRUE)
 write.log("Sources loaded")
 
 dir.create(glue("{cache.dir}/ic"), recursive = TRUE, showWarnings=FALSE)
 
 
-# populate input with the minimum values to generate a faceted tSNE of components
+# populate filter.vals with the minimum values to generate a faceted tSNE of components
+options(dropviz.use.input = FALSE)
+input <- list(opt.use.cache=FALSE, opt.components='real', opt.cluster.disp='all', opt.region.disp='region', use.common.name=TRUE, opt.downsampling.method="none")
+ic.kinds <- c('real','all')
+filter.vals <- list()
 
-input <- list(opt.components='real', opt.cluster.disp='all', opt.region.disp='region', use.common.name=TRUE, opt.downsampling.method="none")
-ic.kinds <- c('real','clustering','all')
-
-no.xy <- theme(axis.title.x=element_blank(),
-               axis.text.x=element_blank(),
-               axis.ticks.x=element_blank(),
-               axis.title.y=element_blank(),
-               axis.text.y=element_blank())
+no.xy <- theme_few() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        strip.text.x=element_text(size=20),
+        strip.text.y=element_text(size=14))
 
 # currently the ICs are generated from the current.subcluster. In the future, it may be parameterized differently.
 dlply(experiments, .(exp.label), function(exp) {
-  input$tissue <<- exp$exp.title
+  filter.vals$tissue <<- exp$exp.title
   ldply(ic.kinds, function(ic.kind) {
+    filter.vals$cell.cluster <<- NULL
     input$opt.components <<- ic.kind
-    cluster.idx <- c(1, 1+which(diff(as.numeric(subclusters.selected_()$cluster))!=0))
-    cluster.idx <- setNames(cluster.idx, subclusters.selected_()$cluster[cluster.idx])
-    ldply(cluster.idx, function(i) {
-      input$current.subcluster <<- i
+    clusters <- clusters.selected_()
+    write.log(glue("{filter.vals$tissue} {input$opt.components} {nrow(clusters)} clusters"))
+    ddply(clusters, .(c.id), function(cl) {
+      filter.vals$cell.cluster <<- cl$cluster.disp
       nr <- nrow(clusters.selected.components())
+      write.log(nr," components for ", cl$cluster.disp)
       if (nr > 0) {
         input$dt.components_rows_selected <<- 1:nr
-        sc <- selected.component.cell.weights.xy()
+        sc.xy <- selected.component.cell.weights.xy()
       } else {
-        sc <- tibble()
+        sc.xy <- tibble()
       }
         
-      if (nrow(sc)>0) {
+      if (nrow(sc.xy)>0) {
         ic.plot <- function(progress) {
-          ggplot() + geom_point(data=sc, aes(x=V1, y=V2, color=weight), size=2, alpha=1) + 
-            facet_wrap(~region.disp+facet.gg+IC, ncol=4) +
-            scale_color_gradient2(low="blue", mid="lightgrey", high="red", midpoint=0, limits=c(-max(sc$weight),max(sc$weight)))
+          if (ic.kind == 'all') { kind.text <- 'All' } else if (ic.kind=='real') { kind.text <- 'Biological' } else { kind.text <- '' }
+          subcluster.text <- ifelse(ic.kind=='clustering', 'used for subclustering', '')
+          title <- glue("{kind.text} ICs for {cl$region.disp} cluster {cl$cluster.disp} {subcluster.text}")
+          ggplot() + geom_point(data=sc.xy, aes(x=V1, y=V2, color=weight), size=2, alpha=1) + 
+            facet_wrap(~IC, ncol=4) + ggtitle(title) +
+            scale_color_gradient2(low="blue", mid="lightgrey", high="red", midpoint=0, limits=c(-max(sc.xy$weight),max(sc.xy$weight)))
         }
         width <- 1000
 #        height <- width/2 * ((nr-1)%/%4+1)
         height <- width/2 * (nr %/% 12 + 1)
       } else {
-        ic.plot <- function(progress) plot.text("No Data")
+        ic.plot <- function(progress) plot.text(glue("No ICs for {cl$region.disp} cluster {cl$cluster.disp}"))
         width <- height <- 500
-        write.log(glue("No data for {component.cluster()$cluster}"))
+        write.log(glue("No data for {cl$cluster}"))
       }
       
-      renderCacheImage(ic.plot, glue("ic/ic_{exp$exp.label}_{component.cluster()$cluster}_{ic.kind}"), width, height, opt.use.cache = FALSE)
+      renderCacheImage(ic.plot, glue("ic/ic_{exp$exp.label}_{cl$cluster}_{ic.kind}"), width, height)
       
       # create little plots to embed in IC table
+      sc <- selected.component.cell.weights()
       if (ic.kind=='all') {
         ddply(sc, .(IC), function(df) {
           df <- arrange(df, cell)
@@ -73,8 +82,8 @@ dlply(experiments, .(exp.label), function(exp) {
           red.blue.gradient <-  scale_color_gradient2(guide="none", low="blue", mid="lightgrey", high="red", midpoint=0, limits=c(-max(df$weight),max(df$weight)))
           
           renderCacheImage(function(progress) { ggplot(df, aes(x=cell, y=weight, color=weight)) + geom_point(size=1, alpha=0.7) + no.xy + red.blue.gradient},
-                           glue("ic/ic_{exp$exp.label}_{component.cluster()$cluster}_{first(df$IC)}"),
-                           width=250, height=75, opt.use.cache = FALSE)
+                           glue("ic/ic_{exp$exp.label}_{cl$cluster}_{first(df$IC)}"),
+                           width=250, height=75)
           NULL
         })
       }

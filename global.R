@@ -10,6 +10,23 @@ library(ggthemes)
 library(digest)
 library(ggplot2)
 
+stack.trace <- capture.output(traceback(0,1))
+if (any(grepl("serviceApp|runApp", stack.trace, perl=TRUE))) {
+  # hack. Checking the call stack for runApp is the best way I can find to determine if
+  # I'm running as a server or not.
+  message("Removing local reactive overrides, if any")
+  suppressWarnings(try(rm(reactive, reactiveValues, observeEvent, output), silent=TRUE))
+} else {
+  message("Running in interactive, non-Shiny environment")
+  reactive <- function(x, env=parent.frame(), ...) exprToFunction(x, env=env)
+  reactiveValues <- list
+  output <- list()
+  observeEvent <- function(...) {}
+}
+
+# loads the bookmark into the input variable in the caller's environment
+load.mark <- function(id) assign('input',readRDS(glue("shiny_bookmarks/{id}/input.rds")), 1)
+
 source("shared.R")
 
 log.reactive <- function(...) {
@@ -53,6 +70,11 @@ send.zip <- function(fn, fname, zipfile, others=character(0)) {
 
 if (file.exists(glue("{prep.dir}/markers/top_genes.RDS"))) {
   top.genes <<- sort(readRDS(glue("{prep.dir}/markers/top_genes.RDS")))
+  if (!file.exists(file.path('www/top.genes.json'))) {
+    writeLines(paste('{ "genes": [\n',
+                     paste0('{ "value": "', top.genes, '", "label": "', top.genes, '" }', collapse=",\n"),
+                     '\n]}'), "www/top.genes.json")
+  }
 }
 
 ## read gene symbols and descriptions

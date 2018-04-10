@@ -2,7 +2,6 @@ source("global.R")
 
 server <- function(input, output, session) {
   
-  try(rm(dt.cluster.markers,dt.subcluster.markers))
   if (file.exists("message.txt") && !is.null(getDefaultReactiveDomain())) {
     msg <- readLines("message.txt")
     showNotification(div(h4(msg[1]),msg[2]),duration=NULL,type="warning")
@@ -20,7 +19,10 @@ server <- function(input, output, session) {
   #####################################################################################################
   # save the latest input for interactive debug
   # load with input <- readRDS("dump.RDS")
+  # if bookmarking is enabled, then another option is to simply load the bookmark data, e.g.
+  # input <- readRDS("shiny_bookmarks/8628603e8215e159/input.rds")
   observeEvent(input$dump, {
+    # deprecated. Use bookmarks
     write.log("Dump"); saveRDS(reactiveValuesToList(input), file="www/dump.RDS")
   })
   
@@ -44,8 +46,8 @@ server <- function(input, output, session) {
   })  
   
   # form reset
-  observeEvent(input$resetDisplay, { reset("display-panel") })
-
+  observeEvent(input$resetDisplay, { reset("display-panel") }, ignoreInit = TRUE)
+  
   # some special parameters are server-side generated through uiOutput. Calling reset on these has
   # unpredictable, usually undesirable, behavior. So instead, reset a div that doesnot include the
   # uiOutput elements and individually reset other UI elements where necessary.
@@ -54,7 +56,7 @@ server <- function(input, output, session) {
     updateSelectInput(session, "current.subcluster", selected="")  
     reset("compare.multiple")
     reset("cluster-panel") 
-  })
+  }, ignoreInit = TRUE)
   observeEvent(input$resetQuery, {
     updateSelectInput(session, "tissue", selected="")
     updateSelectInput(session, "cell.class", selected="")
@@ -62,29 +64,52 @@ server <- function(input, output, session) {
     updateSelectInput(session, "cell.type", selected="")
     reset("showSubclustersInGlobal")
     reset("user.genes")
+    updateQueryString("?#")
+    filter.vals.init()
+  }, ignoreInit = TRUE)
+
+  # change the location bar URL when bookmarking instead of displaying a pop-up
+  onBookmarked(function(url) {
+    updateQueryString(url)
+    showBookmarkUrlModal(url)
   })
 
-  # dropped this idea of expanding and collapsing the sidebar, but this might be an approach
-  # observe({
-  #   if (input$wideside1) {
-  #     jqui_switch_class("#sidebar", 'col-sm-4', 'col-sm-6',1000)
-  #     jqui_switch_class("#mainpanel", 'col-sm-8', 'col-sm-6',1000)
-  #   } else {
-  #     jqui_switch_class("#sidebar", 'col-sm-6', 'col-sm-4',1000)
-  #     jqui_switch_class("#mainpanel", 'col-sm-6', 'col-sm-8',1000)
-  #   }
-  # })
+  # store a text copy of chosen genes to load when bookmarked
+  observeEvent(input$user.genes, {
+    if (is.null(input$user.genes)) {
+      updateTextInput(session, "user.genes.bak", value="")
+    } else {
+      updateTextInput(session, "user.genes.bak", value=input$user.genes)
+    }
+  }, ignoreInit=TRUE, ignoreNULL=FALSE)
+
+  # set user.genes to backup, if present
+  observeEvent(input$user.genes.bak, {
+    js$setgenes(items=as.list(strsplit(input$user.genes.bak,",")[[1]]))
+  }, once=TRUE)
+  
+  output$user.genes.bak <- renderText({ input$user.genes.bak })
   
   # after network disconnect, client will try to reconnect using current state
   session$allowReconnect(TRUE)
 }
 
 
-# this is a hack to set the ID for the actual sidebar div because shiny::sidebarPanel() assigns the
-# id to the sidebar's child (a form).
-# jsCode <- "
-# shinyjs.init = function() { $('#sidebarform').parent().attr('id', 'sidebar') }
-# "
+jsCode <- "shinyjs.setgenes = function(params){ 
+  console.log('setgenes:')
+  console.log(params)
+  x=$('#user\\\\.genes')[0].selectize; 
+  $.each(params.items, function(i,v) { x.addOption({value:v,label:v}); x.addItem(v) })
+}"
+genes.load <- "function(query, callback) {
+  if (query.length) return callback(); // not dynamic by query, just delayed load
+  $.ajax({
+    url: 'top.genes.json',
+    type: 'GET',
+    error: function() { callback() },
+    success: function(res) { console.log('ajax: genes loaded'); callback(res.genes) }
+  })
+}"
 
 help.doc <- list(tsne.local.label.dl=withTags(span(h4("Help for t-SNE plot of subclusters in local cluster space."),
                                                    p("Each point represents a single cell. Each cell is associated with a gene expression vector. This high-dimensional data within a cluster is reduced using a set of curated independent components and projected onto two dimensions using t-SNE ('local cluster space'). The subcluster classifications are derived from Louvain clustering using a subset of the ICs."),
@@ -193,7 +218,7 @@ function(request) {
   
   fluidPage(
     useShinyjs(),
-    #    extendShinyjs(text = jsCode),
+    extendShinyjs(text = jsCode),
     tags$head(HTML('<script async src="https://www.googletagmanager.com/gtag/js?id=UA-111320548-1"></script>
 ')),
     tags$head(includeScript("gtag.js")),
@@ -214,10 +239,13 @@ function(request) {
                                        div(helpIcon("config"), class='top-right'),
                                        tabsetPanel(type="tabs", id='controltabs', selected="controltabs-query",
                                                    tabPanel("Query", value="controltabs-query",
-                                                            div(class="control-box", style="margin-bottom: 0",
+                                                            div(id="filter-params", class="control-box", style="margin-bottom: 0",
                                                                 fluidRow(
-                                                                  column(12, selectizeInput("user.genes", "Gene", choices=c("Symbol"="",top.genes),
-                                                                                            multiple=TRUE, width='100%', options=list(create=TRUE,persist=FALSE)))
+                                                                  column(12,
+                                                                         selectizeInput("user.genes", "Gene", choices=c("Symbol"=""),
+                                                                                        multiple=TRUE, width='100%', options=list(create=TRUE,preload="focus",load=I(genes.load),persist=FALSE,openOnFocus=FALSE,closeAfterSelect=TRUE)),
+                                                                         div(style="display:none", textInput("user.genes.bak", NULL))
+                                                                         )
                                                                 ),
                                                                 fluidRow(
                                                                   column(12, uiOutput("region"))),
@@ -227,9 +255,11 @@ function(request) {
                                                                                  fluidRow(column(12, uiOutput("cell.type")))
                                                                 ),
                                                                 conditionalPanel("input.mainpanel=='subclusters' && input.subclusterpanel=='tsne'",
-                                                                                 checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE))
-                                                            ),
-                                                            actionButton("resetQuery", style="margin-top:10px", "Reset Query Parameters")
+                                                                                 checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE)),
+                                                                fluidRow(style="margin-bottom: 25px",
+                                                                         column(5, offset=1, actionButton("go", "Update!")),
+                                                                         column(6, actionButton("resetQuery", "Reset Query")))
+                                                            )
                                                    ),
                                                    tabPanel("Clusters", value="controltabs-compare",
                                                             div(class="control-box",
@@ -263,7 +293,8 @@ function(request) {
                                                                                width='100%'),
                                                                     div(style="display:none", actionButton("upload.genes","Upload Gene List", width='100%', onclick="alert('Not Implemented')"))
                                                                 ),
-                                                                actionButton("resetClusters", style="margin-top: 10px", "Reset Cluster Parameters")
+                                                                fluidRow(style="margin-top: 10px",
+                                                                         column(10, offset=2, actionButton("resetClusters", "Reset Cluster Parameters")))
                                                             )),
                                                    tabPanel("Display",
                                                             div(id='display-panel',
@@ -326,14 +357,12 @@ function(request) {
                                                                     conditionalPanel("input['opt.cluster.disp']=='annotated' || input['opt.cluster.disp']=='all'",
                                                                                      checkboxInput("use.common.name", "Use Common Name for Subcluster, If Present", value = FALSE)),
                                                                     conditionalPanel("input['use.common.name']", span(h6("(Common names are interpretive best guesses)")))),
-                                                                div(style="display:none", selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all')))
-                                                            ),
-                                                            actionButton("resetDisplay", style="margin-top: 5px", "Reset Display Parameters"))
-                                                            
+                                                                fluidRow(style="margin-top: 10px", column(10, offset=2, actionButton("resetDisplay", "Reset Display Parameters")))
+                                                                )
                                        ),
-                                       div(style="margin-top:20px", bookmarkButton()),
+                                       fluidRow(style="margin-top:20px", column(10, offset=2, bookmarkButton("Bookmark / Update URL"))),
                                        debug.controls()
-                          ),
+                          )),
                           
                           # Show a plot of the generated distribution
                           mainPanel(width=9, 
@@ -392,35 +421,30 @@ function(request) {
                                                                                            conditionalPanel("!input.showSubclustersInGlobal",
                                                                                                             span(class="img-center",imageOutput("tsne.local.label", height=500)))))),
                                                                      tabPanel("Scatter", value="scatter",
-                                                                                           plotDownload("gene.expr.scatter.subcluster.dl"),
+                                                                              plotDownload("gene.expr.scatter.subcluster.dl"),
                                                                               fluidRow(div(id="local-scatter", class="scroll-area",
                                                                                            span(class="img-center",imageOutput("gene.expr.scatter.subcluster", height=500))))),
-                                                                     ## tabPanel("Independent Components",
-                                                                     ##          fluidRow(div(id="ic-grid", class="scroll-area",
-                                                                     ##                       #                                                                                           plotDownload("ic.grid.dl"),
-                                                                     ##                       span(class="img-center",plotOutput("ic.grid", height=500))))),
                                                                      tabPanel("Table",
                                                                               tableDownload("dt.subclusters.dl"),
                                                                               fluidRow(div(id="dt-subclusters", class="scroll-area", DT::dataTableOutput("dt.subclusters"))))),
                                                          hr(),
-                                                         uiOutput("dt.subcluster.markers.heading"),
-                                                         conditionalPanel(
-                                                           'input["current.subcluster"]',
-                                                           fluidRow(class="table-area",
-                                                                    tableDownload("dt.subcluster.markers.dl"),
-                                                                    column(11,DT::dataTableOutput("dt.subcluster.markers")))
+                                                         conditionalPanel('input["subclusterpanel"]!="IC"',
+                                                                          uiOutput("dt.subcluster.markers.heading"),
+                                                                          conditionalPanel(
+                                                                            'input["current.subcluster"]',
+                                                                            fluidRow(class="table-area",
+                                                                                     tableDownload("dt.subcluster.markers.dl"),
+                                                                                     column(11,DT::dataTableOutput("dt.subcluster.markers")))))
+                                                         ),
+                                                tabPanel("Independent Components", value="IC",
+                                                         fluidRow(div(id="ic-grid", class="scroll-area",
+                                                                      uiOutput("ic.grid"))),
+                                                         hr(),
+                                                         uiOutput("dt.components.heading"),
+                                                         fluidRow(DT::dataTableOutput("dt.components"))
                                                          )
-                                                                  #   tabPanel("Differential Expression",
-                                                                              # ) # ,
-                                                                     ## tabPanel("Independent Components",
-                                                                     ##          uiOutput("dt.components.heading"),
-                                                                     ##          fluidRow(DT::dataTableOutput("dt.components"))))
-                                                         )
-                                                # ,
-                                                # tabPanel("Metacells")
+                                                )
                                     )
-                          )
-                          #    tabPanel("Community Annotations", p("A wiki-like editable annotation of cell type"))
                         )
                ),
                tabPanel("Team",

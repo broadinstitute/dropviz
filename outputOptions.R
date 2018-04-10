@@ -9,6 +9,7 @@ outputOptions(output, 'current.cluster', suspendWhenHidden=FALSE, priority=100)
 outputOptions(output, 'comparison.cluster', suspendWhenHidden=FALSE, priority=99)
 outputOptions(output, 'current.subcluster', suspendWhenHidden=FALSE, priority=100)
 outputOptions(output, 'comparison.subcluster', suspendWhenHidden=FALSE, priority=99)
+outputOptions(output, 'dt.components.heading', suspendWhenHidden=FALSE, priority=99)
 
 # These are the differential expression tables. They should render with a low
 # priority so that the items above get computed first.
