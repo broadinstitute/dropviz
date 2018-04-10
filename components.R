@@ -153,9 +153,10 @@ output$ic.grid <- renderUI({
 
 output$dt.components <- DT::renderDataTable( {
   req(nrow(clusters.selected.components())>0)
-  components.tbl <- clusters.selected.components() %>% 
+  components.tbl <- clusters.selected.components() %>%
+    mutate(status=ifelse(status=='Real','Biological',as.character(status))) %>%
     mutate(Loadings=glue("<img height='75' width='250' src='cache/ic/ic_{exp.label}_{cluster}_IC{ic.number}_250_75.png'/>")) %>%
-    dplyr::select(IC=ic.number, Region=region.disp, Cluster=cluster.disp, Class=cell_class, Status=status, "Annotation Notes"=hypothesized_common_name, Loadings, Region=anatomical_region, "Used in Sub-clustering"=use_for_clustering)
+    dplyr::select(IC=ic.number, Region=region.disp, Cluster=cluster.disp, Class=cell_class, Status=status, "Annotation Notes"=hypothesized_common_name, Loadings, Region=anatomical_region)
   
   DT::datatable(components.tbl,
                 rownames=FALSE, escape=FALSE,
@@ -180,7 +181,7 @@ output$dt.components.heading <- renderUI({
         }
       }),
       column(2, 
-             selectInput("opt.components", "Show", choices=c("Real"='real','Used for Clustering'='clustering','All'='all')))
+             selectInput("opt.components", "Show", choices=c("Biological"='real','All'='all')))
     )
   } else {
     tags$p()
