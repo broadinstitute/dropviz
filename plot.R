@@ -5,7 +5,7 @@ plot.text <- function(txt) {
 
 # adjust to nearest 100. This is to avoid flickering when size of region changes by small amounts in browser
 img.size.round <- function(x) {
-  (x %/% 100) * 100
+  (x %/% 200) * 200
 }
 
 # this needs to default to TRUE even if it is missing

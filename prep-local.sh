@@ -9,12 +9,12 @@ REMOTE_STAGED_DIR=${REMOTE_DIR}/staged
 REMOTE_ATLAS_DIR=${REMOTE_DIR}/atlas_ica
 REMOTE_STAGED=${REMOTE_HOST}:${REMOTE_STAGED_DIR}
 REMOTE_ATLAS=${REMOTE_HOST}:${REMOTE_ATLAS_DIR}
-LOCAL=/cygdrive/d/dropviz
+LOCAL=/home/dkulp/data/dropseq
 LOCAL_STAGED=${LOCAL}/staged
 LOCAL_ATLAS=${LOCAL}/atlas_ica
 LOCAL_ATLAS_W=`cygpath -m ${LOCAL_ATLAS}`
 
-EXPERIMENTS="GRCm38.81.P60Hippocampus GRCm38.81.P60Striatum GRCm38.81.P60Thalamus GRCm38.81.P60SubstantiaNigra"
+EXPERIMENTS="GRCm38.81.P60Hippocampus GRCm38.81.P60Striatum GRCm38.81.P60Thalamus" # GRCm38.81.P60SubstantiaNigra
 EXPERIMENTS_Q=`perl -e 'print join("\",\"",@ARGV)' \"${EXPERIMENTS}\"`
 
 

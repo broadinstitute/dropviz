@@ -12,6 +12,6 @@ outputOptions(output, 'comparison.subcluster', suspendWhenHidden=FALSE, priority
 
 # These are the differential expression tables. They should render with a low
 # priority so that the items above get computed first.
-outputOptions(output, 'dt.cluster.markers', suspendWhenHidden=FALSE, priority=1)
-outputOptions(output, 'dt.subcluster.markers', suspendWhenHidden=FALSE, priority=1)
+outputOptions(output, 'dt.cluster.markers', suspendWhenHidden=FALSE, priority=-100)
+outputOptions(output, 'dt.subcluster.markers', suspendWhenHidden=FALSE, priority=-100)
 

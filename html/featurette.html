@@ -1,102 +1,113 @@
-    <!-- Marketing messaging and featurettes
+<!-- Marketing messaging and featurettes
     ================================================== -->
-    <!-- Wrap the rest of the page in another container to center all the content. -->
+<!-- Wrap the rest of the page in another container to center all the content. -->
 
-    <div class="container marketing">
+<div class="container marketing">
 
-      <!-- Three columns of text below the carousel -->
-      <div class="row">
+    <!-- Three columns of text below the carousel -->
+    <div class="row">
         <div class="col-lg-4">
-          <img class="img-rounded" src="/tsne-sample.jpg" width="140" height="140">
-          <h2>Explore Cell Types</h2>
-          <p>The expression profile for each cell was grouped into clusters and sub-clusters through a semi-automated process and the results were projected onto 2-D t-SNE plots to visually approximate the expression relationships amongst individual cells. Gene expression levels of query genes can be overlayed on any subset of data.</p><p>Example: <a href="/?_state_id_=629172982ecf1bb2">The relative expression profile of Sepp1 among sub-types of oligodendrocytes in frontal cortex and hippocampus</a></p>
-          <p><1></p>
-        </div><!-- /.col-lg-4 -->
+            <img class="img-rounded" src="/tsne-sample.jpg" width="140" height="140">
+            <h2>Explore Cell Types</h2>
+            <p class=expo>The expression profile for each cell was grouped into clusters and sub-clusters through a semi-automated process and the results were projected onto 2-D t-SNE plots to visually approximate the expression relationships amongst individual cells. Gene expression levels of query genes can be overlayed on any subset of data.</p>
+            <p class=expo>Example: <a href="/?_state_id_=629172982ecf1bb2">The relative expression profile of Sepp1 among sub-types of oligodendrocytes in frontal cortex and hippocampus</a></p>
+            <p class=buttonpar>
+                <1>
+            </p>
+        </div>
+        <!-- /.col-lg-4 -->
         <div class="col-lg-4">
-          <img class="img-rounded" src="/scatter-sample.jpg" width="140" height="140">
-          <h2>Compare and Discover Genes</h2>
-          <p>The relative pairwise gene expression between cell types within a region or across different regions can be quickly computed for 10,000s of genes and ranked to identify distinguishing marker genes. Additional user selected genes can be added to the comparison set.</p>
-          <p>Example: <a href="/?_state_id_=e07c3977440fb983">The set of genes overexpressed at least five-fold in Oligodendrocytes versus Polydendrocytes within the Ento Peduncular.</a></p>
-          <p><2></p>
-        </div><!-- /.col-lg-4 -->
+            <img class="img-rounded" src="/scatter-sample.jpg" width="140" height="140">
+            <h2>Compare and Discover Genes</h2>
+            <p class=expo>The relative pairwise gene expression between cell types within a region or across different regions can be quickly computed for 10,000s of genes and ranked to identify distinguishing marker genes. Additional user selected genes can be added to the comparison set.</p>
+            <p class=expo>Example: <a href="/?_state_id_=e07c3977440fb983">The set of genes overexpressed at least five-fold in Oligodendrocytes versus Polydendrocytes within the Ento Peduncular.</a></p>
+            <p class=buttonpar>
+                <2>
+            </p>
+        </div>
+        <!-- /.col-lg-4 -->
         <div class="col-lg-4">
-          <img class="img-rounded" src="/rank-sample.jpg" width="140" height="140">
-          <h2>Search By Gene</h2>
-          <p>Enter one or more genes of interest to immediately see the relative gene expression across 262 cell types.</p>
-	  <p>Example: <a href="/?_state_id_=f8677f6733c2fe52">The twenty cell types with the highest expression of S100a6 across all brain regions.</a></p>
-          <p><3></p>
-        </div><!-- /.col-lg-4 -->
-      </div><!-- /.row -->
+            <img class="img-rounded" src="/rank-sample.jpg" width="140" height="140">
+            <h2>Search By Gene</h2>
+            <p class=expo>Enter one or more genes of interest to immediately see the relative gene expression across 262 cell types.</p>
+            <p class=expo>Example: <a href="/?_state_id_=f8677f6733c2fe52">The twenty cell types with the highest expression of S100a6 across all brain regions.</a></p>
+            <p class=buttonpar>
+                <3>
+            </p>
+        </div>
+        <!-- /.col-lg-4 -->
+    </div>
+    <!-- /.row -->
 
+      <p class="note">
+	We hope you find this data resource useful.  Please <a href="mailto:mouse.dropviz@gmail.com">write us</a> with experiences and suggestions.  We would love stories about how people are using it in their work.</p>
 
-      <!-- START THE FEATURETTES -->
+    <!-- START THE FEATURETTES -->
 
-      <hr class="featurette-divider">
+    <hr class="featurette-divider">
 
-      <div class="row featurette">
-          <h2 class="featurette-heading">Methods Summary<span class="text-muted"></span></h2>
-          <div class="col-md-7">
-          <p>Region-specific, single-cell suspensions were generated from acute male mouse brain (P60-70; C57/Blk6). Libraries were prepared with Drop-seq. 5-8K cells were sequenced an Illumina NexSeq 500, yielding an average of 17.5K reads, 2.2K transcripts and 1.2K genes per cell. To determine sources of gene expression variability, Independent Components Analysis (ICA) was used to reduce the dimensionality of digital gene expression matrices from each region. Independent components (ICs) encoding cell types, cell states and spatial information were distinguished from ICs related to replicate or digest. To identify similar cells, ICs describing relevant, non-technical biological information were then grouped with Louvain Modularity clustering. Clustering parameters were evaluated to maximize the frequency of each IC representing its own cluster.</p>
-          </div>
-          <div class="col-md-5">
-          <p><a class="btn btn-default" href="#" role="button">Download data &raquo;</a></p>
-          </div>
-      </div>  
-       <div class="row featurette">
-          <h2 class="featurette-heading">Paper Abstract</h2>
-          <div class="col-md-7">
-          <p>The mammalian brain is composed of a large, unknown number of specialized cell
-types whose complex interactions drive behavior. Unbiased, large-scale gene
-expression profiling in individual cells offers an opportunity to systematically characterize
-cellular specialization within the nervous system. We used Drop-seq<sup>1</sup>, which enables
-unbiased assessment of gene expression from thousands of individual cells, to generate
-profiles from 690,000 cells in nine tissues of the adult mouse brain: frontal cortex
-(156,000), posterior cortex (99,000), striatum (77,000), cerebellum (26,000),
-hippocampus (113,000), substantia nigra/ventral tegmental area (44,000), globus
-pallidus externus/nucleus basalis (66,000), thalamus (89,000), and entopeduncular nucleus (19,000). To identify distinct patterns of co-expression, we performed independent component analysis (ICA) on each of the nine individual tissue datasets. ICA identified both biologically derived signals—including those corresponding to canonical cell type distinctions and those with spatially graded patterns—as well as to technical signals—including those that were
-highly replicate-dependent, defined cell “doublets”, or were correlated with tissue
-processing. We retained 601 non-technical ICs for use in graph-based clustering<sup>2</sup>,
-partitioning cells into 548 distinct groups. These populations encompassed all known
-major cell classes in the nervous system, including neurons, astrocytes, microglia,
-oligodendrocytes and polydendrocytes, endothelial cells, and cells of the choroid plexus.
-Our analysis uncovers numerous undescribed cell types and states across the nervous
-system. For example, in striatum, we identify a novel class of spiny projection neuron
-(SPN), constituting just 4.7% of all SPNs (“Eccentric SPNs”). Like conventional SPNs,
-this minority population can be further divided by their expression of either the D1
-dopamine receptor (Drd1a), or the D2 receptor (Drd2). Fluorescence in situ hybridization
-to unique Eccentric SPN markers suggests Eccentric SPNs are interspersed with
-canonical SPNs with no obvious spatial grouping. This example demonstrates how
-large-scale, unbiased sampling of cell transcriptomes can identify new subpopulations,
-even from cell types that have been extensively molecularly characterized.
+    <div class="row featurette">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+            <h2 class="featurette-heading">Drop-seq<span class="text-muted"></span></h2>
+	    <p><a href="http://mccarrolllab.com/dropseq/">Drop-seq</a> is a technology we developed for highly parallel analysis of RNA expression in thousands of individual cells.  Drop-seq works by encapsulating individual cells into vast numbers of nanoliter-sized droplets, together with DNA-barcoded beads that uniquely identify the droplets.  We described Drop-seq in <a href="http://www.cell.com/abstract/S0092-8674(15)00549-8">a paper in 2015</a>, and subsequent commercial technologies have been built on this approach. We have made Drop-seq open-source, and hundreds of labs have adopted it; detailed protocols and software are available on the <a href="http://mccarrolllab.com/dropseq/">Drop-seq web site</a>.</p>
+            <h2 class="featurette-heading">Summary</h2>
+	  <p>
+	      The mammalian brain is composed of a large, unknown
+number of specialized cell types whose complex interactions drive
+behavior. Unbiased, large-scale gene expression profiling in
+individual cells offers an opportunity to systematically characterize
+cellular specialization within the nervous system. We used
+Drop-seq, which enables unbiased assessment of gene
+expression from thousands of individual cells, to generate profiles
+from 690,000 cells in nine tissues of the adult mouse brain: frontal
+cortex (156,000), posterior cortex (99,000), striatum (77,000),
+cerebellum (26,000), hippocampus (113,000), substantia nigra/ventral
+tegmental area (44,000), globus pallidus externus/nucleus basalis
+(66,000), thalamus (89,000), and entopeduncular nucleus (19,000). To
+identify distinct patterns of co-expression, we performed independent
+component analysis (ICA) on each of the nine individual tissue
+datasets. ICA identified both biologically derived signals&mdash;including
+those corresponding to canonical cell type distinctions and those with
+spatially graded patterns&mdash;as well as to technical signals&mdash;including
+those that were highly replicate-dependent, defined cell "doublets",
+or were correlated with tissue processing. We retained 601
+non-technical ICs for use in graph-based clustering,
+partitioning cells into 565 distinct groups. These populations
+encompassed all known major cell classes in the nervous system,
+including neurons, astrocytes, microglia, oligodendrocytes and
+polydendrocytes, endothelial cells, and cells of the choroid plexus.
+Our analysis uncovers numerous undescribed cell types and states
+across the nervous system.
 </p>
-<dl><dt>1</dt><dl>Macosko, E. Z. <em>et al.</em>Cell, Volume 161, Issue 5, pp 1202&ndash;1214 (2015).</dl><dt>2</dt>Gierahn, T. M. et al. Seq-Well: portable, low-cost RNA sequencing of single cells at high throughput. Nature methods 14, pp 395&ndash;398, doi:10.1038/nmeth.4179 (2017).</dl>
+            <div style="display:none" class=citation>
+                <dl><dt>1</dt>Macosko, E. Z. <em>et al.</em>Cell, Volume 161, Issue 5, pp 1202&ndash;1214 (2015).</dl><dt>2</dt>Gierahn, T. M. <em>et al.</em> Seq-Well: portable, low-cost RNA sequencing of single cells at high throughput. Nature methods 14, pp 395&ndash;398, doi:10.1038/nmeth.4179 (2017).</dl>
+            </div>
+            <h2 class="featurette-heading">Citation</h2>
+            <p>
+                Saunders, A.*, Macosko, E.*, Wysoker, A., Goldman, M., Krienen, F., Bien, E., Baum, M., Wang, S., Goeva, A., Nemesh, J., Kamitaki, N., Brumbaugh, S., Kulp, D. and McCarroll, S. A Single-Cell Atlas of Cell Types, States, and Other Transcriptional Patterns from Nine Regions of the Adult Mouse Brain.&nbsp;<em>Submitted.</em>
+            </p>
 
-          <h2 class="featurette-heading">Citation</h2>
-<p>
-Saunders, A.*, Macosko, E.*, Wysoker, A., Goldman, M., Krienen, F., Bien, E., Baum, M. Bortolin, L., Nemesh, J., Kamitaki, N., Brumbaugh, S., Kulp, D. and McCarroll, S. An Atlas of Transcriptional Signals from the Adult Mouse Brain at Single Cell Resolution. <em>In Preparation.</em> 
-</p>
         </div>
-        <div class="col-md-5">
-                    <p><a class="btn btn-default" href="#" role="button">Manuscript &raquo;</a></p>
+    </div>
+    <div class="col-md-2"></div>
+
+    <hr class="featurette-divider">
+
+    <div class="funding-section">
+        <div class="funding">
+            <h2 class="featurette-heading">Funding and Support<span class="text-muted"></span></h2>
+          <p class="lead">This research was performed in the <a href="http://mccarrolllab.com/">McCarroll</a> and <a href="http://macoskolab.com/">Macosko</a> Labs at Harvard Medical School and the Broad Institute's <a href="https://www.broadinstitute.org/stanley">Stanley Center for Psychiatric Research</a>.</p>
         </div>
-      </div>
+          <img class="featurette-image img-responsive center-block" src="/StanleyCenter-web.png" alt="Stanley Center">
+          <img width="400" class="featurette-image img-responsive center-block" src="HMS.png" alt="Harvard Medical School">
+</div>
 
-      <hr class="featurette-divider">
-
-      <div class="row featurette">
-        <div class="col-md-7 col-md-push-5">
-          <h2 class="featurette-heading">Funding and Support<span class="text-muted"></span></h2>
-          <p class="lead">This research was performed at the <a href="https://www.broadinstitute.org/stanley">Stanley Center for Psychiatric Research</a>, part of the <a href="https://www.broadinstitute.org/">Broad Institute</a>.</p>
-        </div>
-        <div class="col-md-5 col-md-pull-7">
-          <img class="featurette-image img-responsive center-block" src="https://www.broadinstitute.org/sites/all/themes/custom/at_broad/logo.png" alt="Broad Institute">
-          <img class="featurette-image img-responsive center-block" src="https://www.broadinstitute.org/files/styles/landing_page/public/landing-page/featured/image/StanleyCenter-web.png" alt="Stanley Center">
-        </div>
-      </div>
-
-      <hr class="featurette-divider">
+    <hr class="featurette-divider">
 
 
-      <!-- /END THE FEATURETTES -->
+    <!-- /END THE FEATURETTES -->
 
-    </div><!-- /.container -->
+</div>
+
+<!-- /.container -->
