@@ -622,7 +622,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
 
 # TRUE if user has narrowed filter/highlight selection
 is.filtered <- function() {
-  isTruthy(input$tissue) || isTruthy(input$cell.class) || isTruthy(input$cell.cluster) || isTruthy(input$cell.type)
+  isTruthy(filter.vals$tissue) || isTruthy(filter.vals$cell.class) || isTruthy(filter.vals$cell.cluster) || isTruthy(filter.vals$cell.type)
 }
 
 # Set the image size to create square facets. The display is divided into at most 3 facets across when wrapping (e.g. 333x333 for a 1000px region).

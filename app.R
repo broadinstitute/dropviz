@@ -2,7 +2,6 @@ source("global.R")
 
 server <- function(input, output, session) {
   
-  try(rm(dt.cluster.markers,dt.subcluster.markers))
   if (file.exists("message.txt") && !is.null(getDefaultReactiveDomain())) {
     msg <- readLines("message.txt")
     showNotification(div(h4(msg[1]),msg[2]),duration=NULL,type="warning")
@@ -66,11 +65,13 @@ server <- function(input, output, session) {
     reset("showSubclustersInGlobal")
     reset("user.genes")
     updateQueryString("?#")
+    filter.vals.init()
   }, ignoreInit = TRUE)
 
   # change the location bar URL when bookmarking instead of displaying a pop-up
   onBookmarked(function(url) {
     updateQueryString(url)
+    showBookmarkUrlModal(url)
   })
 
   # store a text copy of chosen genes to load when bookmarked
@@ -238,7 +239,7 @@ function(request) {
                                        div(helpIcon("config"), class='top-right'),
                                        tabsetPanel(type="tabs", id='controltabs', selected="controltabs-query",
                                                    tabPanel("Query", value="controltabs-query",
-                                                            div(class="control-box", style="margin-bottom: 0",
+                                                            div(id="filter-params", class="control-box", style="margin-bottom: 0",
                                                                 fluidRow(
                                                                   column(12,
                                                                          selectizeInput("user.genes", "Gene", choices=c("Symbol"=""),
@@ -254,9 +255,11 @@ function(request) {
                                                                                  fluidRow(column(12, uiOutput("cell.type")))
                                                                 ),
                                                                 conditionalPanel("input.mainpanel=='subclusters' && input.subclusterpanel=='tsne'",
-                                                                                 checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE))
-                                                            ),
-                                                            actionButton("resetQuery", style="margin-top:10px", "Reset Query Parameters")
+                                                                                 checkboxInput("showSubclustersInGlobal","Show Subclusters in Global Plot", value=FALSE)),
+                                                                fluidRow(style="margin-bottom: 25px",
+                                                                         column(5, offset=1, actionButton("go", "Update!")),
+                                                                         column(6, actionButton("resetQuery", "Reset Query")))
+                                                            )
                                                    ),
                                                    tabPanel("Clusters", value="controltabs-compare",
                                                             div(class="control-box",
@@ -290,7 +293,8 @@ function(request) {
                                                                                width='100%'),
                                                                     div(style="display:none", actionButton("upload.genes","Upload Gene List", width='100%', onclick="alert('Not Implemented')"))
                                                                 ),
-                                                                actionButton("resetClusters", style="margin-top: 10px", "Reset Cluster Parameters")
+                                                                fluidRow(style="margin-top: 10px",
+                                                                         column(10, offset=2, actionButton("resetClusters", "Reset Cluster Parameters")))
                                                             )),
                                                    tabPanel("Display",
                                                             div(id='display-panel',
@@ -352,16 +356,13 @@ function(request) {
                                                                     div(style="display:none", selectInput("opt.region.disp","Label Region", choices=c("Using Region Name"='region',"Using Experiment Name"='experiment'))),
                                                                     conditionalPanel("input['opt.cluster.disp']=='annotated' || input['opt.cluster.disp']=='all'",
                                                                                      checkboxInput("use.common.name", "Use Common Name for Subcluster, If Present", value = FALSE)),
-                                                                    conditionalPanel("input['use.common.name']", span(h6("(Common names are interpretive best guesses)"))))#,
-                                                                ## conditionalPanel('input["mainpanel"]=="IC"',
-                                                                ##                  div(class="control-box", selectInput("opt.components", "Show Components", choices=c("Real"='real','Used for Clustering'='clustering','All'='all'))))
-                                                                ),
-                                                            actionButton("resetDisplay", style="margin-top: 5px", "Reset Display Parameters"))
-                                                            
+                                                                    conditionalPanel("input['use.common.name']", span(h6("(Common names are interpretive best guesses)")))),
+                                                                fluidRow(style="margin-top: 10px", column(10, offset=2, actionButton("resetDisplay", "Reset Display Parameters")))
+                                                                )
                                        ),
-                                       div(style="margin-top:20px", bookmarkButton("Update URL")),
+                                       fluidRow(style="margin-top:20px", column(10, offset=2, bookmarkButton("Bookmark / Update URL"))),
                                        debug.controls()
-                          ),
+                          )),
                           
                           # Show a plot of the generated distribution
                           mainPanel(width=9, 
@@ -443,10 +444,9 @@ function(request) {
                                                          fluidRow(DT::dataTableOutput("dt.components"))
                                                          )
                                                 )
-                          #    tabPanel("Community Annotations", p("A wiki-like editable annotation of cell type"))
                                     )
                         )
-                        ),
+               ),
                tabPanel("Team",
                         HTML(readLines("html/team.html"))),
                tabPanel("Feedback",

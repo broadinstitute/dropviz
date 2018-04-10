@@ -7,6 +7,10 @@
     text-align: center;
 }
 
+.dirty-controls .selectize-input {
+    background-color: pink
+}
+
 .control-box {
     border: 2px solid #dddddd;
     border-radius: 5px;

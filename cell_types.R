@@ -6,6 +6,50 @@
 #  2. Filtering on the user selection and returning reactive tables, primarily clusters.selected() 
 #  3. Table display
 
+filter.vals <- reactiveValues()
+
+filter.vals.init <- function() {
+  filter.vals$user.genes <- NULL
+  filter.vals$tissue <- NULL
+  filter.vals$cell.class <- NULL
+  filter.vals$cell.cluster <- cell.cluster <- NULL
+  filter.vals$cell.type <- cell.type <- NULL
+}
+filter.vals.init()
+
+# if the user pressed the go button ("Update") or resets parameters
+# then disable go button and remove dirty indictor
+observeEvent(input$go, {
+  filter.vals$user.genes <- isolate(input$user.genes)
+  filter.vals$tissue <- isolate(input$tissue)
+  filter.vals$cell.class <- isolate(input$cell.class)
+  filter.vals$cell.cluster <- isolate(input$cell.cluster)
+  filter.vals$cell.type <- isolate(input$cell.type)
+})
+
+# returns true if a==b.
+# blank and null are considered the same
+input.cmp <- function(a, b) {
+  if (is.null(a)) a <- ''
+  if (is.null(b)) b <- ''
+  return(a==b)
+}
+
+# if the user changes any of these parameters, then
+# set the dirty indicator until presses go.
+observe({
+  if (input.cmp(filter.vals$user.genes, input$user.genes) &&
+        input.cmp(filter.vals$tissue, input$tissue) &&
+        input.cmp(filter.vals$cell.class, input$cell.class) &&
+        input.cmp(filter.vals$cell.cluster, input$cell.cluster) &&
+        input.cmp(filter.vals$cell.type, input$cell.type)) {
+    removeCssClass("filter-params", "dirty-controls")
+    disable("go")
+  } else {
+    addCssClass("filter-params", "dirty-controls")
+    enable("go")
+  }
+})
 
 #####################################################################################################
 # Cell Type Filter options used to generate the selectizeInputs
@@ -15,7 +59,7 @@
 tissue.options <- reactive({
 log.reactive("fn: tissue.options")
   user.selection.changed()
-  tissue.opts <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='tissue')
+  tissue.opts <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='tissue', use.input=TRUE)
   return(sort(unique(tissue.opts$region.disp)))
   # tissue.vals <- setNames(tissue.opts$exp.label, tissue.opts$region.disp)
   # sort(tissue.vals[!duplicated(tissue.vals)])
@@ -24,7 +68,7 @@ log.reactive("fn: tissue.options")
 cell.class.options <- reactive({
 log.reactive("fn: cell.class.options")
   user.selection.changed()
-  cell.class.opt <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='cell.class')
+  cell.class.opt <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='cell.class', use.input=TRUE)
   return(sort(unique(cell.class.opt$class.disp)))
   # cell.class.vals <- setNames(cell.class.opt$class, cell.class.opt$class.disp)
   # sort(cell.class.vals[!duplicated(cell.class.vals)])
@@ -33,10 +77,10 @@ log.reactive("fn: cell.class.options")
 cell.cluster.options <- reactive({
 log.reactive("fn: cell.cluster.options")
   user.selection.changed()
-  cell.cluster.opt <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='cell.cluster')
+  cell.cluster.opt <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='cell.cluster', use.input=TRUE)
   
   # prefix region abbrev if more than one region to distinguish, e.g. "Neuron [#2]" => "STR Neuron [#2]"
-  if (length(input$tissue) != 1) {
+  if (length(filter.vals$tissue) != 1) {
     cco <- arrange(unique(select(cell.cluster.opt, region.abbrev, cluster.disp)), cluster.disp)
     return(setNames(cco$cluster.disp, glue("{cco$region.abbrev} {cco$cluster.disp}")))
   } else {
@@ -50,7 +94,7 @@ log.reactive("fn: cell.cluster.options")
 cell.type.options <- reactive({
 log.reactive("fn: cell.type.options")
   user.selection.changed()
-  cell.type.opt <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='cell.type')
+  cell.type.opt <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='cell.type', use.input=TRUE)
   return(sort(unique(cell.type.opt$subcluster.disp)))
   # cell.type.vals <- setNames(cell.type.opt$subcluster, cell.type.opt$subcluster.disp)
   # cell.type.vals[!duplicated(cell.type.vals)] %>% sort
@@ -88,7 +132,7 @@ cell.types.filter.opts <- c(tissue='region.disp', cell.class='class.disp', cell.
 # or to determine what are the remaining options for a particular multichoice value
 # If excl is specified, then those fields are not included.
 # if only is specified, then only those fields are included in the query.
-filter.df <- function(df, filter.opts, excl=NULL, only=NULL) {
+filter.df <- function(df, filter.opts, excl=NULL, only=NULL, use.input=getOption("dropviz.use.input", default=FALSE)) {
   if (!is.null(excl)) {
     filter.opts <- filter.opts[!(names(filter.opts) %in% excl)]
   }
@@ -96,29 +140,47 @@ filter.df <- function(df, filter.opts, excl=NULL, only=NULL) {
     filter.opts <- filter.opts[names(filter.opts) %in% only]
   }
   
-  # create a list from input with only the named filters and augment the 1:N values for markers
-  if (class(input)!='list') {
-    user.input <- isolate(reactiveValuesToList(input))
+  # create a list from input or filter.vals
+  if (use.input) {
+    if (class(input)!='list') {
+      user.input <- isolate(reactiveValuesToList(input))
+    } else {
+      user.input <- input
+    }
   } else {
-    user.input <- input
+    if (class(filter.vals)!='list') {
+      user.input <- isolate(reactiveValuesToList(filter.vals))
+    } else {
+      user.input <- filter.vals
+    }
   }
+
+  # lapply(names(filter.opts), function(nm) {
+  #   write.log("user.input$",nm,"=",user.input[[nm]]," NULL:",is.null(user.input[[nm]]))
+  # })
   
   # there are different ways of doing this, but this is the easiest, particularly because
   # I'm piecing together an unknown number of different filter_ calls. 
   # See https://stackoverflow.com/a/27197858/86228 among other refs. 
   # The "problem" is that this hides the reactive input from triggering on change
   expr <- paste0('(',paste0('is.null(user.input$',names(filter.opts), ') | ',filter.opts, ' %in% user.input$', names(filter.opts), collapse=') & ('),')')
+  # write.log("expr: ",expr)
   filter_(df, expr)
 }
 
 # this dumby reactive is needed because filter.df hides the reactive variables  
 user.selection.changed <- reactive({
-log.reactive("fn: user.selection.changed")
   # make reactive on these user inputs
   input$tissue; input$cell.class; input$cell.cluster; input$cell.type; input$class.marker; input$type.marker
   input$use.common.name; input$opt.cluster.disp
   # FIXME: this always returns TRUE, which is fine because it triggers dependent reactives, but
   # it would be nice to be able to write if (!user.selection.changed()).
+  TRUE
+})
+
+filter.vals.changed <- reactive({
+  filter.vals$tissue; filter.vals$cell.class; filter.vals$cell.cluster; filter.vals$cell.type; input$class.marker; input$type.marker
+  input$use.common.name; input$opt.cluster.disp
   TRUE
 })
 
@@ -140,12 +202,12 @@ limit.by.components <- function(df, comps) {
   }
 }
 
-# returns a list of gene symbols from input$user.genes
+# returns a list of gene symbols from filter.vals$user.genes
 user.manual.genes <- reactive({
-  if (isTruthy(input$user.genes)) {
-    genes <- gene.symbol(input$user.genes)
+  if (isTruthy(filter.vals$user.genes)) {
+    genes <- gene.symbol(filter.vals$user.genes)
     if (any(genes=='')) {
-      missing <- input$user.genes[genes=='']
+      missing <- filter.vals$user.genes[genes=='']
       genes <- genes[genes!='']
       missing.txt <- glue("Ignoring unknown gene symbols {paste(missing,collapse=', ')}")
       if (!is.null(getDefaultReactiveDomain()))
@@ -154,7 +216,7 @@ user.manual.genes <- reactive({
     }
     genes
   } else {
-    input$user.genes
+    filter.vals$user.genes
   }
 })
 
@@ -197,7 +259,7 @@ gene.cols <- function(df, kind) {
 # to stay even after the components kruft is removed.
 subclusters.selected_ <- reactive({
   log.reactive("fn: subclusters.selected_")
-  user.selection.changed()
+  filter.vals.changed()
   
   filter.df(subclusters.labeled(), cell.types.filter.opts)
 })
@@ -215,7 +277,7 @@ subclusters.selected <- reactive({
 # returns a smaller tibble with a row per cluster from subclusters.selected()
 clusters.selected_ <- reactive({
   log.reactive("fn: clusters.selected_")
-  user.selection.changed()
+  filter.vals.changed()
   select(subclusters.selected__(), c.id, region.disp, region.abbrev, class.disp, cluster.disp, exp.label, cluster) %>% unique
 })
 
@@ -228,7 +290,7 @@ clusters.selected <- reactive({
 
 regions.selected <- reactive({
 log.reactive("fn: regions.selected")
-  user.selection.changed()
+  filter.vals.changed()
   select(subclusters.selected(), region.disp, exp.label) %>% unique 
 })
 
