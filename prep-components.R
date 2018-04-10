@@ -22,7 +22,8 @@ dir.create(glue("{cache.dir}/ic"), recursive = TRUE, showWarnings=FALSE)
 # populate filter.vals with the minimum values to generate a faceted tSNE of components
 options(dropviz.use.input = FALSE)
 filter.vals <- list(opt.use.cache=FALSE, opt.components='real', opt.cluster.disp='all', opt.region.disp='region', use.common.name=TRUE, opt.downsampling.method="none")
-ic.kinds <- c('real')
+ic.kinds <- c('real','all')
+input <- list()
 
 no.xy <- theme_few() +
   theme(axis.title.x=element_blank(),
