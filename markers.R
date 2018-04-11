@@ -143,7 +143,7 @@ output$dt.subcluster.markers.heading <- renderUI({
   if (isTruthy(current.subcluster.i())) {
     target.names.tbl <- select(inner_join(experiments, current.subcluster(), by='exp.label'), exp.abbrev, subcluster.disp)
     target.names <- paste(glue("{target.names.tbl$exp.abbrev} {target.names.tbl$subcluster.disp}"),collapse='+')
-    if (comparison.subcluster()$subcluster=='global') {
+    if (nrow(comparison.subcluster())==1 && comparison.subcluster()$subcluster=='global') {
       comparison.names <- comparison.subcluster()$subcluster.disp
     } else {
       comparison.names.tbl <- select(inner_join(experiments, comparison.subcluster(), by='exp.label'), exp.abbrev, subcluster.disp)
