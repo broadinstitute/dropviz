@@ -330,6 +330,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         tibble()
       })
 
+    if (show.cells && nrow(xy.data)==0) return(plot.text("No cell data to display."))
+    
     if (!is.null(progress) && nrow(xy.data)>0) progress$inc(0.2, detail=glue("Read {nrow(xy.data)} cells"))
     
     # labels
