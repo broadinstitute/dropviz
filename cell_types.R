@@ -12,8 +12,8 @@ filter.vals.init <- function() {
   filter.vals$user.genes <- NULL
   filter.vals$tissue <- NULL
   filter.vals$cell.class <- NULL
-  filter.vals$cell.cluster <- cell.cluster <- NULL
-  filter.vals$cell.type <- cell.type <- NULL
+  filter.vals$cell.cluster <- NULL
+  filter.vals$cell.type <- NULL
 }
 filter.vals.init()
 
@@ -25,31 +25,48 @@ observeEvent(input$go, {
   filter.vals$cell.class <- isolate(input$cell.class)
   filter.vals$cell.cluster <- isolate(input$cell.cluster)
   filter.vals$cell.type <- isolate(input$cell.type)
-})
+}, ignoreInit=TRUE)
 
 # returns true if a==b.
 # blank and null are considered the same
 input.cmp <- function(a, b) {
   if (is.null(a)) a <- ''
   if (is.null(b)) b <- ''
-  return(a==b)
+  return(all(a==b))
 }
 
 # if the user changes any of these parameters, then
 # set the dirty indicator until presses go.
 observe({
+#  write.log("Checking filter.vals === input")
+#  fields <- c('user.genes','tissue','cell.class','cell.cluster','cell.type')
+#  print(str(reactiveValuesToList(filter.vals)[fields]))
+#  print(str(reactiveValuesToList(input)[fields]))
+  
   if (input.cmp(filter.vals$user.genes, input$user.genes) &&
         input.cmp(filter.vals$tissue, input$tissue) &&
         input.cmp(filter.vals$cell.class, input$cell.class) &&
         input.cmp(filter.vals$cell.cluster, input$cell.cluster) &&
         input.cmp(filter.vals$cell.type, input$cell.type)) {
+    write.log("Equal")
     removeCssClass("filter-params", "dirty-controls")
     disable("go")
   } else {
+    write.log("Mismatch")
     addCssClass("filter-params", "dirty-controls")
     enable("go")
   }
 })
+
+onRestore(function(state) {
+  filter.vals$user.genes <- state$input$user.genes
+  filter.vals$tissue <- state$input$tissue
+  filter.vals$cell.class <- state$input$cell.class
+  filter.vals$cell.cluster <- state$input$cell.cluster
+  filter.vals$cell.type <- state$input$cell.type
+})
+
+
 
 #####################################################################################################
 # Cell Type Filter options used to generate the selectizeInputs
