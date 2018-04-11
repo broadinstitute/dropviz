@@ -319,7 +319,7 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         if (!is.null(progress)) progress$inc(0.2, detail="Reading XY data")
         if (show.subclusters) {
           if (is.global) {
-            global.xy.subcluster.selected()
+            global.xy.subcluster.selected() %>% filter(!is.na(V1)) 
           } else {
             local.xy.selected()
           }
@@ -538,7 +538,6 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       )
 
       # bag.data, loop.data and center.data are the polygon and point data associated with each (sub)cluster
-      alpha.limits <- if (opt.tx.scale=='fixed') c(0,7) else c(0,max(center.data$alpha))
       if (opt.show.bags) {
         if (opt.tx.alpha) {
           alpha.limits <- if (opt.tx.scale=='fixed') c(0,7) else c(0,max(center.data$alpha))
@@ -561,7 +560,12 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
         bag.gg <- geom_polygon(data=bag.data, aes(x=x,y=y,group=cx), fill='grey', alpha=0.2) 
         loop.gg <- geom_polygon(data=loop.data, aes(x=x,y=y,group=cx), fill='grey', alpha=0.1) 
         center.gg <- geom_blank_tsne
-        alpha.range <- scale_alpha_continuous(guide="none", range=c(0,1), limit=alpha.limits)
+        if (opt.tx.alpha) {
+          alpha.limits <- if (opt.tx.scale=='fixed') c(0,7) else c(0,max(center.data$alpha))
+          alpha.range <- scale_alpha_continuous(guide="none", range=c(0,1), limit=alpha.limits)
+        } else {
+          alpha.range <- scale_alpha()
+        }
       }
 
       # the facet.label.gg is a text label in the top left of each faceted plot.
