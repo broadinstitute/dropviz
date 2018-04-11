@@ -31,10 +31,12 @@ renderCacheImage <- function(plot.func, key, width, height=width, opt.use.cache=
   if (!file.exists(fn) || !opt.use.cache) {
     write.log(glue("Generating plot {fn}"))
     if (!is.null(progress)) progress$set(value=0.1)
-    a.plot <- plot.func(progress)
-    png(fn, width=width, height=height)
-    print(a.plot)
-    dev.off()
+    tryCatch({
+      a.plot <- plot.func(progress)
+      png(fn, width=width, height=height)
+      print(a.plot)
+      dev.off()
+    }, error = function(e) { dev.off(); unlink(fn) })
     if (!is.null(progress)) progress$set(value=1)
   } else {
     if (!is.null(progress)) progress$set(value=0.9, detail="Retrieved cached plot")
