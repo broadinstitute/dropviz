@@ -57,15 +57,16 @@ server <- function(input, output, session) {
     reset("compare.multiple")
     reset("cluster-panel") 
   }, ignoreInit = TRUE)
+  
   observeEvent(input$resetQuery, {
-    updateSelectInput(session, "tissue", selected="")
-    updateSelectInput(session, "cell.class", selected="")
-    updateSelectInput(session, "cell.cluster", selected="")
+    filter.vals.init()
     updateSelectInput(session, "cell.type", selected="")
+    updateSelectInput(session, "cell.cluster", selected="")
+    updateSelectInput(session, "cell.class", selected="")
+    updateSelectInput(session, "tissue", selected="")
     reset("showSubclustersInGlobal")
     reset("user.genes")
     updateQueryString("?#")
-    filter.vals.init()
   }, ignoreInit = TRUE)
 
   # change the location bar URL when bookmarking instead of displaying a pop-up
@@ -74,27 +75,6 @@ server <- function(input, output, session) {
     showBookmarkUrlModal(url)
   })
 
-  # store a text copy of chosen genes to load when bookmarked
-  observeEvent(input$user.genes, {
-    if (is.null(input$user.genes)) {
-      updateTextInput(session, "user.genes.bak", value="")
-    } else {
-      updateTextInput(session, "user.genes.bak", value=input$user.genes)
-    }
-  }, ignoreInit=TRUE, ignoreNULL=FALSE)
-
-  # set user.genes to backup, if present
-  observeEvent(input$user.genes.bak, {
-    if (isTruthy(input$user.genes.bak)) {
-      js$setgenes(items=as.list(strsplit(input$user.genes.bak,",")[[1]]))
-    } else if (isTruthy(filter.vals$user.genes)) {
-      js$setgenes(items=as.list(filter.vals$user.genes))
-    }
-    
-  }, once=TRUE)
-  
-  # after network disconnect, client will try to reconnect using current state
-  session$allowReconnect(TRUE)
 }
 
 
@@ -246,8 +226,7 @@ function(request) {
                                                                 fluidRow(
                                                                   column(12,
                                                                          selectizeInput("user.genes", "Gene", choices=c("Symbol"=""),
-                                                                                        multiple=TRUE, width='100%', options=list(create=TRUE,preload="focus",load=I(genes.load),persist=FALSE,openOnFocus=FALSE,closeAfterSelect=TRUE)),
-                                                                         div(style="display:none", textInput("user.genes.bak", NULL))
+                                                                                        multiple=TRUE, width='100%', options=list(create=TRUE,preload="focus",load=I(genes.load),persist=FALSE,openOnFocus=FALSE,closeAfterSelect=TRUE))
                                                                          )
                                                                 ),
                                                                 fluidRow(
