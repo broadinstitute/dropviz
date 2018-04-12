@@ -38,11 +38,6 @@ input.cmp <- function(a, b) {
 # if the user changes any of these parameters, then
 # set the dirty indicator until presses go.
 observe({
-#  write.log("Checking filter.vals === input")
-#  fields <- c('user.genes','tissue','cell.class','cell.cluster','cell.type')
-#  print(str(reactiveValuesToList(filter.vals)[fields]))
-#  print(str(reactiveValuesToList(input)[fields]))
-  
   if (input.cmp(filter.vals$user.genes, input$user.genes) &&
         input.cmp(filter.vals$tissue, input$tissue) &&
         input.cmp(filter.vals$cell.class, input$cell.class) &&
@@ -53,11 +48,28 @@ observe({
     disable("go")
   } else {
     write.log("Mismatch")
+    write.log(glue("user.genes {ifelse(is.null(filter.vals$user.genes),'NULL',filter.vals$user.genes)} <-> {ifelse(is.null(input$user.genes),'NULL',input$user.genes)} {input.cmp(filter.vals$user.genes, input$user.genes)}"))
+    write.log(glue("tissue {ifelse(is.null(filter.vals$tissue),'NULL',filter.vals$tissue)} <-> {ifelse(is.null(input$tissue),'NULL',input$tissue)} {input.cmp(filter.vals$tissue, input$tissue)}"))
+    write.log(glue("cell.class {ifelse(is.null(filter.vals$cell.class),'NULL',filter.vals$cell.class)} <-> {ifelse(is.null(input$cell.class),'NULL',input$cell.class)} {input.cmp(filter.vals$cell.class, input$cell.class)}"))
+    write.log(glue("cell.cluster {ifelse(is.null(filter.vals$cell.cluster),'NULL',filter.vals$cell.cluster)} <-> {ifelse(is.null(input$cell.cluster),'NULL',input$cell.cluster)} {input.cmp(filter.vals$cell.cluster, input$cell.cluster)}"))
+    write.log(glue("cell.type {ifelse(is.null(filter.vals$cell.type),'NULL',filter.vals$cell.type)} <-> {ifelse(is.null(input$cell.type),'NULL',input$cell.type)} {input.cmp(filter.vals$cell.type, input$cell.type)}"))
     addCssClass("filter-params", "dirty-controls")
     enable("go")
   }
 })
 
+# set user.genes to stored value, if present
+# because the options for user.genes are delay-loaded, then the initial restore
+# of input will fail because the values for user.genes are missing from the choices.
+# But later, with input$user.genes blank, this event will fire and javascript
+# will be called (once) to reset the user.genes by forcing values.
+observeEvent(input$user.genes, {
+  if (!isTruthy(input$user.genes) && isTruthy(filter.vals$user.genes)) {
+    js$setgenes(items=as.list(filter.vals$user.genes))
+  }
+    
+}, priority=-100, ignoreNULL=FALSE, once=TRUE)
+  
 onRestore(function(state) {
   filter.vals$user.genes <- state$input$user.genes
   filter.vals$tissue <- state$input$tissue
