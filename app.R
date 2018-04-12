@@ -85,7 +85,12 @@ server <- function(input, output, session) {
 
   # set user.genes to backup, if present
   observeEvent(input$user.genes.bak, {
-    js$setgenes(items=as.list(strsplit(input$user.genes.bak,",")[[1]]))
+    if (isTruthy(input$user.genes.bak)) {
+      js$setgenes(items=as.list(strsplit(input$user.genes.bak,",")[[1]]))
+    } else if (isTruthy(filter.vals$user.genes)) {
+      js$setgenes(items=as.list(filter.vals$user.genes))
+    }
+    
   }, once=TRUE)
   
   # after network disconnect, client will try to reconnect using current state
