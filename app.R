@@ -91,7 +91,7 @@ server <- function(input, output, session) {
       js$setgenes(items=as.list(filter.vals$user.genes))
     }
     
-  }, once=TRUE)
+  }, priority=-100, once=TRUE)
   
   # after network disconnect, client will try to reconnect using current state
   session$allowReconnect(TRUE)
