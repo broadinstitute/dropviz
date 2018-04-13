@@ -139,6 +139,7 @@ log.reactive("fn: global.xy")
 })
 
 # the global.xy limited to clusters.selected()
+# may set X and Y to NA because there are no cells assigned to cluster
 global.xy.cluster.selected <- reactive({
   log.reactive("fn: global.xy.cluster.selected")
   left_join(select(clusters.selected(),exp.label, cluster), global.xy(), by=c('exp.label','cluster')) %>%
@@ -593,8 +594,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
                           ylim=c(min(c(-tsne.lim, loop.data$y)), max(c(tsne.lim, loop.data$y))))
         } else { 
           # opt.show.cells
-          coord_cartesian(xlim=c(min(c(-tsne.lim, xy.data$V1)), max(c(tsne.lim, xy.data$V1))), 
-                          ylim=c(min(c(-tsne.lim, xy.data$V2)), max(c(tsne.lim, xy.data$V2))))
+          coord_cartesian(xlim=c(min(c(-tsne.lim, xy.data$V1), na.rm=TRUE), max(c(tsne.lim, xy.data$V1), na.rm=TRUE)), 
+                          ylim=c(min(c(-tsne.lim, xy.data$V2), na.rm=TRUE), max(c(tsne.lim, xy.data$V2), na.rm=TRUE)))
         }
       )
 
