@@ -21,6 +21,7 @@ if (any(grepl("serviceApp|runApp", stack.trace, perl=TRUE))) {
   reactive <- function(x, env=parent.frame(), ...) exprToFunction(x, env=env)
   reactiveValues <- list
   output <- list()
+  onRestore <- function(...) {}
   observeEvent <- function(...) {}
 }
 
