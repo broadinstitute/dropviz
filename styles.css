@@ -8,7 +8,11 @@
 }
 
 .dirty-controls .selectize-input {
-    background-color: pink
+    background-color: #ffdc60  /* a little lighter than orange */
+}
+.dirty-controls #go {
+    border-color: #ffdc60;
+    border-width: 4px;
 }
 
 .control-box {
@@ -244,7 +248,7 @@ dl{
 /* Funding
 -------------------------------------------------- */
 div.crop{
-    width: 205px;
+    width: 215px;
     height:52px;
     overflow:hidden;
 }
@@ -515,3 +519,33 @@ hr.featurette-divider.half{
     align-items: flex-end;
     /* bottom of the box */
 }
+
+
+/* Responsive, mobile-friendly
+------------------------- */
+
+@media only screen and (max-width: 800px){
+    div.tab-pane.active>div>div.col-sm-8{
+        width:100%;
+        padding:0;
+    }
+    div.container-fluid>div.container-fluid{
+        padding:0
+    }
+    .jumbotron h1{
+        font-size:60px;
+    }
+    .jumbotron{
+        padding-bottom:10px;
+    }
+    div.funding-section{
+        width:100%;
+    }
+    div.funding{
+        width:100%;
+        margin: auto;
+    }
+}
+
+
+
