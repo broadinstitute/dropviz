@@ -94,7 +94,8 @@ saveRDS(top.genes.symbols, file=glue("{markers.dir}/top_genes.RDS"))
 ## retrieved from /broad/mccarroll/software/metadata/individual_reference/mm10/mm10.gene_descriptions.txt via James Nemesh <nemesh@broadinstitute.org>
 gene.descriptions <- read.delim("data/gene_descriptions.txt.gz") %>% mutate(Description=sub(' \\[.*','',Description))
 write.log(glue("Read {nrow(gene.descriptions)} gene descriptions"))
-gene.descriptions <- inner_join(gene.descriptions, all.genes, by=c(Associated.Gene.Name='gene')) # limit to genes used in analysis
+gene.descriptions <- right_join(gene.descriptions, unique(all.genes[,'gene']), by=c(Associated.Gene.Name='gene')) %>% # limit to genes used in analysis
+  mutate(Description=ifelse(is.na(Description),Associated.Gene.Name,Description)) # Some symbols are missing from description (e.g. Drd1) #17
 write.log(glue("Reduced to {nrow(gene.descriptions)} gene descriptions"))
 gene.list <- setNames(lapply(1:nrow(gene.descriptions), function(i) c(gene.descriptions$Associated.Gene.Name[i], gene.descriptions$Description[i])), tolower(gene.descriptions$Associated.Gene.Name))
 gene.dict <- list2env(gene.list)

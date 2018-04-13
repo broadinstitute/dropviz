@@ -321,7 +321,7 @@ function(request) {
                                                                                      selectInput("opt.plot.label", "Plot Labels for Clusters and Subclusters", choices=c("Names"='disp',"Numbers"='number',"None"='none')),
                                                                                      conditionalPanel("!input['user.genes'] || (input['opt.tx']=='alpha' && ((input.mainpanel=='clusters' && input.clusterpanel=='tsne') || (input.mainpanel=='subclusters' && input.subclusterpanel=='tsne')))",
                                                                                                       checkboxInput("opt.show.bags","Display t-SNE using bag plots", value=FALSE)),
-                                                                                     selectInput("opt.downsampling.method","Downsample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='uniform'),
+                                                                                     selectInput("opt.downsampling.method","Downsample Cells",choices=c("Uniformly"='uniform',"Per Cluster"='cluster',"Show all"='none'), selected='cluster'),
                                                                                      conditionalPanel("input['opt.downsampling.method']!='none'",
                                                                                                       sliderInput("downsampling", "Downsample Count", 0, 100000, value=2000, step=1000))
                                                                                  )
