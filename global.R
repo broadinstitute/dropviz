@@ -99,3 +99,18 @@ gene.desc <- function(name) {
 
 stopifnot(file.exists(glue("{prep.dir}/globals.Rdata")))
 load(glue("{prep.dir}/globals.Rdata"))
+
+# #34 replace old names
+# Endothelial_Tip -> Fibroblast-Like
+# Endothelial_Stalk -> Endothelial
+# Ependyma.+ -> Ependyma
+
+cluster.names_ <- 
+  mutate(cluster.names_, 
+                         class=sub('Ependyma.+', 'Ependyma', sub('Endothelial_Stalk', 'Endothelial', sub('Endothelial_Tip', 'Fibroblast-Like', class))),
+                         cluster_name=sub('Ependyma.+', 'Ependyma', sub('Endothelial_Stalk', 'Endothelial', sub('Endothelial_Tip', 'Fibroblast-Like', cluster_name)))
+)
+
+subcluster.names_ <- mutate(subcluster.names_,
+                            full_name=sub('Ependyma.+', 'Ependyma', sub('Endothelial_Stalk', 'Endothelial', sub('Endothelial_Tip', 'Fibroblast-Like', full_name))),
+                            subcluster_name=sub('Ependyma.+', 'Ependyma', sub('Endothelial_Stalk', 'Endothelial', sub('Endothelial_Tip', 'Fibroblast-Like', subcluster_name))))
