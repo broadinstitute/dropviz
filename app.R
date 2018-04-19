@@ -441,7 +441,9 @@ function(request) {
                                 tags$dd(p("Annotation file for the 565 atlas cell populations. Provides the tissue of origin, cell class, formal markers, formal full name and common name (anatomical best guess) for each metacell."),
                                         p(a(href="http://dropviz.org/downloads/annotation.BrainCellAtlas_Saunders_version_2018.04.01.csv","CSV: annotation.BrainCellAtlas_Saunders_version_2018.04.01.csv (54K)")),
                                         p(a(href="http://dropviz.org/downloads/annotation.BrainCellAtlas_Saunders_version_2018.04.01.xlsx","Excel: annotation.BrainCellAtlas_Saunders_version_2018.04.01.xlsx (83K)")),
-                                        p(a(href="http://dropviz.org/downloads/annotation.BrainCellAtlas_Saunders_version_2018.04.01.RDS","R Data: annotation.BrainCellAtlas_Saunders_version_2018.04.01.rds (12K)"))))
+                                        p(a(href="http://dropviz.org/downloads/annotation.BrainCellAtlas_Saunders_version_2018.04.01.RDS","R Data: annotation.BrainCellAtlas_Saunders_version_2018.04.01.rds (12K)"))),
+                                tags$dt("Single Cell Suspension Protocol from Acute Adult Brain"),
+                                tags$dd(p(),p(a(href="http://dropviz.org/downloads/Saunders_scBrainSuspensionProtocol_v1_180419.pdf","Saunders_scBrainSuspensionProtocol_v1_180419.pdf"))))
                         ),
                tabPanel("Tutorial",
                         h1("Video Tutorials"), hr(),
