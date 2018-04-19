@@ -43,15 +43,10 @@ shiny.progress <- function(message=NULL) {
   }, error=function(err) NULL)
 }
 
-write.func.body <- function(fn, file) {
-  fn.lines <- capture.output(print(fn))
-  # skip anonymous function def (first line), environment label (last line) and closing brace (penultimate line)
-  writeLines(fn.lines[2:(length(fn.lines)-2)], file)
-}
-
-# take the environment and variables in the function fn and save to fname.Rdata
-# write the function body to fname.R
-# add others and zip them all up.
+# take the environment in the function fn and save to fname.Rdata
+# this function used to also print the function body, but it appears inconsistent across platforms.
+# add others after removing first and last line.
+# zip them all up.
 send.zip <- function(fn, fname, zipfile, others=character(0)) {
   require(utils)
   zip.dir <- tempdir()
@@ -60,11 +55,10 @@ send.zip <- function(fn, fname, zipfile, others=character(0)) {
   file.copy(others, zip.dir)
   cwd <- getwd()
   setwd(zip.dir)
-  zip.files <- c(paste0(fname, c(".Rdata", ".R")), basename(others))
+  zip.files <- c(paste0(fname, ".Rdata"), basename(others))
   attach(fn.env)
   save(list=vars, file=zip.files[1])
   detach()
-  write.func.body(fn, file=zip.files[2])
   zip(zipfile, zip.files)
   setwd(cwd)
 }
