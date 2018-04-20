@@ -115,5 +115,8 @@ subcluster.names_ <- mutate(subcluster.names_,
                             full_name=sub('Ependyma.+', 'Ependyma', sub('Endothelial_Stalk', 'Endothelial', sub('Endothelial_Tip', 'Fibroblast-Like', full_name))),
                             subcluster_name=sub('Ependyma.+', 'Ependyma', sub('Endothelial_Stalk', 'Endothelial', sub('Endothelial_Tip', 'Fibroblast-Like', subcluster_name))))
 
+components <- mutate(components,
+                     cell_class=gsub('Ependyma.+', 'Ependyma', sub('Endothelial_[Ss]talk', 'Endothelial', sub('Endothelial_[Tt]ip', 'Fibroblast-Like', cell_class))))
+
 # #36 replace exp.title
 experiments <- mutate(experiments, exp.title=sub('Ento Peduncular', 'Entopeduncular', exp.title))
