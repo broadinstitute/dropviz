@@ -342,8 +342,9 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
           if (is.global) {
             filter(global.selected.sub.center(), !is.na(cx.gg))
           } else {
-            mutate(local.selected.sub.center(), 
-                   cx.disp=ifelse(is.na(cx.gg), 'No Data', as.character(cx.disp)))
+            local.selected.sub.center()
+            # mutate(local.selected.sub.center(), 
+            #        cx.disp=ifelse(is.na(cx.gg), '', as.character(cx.disp)))
           }
         } else {
           na.omit(global.selected.center())
@@ -390,11 +391,8 @@ tsne.label <- function(is.global=TRUE, show.subclusters=FALSE, show.cells=TRUE, 
       xy.data <- mutate(xy.data, alpha=pmax(0,alpha-1))
 
       # only show labels where the cluster level is greater than thresh, or there's no data
-      # if no data, then set heat and alpha to NA
       label.data$pass <- with(label.data, (as.integer(heat)/length(levels(heat)))>=(input$opt.tx.min/100))
-      label.data <- filter(label.data, cx.disp=='No Data' | pass)
-      label.data <- mutate(label.data, alpha=ifelse(cx.disp=='No Data', NA, alpha),
-                           heat=factor(ifelse(cx.disp=='No Data', NA, as.character(heat)), levels=levels(heat))) # ugh, show me a cleaner way.
+      label.data <- filter(label.data, pass)
 
       if (!is.null(progress)) progress$inc(0.2, detail=glue("Computing alpha for {user.genes()}"))
     }

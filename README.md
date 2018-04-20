@@ -1,5 +1,5 @@
 # dropviz
-Prototype app for visualization, exploration of mouse brain single cell gene expression
+Shiny app for visualization, exploration of mouse brain single cell gene expression
 
 Data Prep
 =========
@@ -29,13 +29,7 @@ Data Files
 		<exp>/clusterN.xy.RDS - XYs of cells of subclusters in cluster N of exp
 		<exp>/global.xy.RDS - XYs of cells in all clusters in exp
 		
-App Logic
-=========
 
-The terminology could be improved. The filtering of clusters/subclusters by region/class/cluster/subcluster is referred to as "selected".
-Then, for analysis the user chooses one cluster or subcluster and one or more genes or components. These are referred to as "current".
-
-TBD.
 
 Cached Data
 ===========
