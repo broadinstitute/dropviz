@@ -1,4 +1,0 @@
-FROM rocker/shiny
-RUN R -e "install.packages(c('tidyr','dplyr','ggplot2','shinyjs','shinyjqui','DT','ggthemes'), repos = 'http://cran.us.r-project.org')"
-RUN R -e "source('http://www.bioconductor.org/biocLite.R'); biocLite('edgeR', ask=FALSE)"
-COPY shiny-server.conf /etc/shiny-server
