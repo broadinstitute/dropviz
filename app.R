@@ -75,8 +75,27 @@ server <- function(input, output, session) {
     showBookmarkUrlModal(url)
   })
 
+  session$onSessionEnded(trim.cache)
 }
 
+trim.cache <- function() {
+  write.log("Clean cache to 2G of most recently used")
+  files <- list.files(cache.dir, full.names=TRUE)
+
+  cache.files <- as_tibble(file.info(files)) %>%
+    mutate(files=files) %>%
+    filter(!isdir) %>%
+    arrange(desc(atime)) %>%
+    mutate(csize=cumsum(size))
+
+  old.files <- filter(cache.files, csize>2e9)
+
+  if (nrow(old.files) > 0) {
+    print(dplyr::select(cache.files, files, atime))
+#    unlink(old.files$files)
+  }
+
+}
 
 jsCode <- "shinyjs.setgenes = function(params){ 
   console.log('setgenes:')

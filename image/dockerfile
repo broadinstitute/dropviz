@@ -1,0 +1,27 @@
+FROM gcr.io/dropviz-181317/dropviz-shiny-server
+MAINTAINER dkulp@broadinstitute.org
+RUN rm -r /srv/shiny-server
+WORKDIR /srv/shiny-server
+
+RUN git clone https://github.com/broadinstitute/dropviz.git .
+RUN mkdir -p www/cache/metacell
+RUN mkdir -p www/downloads
+
+RUN chmod -R a+rwx www
+
+RUN gsutil -m rsync -r gs://dropviz-downloads/ www/downloads/
+
+RUN echo "dropviz-bookmarks /var/lib/shiny-server/bookmarks/ gcsfuse rw,uid=999,gid=999" >> /etc/fstab
+COPY shiny-server.sh /bin
+RUN chmod +x /bin/shiny-server.sh
+CMD /bin/shiny-server.sh
+
+EXPOSE 80
+
+# debug:
+RUN echo "preserve_logs true;" >> /etc/shiny-server/shiny-server.conf
+
+# start image with full privs on GCE console and these mount points
+#docker run -d --privileged
+#              -v /mnt/disks/dropseq/staged/:/cache/ 
+#              -v /mnt/disks/dropseq/atlas_ica/:/atlas_ica/ 
