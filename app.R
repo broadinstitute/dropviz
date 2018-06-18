@@ -2,6 +2,7 @@ source("global.R")
 
 server <- function(input, output, session) {
   
+  # display a message, such as a development or testing notice
   if (file.exists("message.txt") && !is.null(getDefaultReactiveDomain())) {
     msg <- readLines("message.txt")
     showNotification(div(h4(msg[1]),msg[2]),duration=NULL,type="warning")
