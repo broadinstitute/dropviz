@@ -1,0 +1,11 @@
+steps:
+- name: 'gcr.io/cloud-builders/gsutil'
+  args: [ "-m", "rsync", "-r", "gs://dropviz-downloads/", "." ]
+  dir: "downloads"
+- name: 'gcr.io/cloud-builders/gsutil'
+  args: [ "-m", "rsync", "-r", "gs://dropviz-ic/", "." ]
+  dir: "ic"
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/dropviz', '.']
+images: ['gcr.io/$PROJECT_ID/dropviz']
+

@@ -5,16 +5,17 @@ WORKDIR /srv/shiny-server
 
 RUN git clone https://github.com/broadinstitute/dropviz.git .
 RUN mkdir -p www/cache/metacells
-RUN mkdir -p www/downloads
-RUN mkdir -p www/cache/ic
 
 RUN chmod -R a+rwx www
 
-RUN gsutil -m rsync -r gs://dropviz-downloads/ www/downloads/
-RUN gsutil -m rsync -r gs://dropviz-ic/ www/cache/ic/
+RUN mkdir -p www/downloads
+COPY downloads/* www/downloads/
+
+RUN mkdir -p www/cache/ic
+COPY ic/* www/cache/ic/
 
 RUN echo "dropviz-bookmarks /var/lib/shiny-server/bookmarks/ gcsfuse rw,uid=999,gid=999" >> /etc/fstab
-COPY shiny-server.sh /bin
+COPY image/shiny-server.sh /bin
 RUN chmod +x /bin/shiny-server.sh
 CMD /bin/shiny-server.sh
 
