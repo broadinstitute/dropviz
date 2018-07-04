@@ -3,7 +3,6 @@
 # returns a tibble containing the currently configured display form of the region/experiment
 # [ exp.label, region.disp ]
 region.names <- reactive({
-log.reactive("fn: region.names")
   if (input$opt.region.disp=='region') {
     tibble(exp.label=experiments$exp.label, region.disp=experiments$exp.title, region.abbrev=experiments$exp.abbrev)
   } else {
@@ -14,7 +13,6 @@ log.reactive("fn: region.names")
 # returns a tibble containing the currently configured display form of the cluster
 # [ exp.label, cluster, cluster.disp ]
 cluster.names <- reactive({
-  log.reactive("fn: cluster.names")
   (
     if (input$opt.cluster.disp=='numbers') {
       tibble(exp.label=cluster.names_$exp.label, cluster=cluster.names_$cluster, cluster.disp=cluster.names_$cluster, class=cluster.names_$class)
@@ -46,7 +44,6 @@ cluster.labels <- reactive({
 # returns a tibble containing the currently configured display form of the subcluster
 # [ exp.label, subcluster, subcluster.disp ]
 subcluster.names <- reactive({
-  log.reactive("fn: subcluster.names")
   (
     if (input$opt.cluster.disp=='numbers') {
       tibble(exp.label=subcluster.names_$exp.label, subcluster=subcluster.names_$subcluster, subcluster.disp=subcluster.names_$subcluster)
@@ -77,14 +74,12 @@ subcluster.labels <- reactive({
 
 # to allow lookups of cluster from subcluster or vice-versa
 all.subclusters <- reactive({
-log.reactive("fn: all.subclusters")
   with(cell.types, tibble(exp.label=exp.label, cluster=cluster, subcluster=subcluster))
 })
 
 # a tibble with cluster and subcluster combined
 # [ exp.label, cx, cx.disp ]
 cx.names <- reactive({
-log.reactive("fn: cx.names")
   rbind(dplyr::select(cluster.names(), exp.label, cx=cluster, cx.disp=cluster.disp), dplyr::select(subcluster.names(), exp.label, cx=subcluster, cx.disp=subcluster.disp)) %>%
     mutate(cx=as.character(cx))
 })

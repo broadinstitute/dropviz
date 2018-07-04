@@ -5,7 +5,6 @@
 
 # essentially just an alias for clusters.selected()
 component.cluster <- reactive({
-  log.reactive("fn: component.cluster")
 
   if (nrow(clusters.selected_()) > 0) {
     clusters.selected_()
@@ -18,7 +17,6 @@ component.cluster <- reactive({
 clusters.selected.components <- reactive({
   req(input$opt.components)
   
-  log.reactive("fn: clusters.selected.components")
   if (nrow(component.cluster())==0)
     return(tibble())
   
@@ -35,7 +33,6 @@ clusters.selected.components <- reactive({
 
 # returns the ICs that the user selected in the table
 selected.components <- reactive({
-  log.reactive("fn: selected.components")
   if (isTruthy(input$dt.components_rows_selected) && nrow(clusters.selected.components())>0) {
    clusters.selected.components()[input$dt.components_rows_selected,]
   } else {
@@ -58,14 +55,12 @@ component.ICA <- reactive({
 
 # returns a matrix the weights ("rotations") of clusters (columns) on cells (rows) for the clusters.selected.components
 component.cell.weights <- reactive({
-  log.reactive("fn: component.cell.weights")
   component.ICA()$cell_rotations
 })
 
 # returns as a tibble the slice of the component.cell.weights matrix for only the components selected in the table
 selected.component.cell.weights <- reactive({
   require(tidyr)
-  log.reactive("fn: component.cell.weights.selected")
   if (nrow(selected.components())==0)
     return(tibble())
   

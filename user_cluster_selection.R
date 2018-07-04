@@ -9,13 +9,11 @@
 
 # the index into the selection
 current.cluster.i <- reactive({
-  log.reactive("fn: current.cluster.i")
   if (is.null(input$current.cluster)) NA_integer_ else as.numeric(input$current.cluster)
 })
 
 # the row corresponding to the selection
 current.cluster <- reactive({
-  log.reactive("fn: current.cluster")
   filter(clusters.selected_(), c.id %in% current.cluster.i())
 })
 
@@ -49,12 +47,10 @@ output$comparison.cluster <- renderUI({
 
 
 current.subcluster.i <- reactive({
-  log.reactive("fn: current.subcluster.i")
   if (is.null(input$current.subcluster)) NA_integer_ else as.numeric(input$current.subcluster)
 })
 
 current.subcluster <- reactive({
-  log.reactive("fn: current.subcluster") 
   subc.s <- subclusters.selected_()
   filter(subc.s, sc.id %in% current.subcluster.i())
 })
@@ -93,7 +89,6 @@ output$comparison.subcluster <- renderUI({
 
 
 comparison.cluster <- reactive({
-  log.reactive("fn: comparison.cluster")
   req(input$comparison.cluster)
   if (length(input$comparison.cluster)==1 && input$comparison.cluster==0) {
     tibble(cluster='global', exp.label=first(current.cluster()$exp.label), cluster.disp=glue("Rest of {current.cluster()$region.disp}"))
@@ -103,7 +98,6 @@ comparison.cluster <- reactive({
 })
 
 comparison.subcluster <- reactive({
-log.reactive("fn: comparison.subcluster")
   req(input$comparison.subcluster)
   if (length(input$comparison.subcluster)==1 && input$comparison.subcluster==0) {
     tibble(subcluster='global', exp.label=first(current.subcluster()$exp.label), subcluster.disp=glue("Rest of {current.subcluster()$region.disp}"))

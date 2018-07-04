@@ -4,7 +4,6 @@
 # for the selected marker (from the differentially expressed gene list) or a user-supplied gene(s),
 # return the cells, expression levels, global X, Y coordinates in the comparison region
 expr.xy <- reactive({
-  log.reactive("fn: expr.xy")
   ldply(user.genes(), function(g) {
     ddply(regions.selected(), .(exp.label), function(r) {
       expr.fn <- glue("{prep.dir}/expr/{first(r$exp.label)}/gene/{g}.RDS")
@@ -21,7 +20,6 @@ expr.xy <- reactive({
 # return the cells, expression levels, global X, Y limited to selected subclusters
 ## expr.subcluster.xy <- reactive({
 ##   stop("expr.xy and expr.subcluster.xy are now identical. merge?")
-##   log.reactive("fn: expr.subcluster.xy")
   
 ##   ldply(user.genes(), function(g) {
 ##     ddply(regions.selected(), .(exp.label), function(r) {
@@ -39,7 +37,6 @@ expr.subcluster.xy <- reactive({ expr.xy() })
 # for the selected subcluster markers or user-supplied gene(s)
 # return the cells, expression levels and local X, Y limited to selected subclusters
 expr.subcluster.local.xy <- reactive({
-  log.reactive("fn: expr.subcluster.local.xy")
   
   xy <- expr.subcluster.xy()
   if (nrow(xy)>0) {
