@@ -99,22 +99,6 @@ trim.cache <- function() {
 
 }
 
-jsCode <- "shinyjs.setgenes = function(params){ 
-  console.log('setgenes:')
-  console.log(params)
-  x=$('#user\\\\.genes')[0].selectize; 
-  $.each(params.items, function(i,v) { x.addOption({value:v,label:v}); x.addItem(v) })
-}"
-genes.load <- "function(query, callback) {
-  if (query.length) return callback(); // not dynamic by query, just delayed load
-  $.ajax({
-    url: 'top.genes.json',
-    type: 'GET',
-    error: function() { callback() },
-    success: function(res) { console.log('ajax: genes loaded'); callback(res.genes) }
-  })
-}"
-
 help.doc <- list(tsne.local.label.dl=withTags(span(h4("Help for t-SNE plot of subclusters in local cluster space."),
                                                    p("Each point represents a single cell. Each cell is associated with a gene expression vector. This high-dimensional data within a cluster is reduced using a set of curated independent components and projected onto two dimensions using t-SNE ('local cluster space'). The subcluster classifications are derived from Louvain clustering using a subset of the ICs."),
                                                    p('Subcluster regions are highlighted in different colors based on the filtering choices in the',b('Query'),'section in the left panel. All points in the corresponding cluster are displayed with points outside of the chosen subcluster(s) shown in gray and all points in the chosen subclusters displayed in color. (There is no subsampling for subcluster displays.)'),
