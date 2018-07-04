@@ -1,7 +1,7 @@
 source("global.R")
 
 server <- function(input, output, session) {
-  
+
   # display a message, such as a development or testing notice
   if (file.exists("message.txt") && !is.null(getDefaultReactiveDomain())) {
     msg <- readLines("message.txt")
@@ -70,13 +70,14 @@ server <- function(input, output, session) {
     updateQueryString("?#")
   }, ignoreInit = TRUE)
 
-  # change the location bar URL when bookmarking instead of displaying a pop-up
+  # change the location bar URL when bookmarking and display a pop-up
   onBookmarked(function(url) {
     updateQueryString(url)
     showBookmarkUrlModal(url)
   })
 
   session$onSessionEnded(trim.cache)
+
 }
 
 trim.cache <- function() {
@@ -97,22 +98,6 @@ trim.cache <- function() {
   }
 
 }
-
-jsCode <- "shinyjs.setgenes = function(params){ 
-  console.log('setgenes:')
-  console.log(params)
-  x=$('#user\\\\.genes')[0].selectize; 
-  $.each(params.items, function(i,v) { x.addOption({value:v,label:v}); x.addItem(v) })
-}"
-genes.load <- "function(query, callback) {
-  if (query.length) return callback(); // not dynamic by query, just delayed load
-  $.ajax({
-    url: 'top.genes.json',
-    type: 'GET',
-    error: function() { callback() },
-    success: function(res) { console.log('ajax: genes loaded'); callback(res.genes) }
-  })
-}"
 
 help.doc <- list(tsne.local.label.dl=withTags(span(h4("Help for t-SNE plot of subclusters in local cluster space."),
                                                    p("Each point represents a single cell. Each cell is associated with a gene expression vector. This high-dimensional data within a cluster is reduced using a set of curated independent components and projected onto two dimensions using t-SNE ('local cluster space'). The subcluster classifications are derived from Louvain clustering using a subset of the ICs."),
@@ -221,7 +206,6 @@ function(request) {
   
   fluidPage(
     useShinyjs(),
-    extendShinyjs(text = jsCode),
     tags$head(HTML('<script async src="https://www.googletagmanager.com/gtag/js?id=UA-111320548-1"></script>
 ')),
     tags$head(includeScript("gtag.js")),
@@ -246,7 +230,7 @@ function(request) {
                                                                 fluidRow(
                                                                   column(12,
                                                                          selectizeInput("user.genes", "Gene", choices=c("Symbol"=""),
-                                                                                        multiple=TRUE, width='100%', options=list(create=TRUE,preload="focus",load=I(genes.load),persist=FALSE,openOnFocus=FALSE,closeAfterSelect=TRUE))
+                                                                                        multiple=TRUE, width='100%', options=list(create=TRUE,persist=FALSE,closeAfterSelect=TRUE))
                                                                          )
                                                                 ),
                                                                 fluidRow(

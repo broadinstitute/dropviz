@@ -42,14 +42,12 @@ pairwise.markers <- function(kind) {
 # Returns a table of the markers associated with the filtered clusters, 
 # filtered according to expression criteria and user genes
 cluster.markers <- reactive({
-log.reactive("fn: cluster.markers")
   req(current.cluster.i())
   pairwise.markers('cluster')
 })
 
 
 subcluster.markers <- reactive({
-log.reactive("fn: subcluster.markers")
   req(current.subcluster.i())
   pairwise.markers('subcluster')
 })
@@ -57,7 +55,6 @@ log.reactive("fn: subcluster.markers")
 # Returns a subset of the cluster.markers for rows that user clicked in table
 # If user.genes exist and option to display cells in gene search, but there is no comparison, yet, then return a stub with user.genes
 cluster.markers.selected <- reactive({
-  log.reactive("fn: cluster.markers.selected")
   if (isTruthy(input$dt.cluster.markers_rows_selected)) {
     cluster.markers()[input$dt.cluster.markers_rows_selected,]
   } else {
@@ -66,7 +63,6 @@ cluster.markers.selected <- reactive({
 })
 
 subcluster.markers.selected <- reactive({
-  log.reactive("fn: subcluster.markers.selected")
   if (isTruthy(input$dt.subcluster.markers_rows_selected)) {
     subcluster.markers()[input$dt.subcluster.markers_rows_selected,]
   } else {

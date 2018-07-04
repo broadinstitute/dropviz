@@ -58,18 +58,6 @@ observe({
   }
 })
 
-# set user.genes to stored value, if present
-# because the options for user.genes are delay-loaded, then the initial restore
-# of input will fail because the values for user.genes are missing from the choices.
-# But later, with input$user.genes blank, this event will fire and javascript
-# will be called (once) to reset the user.genes by forcing values.
-observeEvent(input$user.genes, {
-  if (!isTruthy(input$user.genes) && isTruthy(filter.vals$user.genes)) {
-    js$setgenes(items=as.list(filter.vals$user.genes))
-  }
-    
-}, priority=-100, ignoreNULL=FALSE, once=TRUE)
-  
 onRestore(function(state) {
   filter.vals$user.genes <- state$input$user.genes
   filter.vals$tissue <- state$input$tissue
@@ -77,8 +65,14 @@ onRestore(function(state) {
   filter.vals$cell.cluster <- state$input$cell.cluster
   filter.vals$cell.type <- state$input$cell.type
 })
-
-
+onRestored(function(state) {
+  updateSelectizeInput(session, "user.genes", selected=state$input$user.genes, choices=c("Symbol"="", unique(c(state$input$user.genes, top.genes))), server=TRUE)
+  updateSelectizeInput(session, "tissue", selected=state$input$tissue)
+  updateSelectizeInput(session, "cell.class", selected=state$input$cell.class)
+  updateSelectizeInput(session, "cell.cluster", selected=state$input$cell.cluster)
+  updateSelectizeInput(session, "cell.type", selected=state$input$cell.type)
+})
+updateSelectizeInput(session, "user.genes", choices=c("Symbol"="", top.genes), server=TRUE)
 
 #####################################################################################################
 # Cell Type Filter options used to generate the selectizeInputs
@@ -86,7 +80,6 @@ onRestore(function(state) {
 # the *.options reactive expressions return the corresponding options for that variable, excluding 
 # rows from cell.types that are filtered out by the remaining variables.
 tissue.options <- reactive({
-log.reactive("fn: tissue.options")
   user.selection.changed()
   tissue.opts <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='tissue', use.input=TRUE)
   return(sort(unique(tissue.opts$region.disp)))
@@ -95,7 +88,6 @@ log.reactive("fn: tissue.options")
 })
 
 cell.class.options <- reactive({
-log.reactive("fn: cell.class.options")
   user.selection.changed()
   cell.class.opt <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='cell.class', use.input=TRUE)
   return(sort(unique(cell.class.opt$class.disp)))
@@ -104,7 +96,6 @@ log.reactive("fn: cell.class.options")
 })
 
 cell.cluster.options <- reactive({
-log.reactive("fn: cell.cluster.options")
   user.selection.changed()
   cell.cluster.opt <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='cell.cluster', use.input=TRUE)
   
@@ -121,7 +112,6 @@ log.reactive("fn: cell.cluster.options")
 
 # A cell type is 1:1 with a cell subcluster
 cell.type.options <- reactive({
-log.reactive("fn: cell.type.options")
   user.selection.changed()
   cell.type.opt <- filter.df(subclusters.labeled(), cell.types.filter.opts, excl='cell.type', use.input=TRUE)
   return(sort(unique(cell.type.opt$subcluster.disp)))
@@ -215,7 +205,6 @@ filter.vals.changed <- reactive({
 
 # add display labels as per user options
 subclusters.labeled <- reactive({
-log.reactive("fn: subclusters.labeled")
   inner_join(cell.types, region.names(), by='exp.label') %>% 
     inner_join(cluster.names(), by=c('exp.label','cluster')) %>%
     inner_join(subcluster.names(), by=c('exp.label','subcluster')) %>%
@@ -287,7 +276,6 @@ gene.cols <- function(df, kind) {
 # This is even more of a mess because some calls to (sub)clusters.selected() cannot include the gene.cols. It probably needs
 # to stay even after the components kruft is removed.
 subclusters.selected_ <- reactive({
-  log.reactive("fn: subclusters.selected_")
   filter.vals.changed()
   
   filter.df(subclusters.labeled(), cell.types.filter.opts)
@@ -305,20 +293,17 @@ subclusters.selected <- reactive({
 
 # returns a smaller tibble with a row per cluster from subclusters.selected()
 clusters.selected_ <- reactive({
-  log.reactive("fn: clusters.selected_")
   filter.vals.changed()
   select(subclusters.selected__(), c.id, region.disp, region.abbrev, class.disp, cluster.disp, exp.label, cluster) %>% unique
 })
 
 # adds gene.cols
 clusters.selected <- reactive({
-  log.reactive("fn: clusters.selected")
 
   gene.cols(clusters.selected_(), 'cluster')
 })
 
 regions.selected <- reactive({
-log.reactive("fn: regions.selected")
   filter.vals.changed()
   select(subclusters.selected(), region.disp, exp.label) %>% unique 
 })

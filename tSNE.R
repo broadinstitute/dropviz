@@ -2,7 +2,6 @@
 # tSNE plot related functions
 
 downsample <- reactive({
-  log.reactive("fn: downsample")
   if (input$opt.downsampling.method != 'none') {
     input$downsampling
   } else {
@@ -69,47 +68,38 @@ polygons.labeled <- function(polygon, regions, clusters, kind, region.nms, clust
 
 # filters tsne.cluster.bag.data for the bag data of selected experiments
 global.selected.bag <- reactive({
-log.reactive("fn: global.selected.bag")
   polygons.labeled(tsne.cluster.bag.data$bags, regions.selected(), clusters.selected(), 'cluster', region.names(), cluster.labels())
 })
   
 global.selected.loop <- reactive({
-log.reactive("fn: global.selected.loop")
   polygons.labeled(tsne.cluster.bag.data$loops, regions.selected(), clusters.selected(), 'cluster', region.names(), cluster.labels())
 })
 
 global.selected.center <- reactive({
-log.reactive("fn: global.selected.center")
   polygons.labeled(tsne.cluster.bag.data$centers, regions.selected(), clusters.selected(), 'cluster', region.names(), cluster.labels())
 })
 
 global.selected.sub.bag <- reactive({
-log.reactive("fn: global.selected.sub.bag")
   polygons.labeled(tsne.subcluster.bag.data$bags, regions.selected(), subclusters.selected(), 'subcluster', region.names(), subcluster.labels())
 })
 
 global.selected.sub.loop <- reactive({
-log.reactive("fn: global.selected.sub.loop")
   polygons.labeled(tsne.subcluster.bag.data$loops, regions.selected(), subclusters.selected(), 'subcluster', region.names(), subcluster.labels())
 })
 
 global.selected.sub.center <- reactive({
-log.reactive("fn: global.selected.sub.center")
   polygons.labeled(tsne.subcluster.bag.data$centers, regions.selected(), subclusters.selected(), 'subcluster', region.names(), subcluster.labels())
 })
 
 local.selected.sub.bag <- reactive({
-log.reactive("fn: local.selected.sub.bag")
   polygons.labeled(tsne.local.bag.data$bags, regions.selected(), subclusters.selected(), 'local', region.names(), subcluster.labels(), cluster.names())
 })
 
 local.selected.sub.loop <- reactive({
-log.reactive("fn: local.selected.sub.loop")
   polygons.labeled(tsne.local.bag.data$loops, regions.selected(), subclusters.selected(), 'local', region.names(), subcluster.labels(), cluster.names())
 })
 
 local.selected.sub.center <- reactive({
-log.reactive("fn: local.selected.sub.center")
   polygons.labeled(tsne.local.bag.data$centers, regions.selected(), subclusters.selected(), 'local', region.names(), subcluster.labels(), cluster.names())
 })
 
@@ -119,7 +109,6 @@ log.reactive("fn: local.selected.sub.center")
 
 # the coordinates for current regions
 global.xy <- reactive({
-log.reactive("fn: global.xy")
   ldply(regions.selected()$exp.label, function(region) {
     # read the global XYs 
     df.region <- 
@@ -141,7 +130,6 @@ log.reactive("fn: global.xy")
 # the global.xy limited to clusters.selected()
 # may set X and Y to NA because there are no cells assigned to cluster
 global.xy.cluster.selected <- reactive({
-  log.reactive("fn: global.xy.cluster.selected")
   left_join(select(clusters.selected(),exp.label, cluster), global.xy(), by=c('exp.label','cluster')) %>%
     inner_join(region.names(), by='exp.label') %>%
     dplyr::rename(cx=cluster)
@@ -151,7 +139,6 @@ global.xy.cluster.selected <- reactive({
 # Unassigned are displayed in grey. All cells are shown in the cluster because only a subset of the assigned cells
 # were used in the subclustering.
 global.xy.subcluster.selected <- reactive({
-  log.reactive("fn: global.xy.subcluster.selected")
   bind_rows(left_join(select(subclusters.selected(), exp.label, subcluster), global.xy(), by=c('exp.label','subcluster')),
             (left_join(select(clusters.selected(), exp.label, cluster), global.xy(), by=c('exp.label','cluster')) %>% filter(is.na(subcluster)))) %>%
     inner_join(region.names(), by='exp.label') %>% 
@@ -187,7 +174,6 @@ local.xy <- reactive ({
 
 # local XY of all selected subclusters - with display names added
 local.xy.selected <- reactive({
-log.reactive("fn: local.xy.selected")
   x <- left_join(select(subclusters.selected(),exp.label, subcluster), local.xy(), by=c('exp.label','subcluster')) %>%
     inner_join(region.names(), by='exp.label') %>%
     inner_join(cluster.names(), by=c('exp.label','cluster')) %>%
@@ -293,7 +279,6 @@ xy.cell.size <- reactive({
 
 
 tsne.disp.opts <- reactive({
-log.reactive("fn: tsne.disp.opts")
   c(input$opt.cluster.disp, input$use.common.name, downsample(), input$opt.downsampling.method, 
     input$opt.region.disp, input$opt.plot.label, input$use.bag.plot, input$opt.expr.size,
     input$opt.show.bags,input$opt.tx,input$opt.tx.min,input$opt.tx.sum, input$opt.tx.scale, input$opt.tx.legend,
