@@ -1,9 +1,11 @@
 FROM gcr.io/dropviz-181317/dropviz-shiny-server
+ARG BRANCH=master
 MAINTAINER dkulp@broadinstitute.org
 RUN rm -r /srv/shiny-server
 WORKDIR /srv/shiny-server
 
 RUN git clone https://github.com/broadinstitute/dropviz.git .
+RUN git checkout $BRANCH
 RUN mkdir -p www/cache/metacells
 
 RUN chmod -R a+rwx www
