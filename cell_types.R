@@ -32,7 +32,7 @@ observeEvent(input$go, {
 input.cmp <- function(a, b) {
   if (is.null(a)) a <- ''
   if (is.null(b)) b <- ''
-  return(all(a==b))
+  return(length(a)==length(b) && (all(a==b) || all(a %in% b)))
 }
 
 # if the user changes any of these parameters, then
@@ -48,8 +48,8 @@ observe({
     disable("go")
   } else {
     write.log("Mismatch")
-    write.log(glue("user.genes {ifelse(is.null(filter.vals$user.genes),'NULL',filter.vals$user.genes)} <-> {ifelse(is.null(input$user.genes),'NULL',input$user.genes)} {input.cmp(filter.vals$user.genes, input$user.genes)}"))
-    write.log(glue("tissue {ifelse(is.null(filter.vals$tissue),'NULL',filter.vals$tissue)} <-> {ifelse(is.null(input$tissue),'NULL',input$tissue)} {input.cmp(filter.vals$tissue, input$tissue)}"))
+    write.log(glue("user.genes {ifelse(is.null(filter.vals$user.genes),'NULL',paste(filter.vals$user.genes,collapse=','))} <-> {ifelse(is.null(input$user.genes),'NULL',paste(input$user.genes,collapse=','))} {input.cmp(filter.vals$user.genes, input$user.genes)}"))
+    write.log(glue("tissue {ifelse(is.null(filter.vals$tissue),'NULL',paste(filter.vals$tissue,collapse=','))} <-> {ifelse(is.null(input$tissue),'NULL',paste(input$tissue,collapse=','))} {input.cmp(filter.vals$tissue, input$tissue)}"))
     write.log(glue("cell.class {ifelse(is.null(filter.vals$cell.class),'NULL',filter.vals$cell.class)} <-> {ifelse(is.null(input$cell.class),'NULL',input$cell.class)} {input.cmp(filter.vals$cell.class, input$cell.class)}"))
     write.log(glue("cell.cluster {ifelse(is.null(filter.vals$cell.cluster),'NULL',filter.vals$cell.cluster)} <-> {ifelse(is.null(input$cell.cluster),'NULL',input$cell.cluster)} {input.cmp(filter.vals$cell.cluster, input$cell.cluster)}"))
     write.log(glue("cell.type {ifelse(is.null(filter.vals$cell.type),'NULL',filter.vals$cell.type)} <-> {ifelse(is.null(input$cell.type),'NULL',input$cell.type)} {input.cmp(filter.vals$cell.type, input$cell.type)}"))
