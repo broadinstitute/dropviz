@@ -15,7 +15,7 @@ if (any(grepl("serviceApp|runApp", stack.trace, perl=TRUE))) {
   # hack. Checking the call stack for runApp is the best way I can find to determine if
   # I'm running as a server or not.
   message("Removing local reactive overrides, if any")
-  suppressWarnings(try(rm(reactive, reactiveValues, observeEvent, output), silent=TRUE))
+  suppressWarnings(try(rm(reactive, reactiveValues, observeEvent, output, onRestore), silent=TRUE))
 } else {
   message("Running in interactive, non-Shiny environment")
   reactive <- function(x, env=parent.frame(), ...) exprToFunction(x, env=env)
@@ -29,10 +29,6 @@ if (any(grepl("serviceApp|runApp", stack.trace, perl=TRUE))) {
 load.mark <- function(id) assign('input',readRDS(glue("shiny_bookmarks/{id}/input.rds")), 1)
 
 source("shared.R")
-
-log.reactive <- function(...) {
-  if (getOption("log.reactive", default=FALSE)) write.log(...)
-}
 
 # gracefully fails returning a NULL if not in a reactive environment
 shiny.progress <- function(message=NULL) {
