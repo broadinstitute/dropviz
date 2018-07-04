@@ -202,11 +202,8 @@ debug.controls <- function() {
 
 ui <-
 function(request) {
-  require(shinyjs)
   
   fluidPage(
-    useShinyjs(),
-    extendShinyjs(text = jsCode),
     tags$head(HTML('<script async src="https://www.googletagmanager.com/gtag/js?id=UA-111320548-1"></script>
 ')),
     tags$head(includeScript("gtag.js")),
