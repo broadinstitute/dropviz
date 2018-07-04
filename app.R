@@ -1,7 +1,7 @@
 source("global.R")
 
 server <- function(input, output, session) {
-  
+
   # display a message, such as a development or testing notice
   if (file.exists("message.txt") && !is.null(getDefaultReactiveDomain())) {
     msg <- readLines("message.txt")
@@ -70,13 +70,14 @@ server <- function(input, output, session) {
     updateQueryString("?#")
   }, ignoreInit = TRUE)
 
-  # change the location bar URL when bookmarking instead of displaying a pop-up
+  # change the location bar URL when bookmarking and display a pop-up
   onBookmarked(function(url) {
     updateQueryString(url)
     showBookmarkUrlModal(url)
   })
 
   session$onSessionEnded(trim.cache)
+
 }
 
 trim.cache <- function() {
@@ -246,7 +247,7 @@ function(request) {
                                                                 fluidRow(
                                                                   column(12,
                                                                          selectizeInput("user.genes", "Gene", choices=c("Symbol"=""),
-                                                                                        multiple=TRUE, width='100%', options=list(create=TRUE,preload="focus",load=I(genes.load),persist=FALSE,openOnFocus=FALSE,closeAfterSelect=TRUE))
+                                                                                        multiple=TRUE, width='100%', options=list(create=TRUE,persist=FALSE,closeAfterSelect=TRUE))
                                                                          )
                                                                 ),
                                                                 fluidRow(
