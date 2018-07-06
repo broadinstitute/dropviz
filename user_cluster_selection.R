@@ -37,10 +37,14 @@ output$comparison.cluster <- renderUI({
       choices <- c(0,choices) 
       names(choices)[1] <- glue("Rest of {current.cluster()$region.disp}")
     }
+
+    # #55 hack to set bookmarked value when possible
+    selected.comparison.cluster <- (if (is.null(delayed.comparison.cluster)) input$comparison.cluster else delayed.comparison.cluster)
+    if (all(selected.comparison.cluster %in% choices)) delayed.comparison.cluster <<- NULL
     
     column(12, selectizeInput("comparison.cluster", "Comparison", 
                               choices=choices,
-                              selected=input$comparison.cluster,
+                              selected=selected.comparison.cluster,
                               multiple=input$compare.multiple))
   }
 })
@@ -79,9 +83,13 @@ output$comparison.subcluster <- renderUI({
       names(choices)[1] <- glue("Rest of {current.subcluster()$region.disp}")
     }
     
+    # #55 hack to set bookmarked value when possible
+    selected.comparison.subcluster <- (if (is.null(delayed.comparison.subcluster)) input$comparison.subcluster else delayed.comparison.subcluster)
+    if (all(selected.comparison.subcluster %in% choices)) delayed.comparison.subcluster <<- NULL
+    
     column(12, selectizeInput("comparison.subcluster", "Comparison",
                               choices=choices,
-                              selected=input$comparison.subcluster,
+                              selected=selected.comparison.subcluster,
                               multiple=input$compare.multiple))
   }
 })

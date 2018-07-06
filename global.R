@@ -116,3 +116,12 @@ components <- mutate(components,
 
 # #36 replace exp.title
 experiments <- mutate(experiments, exp.title=sub('Ento Peduncular', 'Entopeduncular', exp.title))
+
+
+# #55 store globals of the comparison.cluster because it cannot be
+# restored until the choices are set by choosing the
+# selected.cluster. These get assigned once in onRestore and then get
+# reset back to NULL in the corresponding output$comparison.cluster
+# renderUI call after successfully setting the selected value. Yech.
+delayed.comparison.cluster <- NULL
+delayed.comparison.subcluster <- NULL
