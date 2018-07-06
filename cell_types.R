@@ -67,6 +67,9 @@ onRestore(function(state) {
 
   delayed.comparison.cluster <<- state$input$comparison.cluster
   delayed.comparison.subcluster <<- state$input$comparison.subcluster
+
+  # #36 - fix name for legacy bookmarks
+  filter.vals$tissue <- sub('Ento Peduncular','Entopeduncular', filter.vals$tissue)
 })
 
 onRestored(function(state) {
