@@ -59,6 +59,9 @@ observe({
 })
 
 onRestore(function(state) {
+  # #36 - fix name for legacy bookmark
+  state$input$tissue <- sub('Ento Peduncular','Entopeduncular', state$input$tissue)
+
   filter.vals$user.genes <- state$input$user.genes
   filter.vals$tissue <- state$input$tissue
   filter.vals$cell.class <- state$input$cell.class
@@ -67,12 +70,12 @@ onRestore(function(state) {
 
   delayed.comparison.cluster <<- state$input$comparison.cluster
   delayed.comparison.subcluster <<- state$input$comparison.subcluster
-
-  # #36 - fix name for legacy bookmarks
-  filter.vals$tissue <- sub('Ento Peduncular','Entopeduncular', filter.vals$tissue)
 })
 
 onRestored(function(state) {
+  # #36 - fix name for legacy bookmark
+  state$input$tissue <- sub('Ento Peduncular','Entopeduncular', state$input$tissue)
+
   updateSelectizeInput(session, "user.genes", selected=state$input$user.genes, choices=c("Symbol"="", unique(c(state$input$user.genes, top.genes))), server=TRUE)
   updateSelectizeInput(session, "tissue", selected=state$input$tissue)
   updateSelectizeInput(session, "cell.class", selected=state$input$cell.class)
