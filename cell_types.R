@@ -64,13 +64,22 @@ onRestore(function(state) {
   filter.vals$cell.class <- state$input$cell.class
   filter.vals$cell.cluster <- state$input$cell.cluster
   filter.vals$cell.type <- state$input$cell.type
+
+  delayed.comparison.cluster <<- state$input$comparison.cluster
+  delayed.comparison.subcluster <<- state$input$comparison.subcluster
 })
+
 onRestored(function(state) {
   updateSelectizeInput(session, "user.genes", selected=state$input$user.genes, choices=c("Symbol"="", unique(c(state$input$user.genes, top.genes))), server=TRUE)
   updateSelectizeInput(session, "tissue", selected=state$input$tissue)
   updateSelectizeInput(session, "cell.class", selected=state$input$cell.class)
   updateSelectizeInput(session, "cell.cluster", selected=state$input$cell.cluster)
   updateSelectizeInput(session, "cell.type", selected=state$input$cell.type)
+
+  updateSelectizeInput(session, "current.cluster", selected=state$input$current.cluster)
+  updateSelectizeInput(session, "comparison.cluster", selected=state$input$comparison.cluster)
+  updateSelectizeInput(session, "current.subcluster", selected=state$input$current.subcluster)
+  updateSelectizeInput(session, "comparison.subcluster", selected=state$input$comparison.subcluster)
 })
 updateSelectizeInput(session, "user.genes", choices=c("Symbol"="", top.genes), server=TRUE)
 
