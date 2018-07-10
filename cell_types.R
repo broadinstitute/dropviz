@@ -28,11 +28,11 @@ observeEvent(input$go, {
 }, ignoreInit=TRUE)
 
 # returns true if a==b.
-# blank and null are considered the same
+# blank and null and character(0) are considered the same
 input.cmp <- function(a, b) {
-  if (is.null(a)) a <- ''
-  if (is.null(b)) b <- ''
-  return(length(a)==length(b) && (all(a==b) || all(a %in% b)))
+  if (is.null(a) || length(a)==0) a <- ''
+  if (is.null(b) || length(b)==0) b <- ''
+  return(length(a)==length(b) && nchar(a)==nchar(b) && (all(a==b) || all(a %in% b)))
 }
 
 # if the user changes any of these parameters, then
@@ -60,7 +60,7 @@ observe({
 
 onRestore(function(state) {
   # #36 - fix name for legacy bookmark
-  state$input$tissue <- sub('Ento Peduncular','Entopeduncular', state$input$tissue)
+  if (!is.null(state$input$tissue)) state$input$tissue <- sub('Ento Peduncular','Entopeduncular', state$input$tissue)
 
   filter.vals$user.genes <- state$input$user.genes
   filter.vals$tissue <- state$input$tissue
@@ -70,11 +70,17 @@ onRestore(function(state) {
 
   delayed.comparison.cluster <<- state$input$comparison.cluster
   delayed.comparison.subcluster <<- state$input$comparison.subcluster
+
+  delayed.dt.components_rows_selected <<- state$input$dt.components_rows_selected
+
+  delayed.dt.cluster.markers_rows_selected <<- state$input$dt.cluster.markers_rows_selected
+  delayed.dt.subcluster.markers_rows_selected <<- state$input$dt.subcluster.markers_rows_selected
+
 })
 
 onRestored(function(state) {
   # #36 - fix name for legacy bookmark
-  state$input$tissue <- sub('Ento Peduncular','Entopeduncular', state$input$tissue)
+  if (!is.null(state$input$tissue)) state$input$tissue <- sub('Ento Peduncular','Entopeduncular', state$input$tissue)
 
   updateSelectizeInput(session, "user.genes", selected=state$input$user.genes, choices=c("Symbol"="", unique(c(state$input$user.genes, top.genes))), server=TRUE)
   updateSelectizeInput(session, "tissue", selected=state$input$tissue)

@@ -125,3 +125,9 @@ experiments <- mutate(experiments, exp.title=sub('Ento Peduncular', 'Entopeduncu
 # renderUI call after successfully setting the selected value. Yech.
 delayed.comparison.cluster <- NULL
 delayed.comparison.subcluster <- NULL
+
+# #42 hack as for #55.
+delayed.dt.components_rows_selected <- NULL
+delayed.dt.cluster.markers_rows_selected <- NULL
+delayed.dt.subcluster.markers_rows_selected <- NULL
+
