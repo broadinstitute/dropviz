@@ -152,11 +152,19 @@ output$dt.components <- DT::renderDataTable( {
     mutate(status=ifelse(status=='Real','Biological',as.character(status))) %>%
     mutate(Loadings=glue("<img height='75' width='250' src='cache/ic/ic_{exp.label}_{cluster}_IC{ic.number}_250_75.png'/>")) %>%
     dplyr::select(IC=ic.number, Region=region.disp, Cluster=cluster.disp, Class=cell_class, Status=status, "Annotation Notes"=hypothesized_common_name, Loadings, Region=anatomical_region)
+
+  # Hack. #42 selected row is not valid on initialization. save bookmarked row and restore the first time that table is ready
+  print(head(components.tbl))
+  write.log('delayed.dt.components_rows_selected=',delayed.dt.components_rows_selected)
+  selected.row <- delayed.dt.components_rows_selected
+  if (!is.null(delayed.dt.components_rows_selected)) {
+    delayed.dt.components_rows_selected <<- NULL
+  }
   
   DT::datatable(components.tbl,
                 rownames=FALSE, escape=FALSE,
                 filter="bottom", 
-                selection="single",
+                selection=list(mode="single", selected=selected.row, target='row'),
                 options=list(dom="tp", pageLength=50))
 })
 

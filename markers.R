@@ -77,7 +77,15 @@ dt.markers <- function(mrkrs,label) {
   if (nrow(mrkrs)==0) {
     rows.selected <- NULL
   } else {
-    prev.rows.selected <- isolate(input[[paste0(label,'_rows_selected')]])
+    # Hack #42
+    delayed.str <- paste0('delayed.',label,'_rows_selected')
+    prev.rows.selected <- get(delayed.str)
+    if (!is.null(prev.rows.selected)) {
+      assign(delayed.str, NULL, envir = .GlobalEnv)
+    } else {
+      prev.rows.selected <- isolate(input[[paste0(label,'_rows_selected')]])
+    }
+    
     if (!exists(label) || identical(get(label),mrkrs)) {
       rows.selected <- prev.rows.selected
     } else {
