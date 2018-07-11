@@ -10,9 +10,6 @@ RUN mkdir -p www/cache/metacells
 
 RUN chmod -R a+rwx www
 
-RUN mkdir -p www/downloads
-COPY downloads/* www/downloads/
-
 RUN mkdir -p www/cache/ic
 COPY ic/* www/cache/ic/
 
