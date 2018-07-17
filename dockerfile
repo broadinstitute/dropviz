@@ -18,6 +18,9 @@ COPY image/shiny-server.sh /bin
 RUN chmod +x /bin/shiny-server.sh
 CMD /bin/shiny-server.sh
 
+# workaround for #60
+RUN R -e "install.packages('devtools', repos = 'http://cran.us.r-project.org'); library('devtools'); install_github('jrnold/ggthemes')"
+
 EXPOSE 80
 
 # debug:
