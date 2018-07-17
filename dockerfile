@@ -11,7 +11,7 @@ RUN mkdir -p www/cache/metacells
 RUN chmod -R a+rwx www
 
 RUN mkdir -p www/cache/ic
-COPY ic/* www/cache/ic/
+COPY /dropseq/staged/ic/* www/cache/ic/
 
 RUN echo "dropviz-bookmarks /var/lib/shiny-server/bookmarks/ gcsfuse rw,uid=999,gid=999" >> /etc/fstab
 COPY image/shiny-server.sh /bin
