@@ -3,7 +3,9 @@ source("options.R")
 options(stringsAsFactors=FALSE) # plyr methods return data.frame
 options(bitmapType = 'cairo') # https://stackoverflow.com/a/17955000/86228
 
-prep.dir <- getOption('dropviz.prep.dir', default='/cache')               # destination for all prepared data
+# if prep.dir default changed, then dockerfile must also be changed
+prep.dir <- getOption('dropviz.prep.dir', default='/dropseq/staged')               # destination for all prepared data
+
 cache.dir <- 'www/cache'  # destination for renderCacheImage()
 suppressWarnings(dir.create(prep.dir, recursive = TRUE))
 stopifnot(file.exists(prep.dir))
