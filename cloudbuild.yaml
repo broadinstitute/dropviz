@@ -1,7 +1,4 @@
 steps:
-- name: 'gcr.io/cloud-builders/gsutil'
-  args: [ "-m", "rsync", "-r", "gs://dropviz-ic/", "." ]
-  dir: "ic"
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '-t', 'gcr.io/$PROJECT_ID/dropviz-$BRANCH_NAME', '--build-arg', 'BRANCH=$BRANCH_NAME', '.']
 images: ['gcr.io/$PROJECT_ID/dropviz-$BRANCH_NAME']
