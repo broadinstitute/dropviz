@@ -181,7 +181,10 @@ rank.plot <- function(clusters, kind, genes, return.closure=FALSE) {
       group_by(clusters, gene) %>% top_n(as.integer(input$top.N), target.sum.per.100k)      
     }
   )
-  gene.description <- paste(clusters.top$gene,"-",gene.desc(clusters.top$gene))
+  
+  #  gene.description <- paste(clusters.top$gene,"-",gene.desc(clusters.top$gene))
+  gene.description <- clusters.top$gene
+  
   clusters.top$gene.description <- factor(gene.description, levels=unique(gene.description[order(clusters.top$gene)]))
   
   rank.facet_grid <- (
