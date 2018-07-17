@@ -15,18 +15,25 @@ if (any(grepl("serviceApp|runApp", stack.trace, perl=TRUE))) {
   # hack. Checking the call stack for runApp is the best way I can find to determine if
   # I'm running as a server or not.
   message("Removing local reactive overrides, if any")
-  suppressWarnings(try(rm(reactive, reactiveValues, observeEvent, output, onRestore), silent=TRUE))
+  suppressWarnings(try(rm(reactive, reactiveValues, observeEvent, output, onRestore, onRestored, updateSelectizeInput), silent=TRUE))
 } else {
   message("Running in interactive, non-Shiny environment")
   reactive <- function(x, env=parent.frame(), ...) exprToFunction(x, env=env)
   reactiveValues <- list
   output <- list()
+  updateSelectizeInput <- function(...) {}
   onRestore <- function(...) {}
+  onRestored <- function(...) {}
   observeEvent <- function(...) {}
 }
 
 # loads the bookmark into the input variable in the caller's environment
-load.mark <- function(id) assign('input',readRDS(glue("shiny_bookmarks/{id}/input.rds")), 1)
+load.mark <- function(id) {
+  assign('input',readRDS(glue("shiny_bookmarks/{id}/input.rds")), 1)
+  assign('filter.vals',input,1)
+}
+
+
 
 source("shared.R")
 
