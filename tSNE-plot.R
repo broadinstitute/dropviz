@@ -38,8 +38,8 @@
         scale_color <- function(...) scale_color_brewer(..., palette='YlOrRd')
         scale_fill <- function(...) scale_fill_brewer(..., palette='YlOrRd')
       } else {
-        if (length(unique(center.data$cx.gg)) <= 20) {
-          # gdocs has a max of 20 discrete colors
+        if (length(unique(center.data$cx.gg)) <= 10) {
+          # gdocs has a max of 10 discrete colors (used to be 20, grr)
           scale_fill <- scale_fill_gdocs
           scale_color <- scale_color_gdocs
         } else {
@@ -155,8 +155,8 @@
                       # approximate full size regardless of the subset
                       # of cells that is plotted.
       xy.limits.gg <- 
-        coord_cartesian(xlim=c(min(c(-tsne.lim, bag.data$x)), max(c(tsne.lim, bag.data$x))), 
-                        ylim=c(min(c(-tsne.lim, bag.data$y)), max(c(tsne.lim, bag.data$y))))
+        coord_cartesian(xlim=c(min(c(-tsne.lim, loop.data$x)), max(c(tsne.lim, loop.data$x))), 
+                        ylim=c(min(c(-tsne.lim, loop.data$y)), max(c(tsne.lim, loop.data$y))))
 
       tsne.gg <- ggplot() + tsne.color.scale + tsne.fill.scale + scale_size(guide="none", range=c(0.1,opt.expr.size)) + theme_few() + theme(strip.text.x=element_text(size=20), strip.text.y=element_text(size=14))
       p <- tsne.gg + center.gg + xy.gg + loop.gg + bag.gg + alpha.range + diff.gg + label.gg + facet.label.gg + xy.limits.gg + xlab("V1") + ylab("V2")

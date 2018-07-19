@@ -23,7 +23,7 @@
                           xmax=target.sum.R.per.100k, y=cx.disp, yend=cx.disp)) + 
       geom_point(size=3) + 
       geom_segment(aes(x=target.sum.L.per.100k,xend=target.sum.R.per.100k)) +
-      ggtitle(glue("{Kind}s With Highest Expression of {paste0(genes,collapse=' & ')} (top {length(unique(clusters.top$cx.disp))} results)")) + 
+      ggtitle(glue("{Kind}s With Highest Expression (top {length(unique(clusters.top$cx.disp))} results)")) + 
       xlab(glue("Transcripts Per 100,000 in {Kind}\n\nThe reported confidence intervals reflect statistical sampling noise (calculated from the binomial distribution,\nand reflecting total number of UMIs ascertained by cluster) rather than cell-to-cell heterogeneity within a cluster")) + 
       ylab("") + 
       rank.facet_grid + 

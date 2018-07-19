@@ -77,6 +77,8 @@ server <- function(input, output, session) {
   })
 
   session$onSessionEnded(trim.cache)
+  
+  transfer.ics()
 
 }
 
@@ -94,9 +96,15 @@ trim.cache <- function() {
 
   if (nrow(old.files) > 0) {
     print(dplyr::select(cache.files, files, atime))
-#    unlink(old.files$files)
+    unlink(old.files$files)
   }
+}
 
+# transfer the IC images, stored in prep.dir, to the cache.dir on first run 
+transfer.ics <- function() {
+  if (!file.exists(file.path(cache.dir,'ic'))) {
+    file.copy(file.path(prep.dir,'ic'), cache.dir, recursive = TRUE)
+  }
 }
 
 help.doc <- list(tsne.local.label.dl=withTags(span(h4("Help for t-SNE plot of subclusters in local cluster space."),

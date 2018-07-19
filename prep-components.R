@@ -91,3 +91,8 @@ dlply(experiments, .(exp.label), function(exp) {
     })
   })
 })
+
+# move to prep where it will be copied back to cache for each instance
+file.copy(file.path(cache.dir,"ic"), prep.dir, recursive=TRUE)
+
+
