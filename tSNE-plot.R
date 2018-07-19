@@ -43,8 +43,8 @@
           scale_fill <- scale_fill_gdocs
           scale_color <- scale_color_gdocs
         } else {
-          scale_fill <- scale_fill_discrete
-          scale_color <- scale_color_discrete
+          scale_fill <- function(...) scale_fill_discrete(..., l=40)
+          scale_color <- function(...) scale_color_discrete(..., l=40)
         }
       }
 
