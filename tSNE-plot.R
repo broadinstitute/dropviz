@@ -38,8 +38,8 @@
         scale_color <- function(...) scale_color_brewer(..., palette='YlOrRd')
         scale_fill <- function(...) scale_fill_brewer(..., palette='YlOrRd')
       } else {
-        if (length(unique(center.data$cx.gg)) <= 20) {
-          # gdocs has a max of 20 discrete colors
+        if (length(unique(center.data$cx.gg)) <= 10) {
+          # gdocs has a max of 10 discrete colors (used to be 20, grr)
           scale_fill <- scale_fill_gdocs
           scale_color <- scale_color_gdocs
         } else {
