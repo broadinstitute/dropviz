@@ -1,0 +1,11 @@
+<p>To access the data in <i>.raw.dge.txt.gz</i> files:
+<ul>
+  <li> Download the private R package of DropSeq library functions: <a href="https://storage.googleapis.com/dropviz-downloads/static/DropSeq.util_2.0.tar.gz">DropSeq.util_2.0.tar.gz</a></li>
+  <li>Install the R package: <pre>install.packages('/insert_path_to/DropSeq.util_2.0.tar.gz', repos=NULL)</pre></li>
+  <li> Load the library: <pre>library(DropSeq.util)</pre></li>
+  <li>Use the <i>loadSparseDge</i> function. DGE will be of class "dgTMatrix"<pre>
+dge.path &lt;- "/insert_path_to/the_raw.dge.txt.gz_file"<br>
+dge &lt;- loadSparseDge(dge.path)
+</pre>
+  </li>
+</ul></p>
