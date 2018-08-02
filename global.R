@@ -122,8 +122,7 @@ components <- mutate(components,
                      cell_class=gsub('Ependyma.+', 'Ependyma', gsub('Endothelial_[Ss]talk', 'Endothelial', gsub('Endothelial_[Tt]ip', 'Fibroblast-Like', cell_class))))
 
 # #36 replace exp.title
-# #68 Substantia
-experiments <- mutate(experiments, exp.title=sub('Sustantia Nigra', 'Substantia Nigra', sub('Ento Peduncular', 'Entopeduncular', exp.title)))
+experiments <- mutate(experiments, exp.title=sub('Ento Peduncular', 'Entopeduncular', exp.title))
 
 
 # #55 store globals of the comparison.cluster because it cannot be
