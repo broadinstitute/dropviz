@@ -53,32 +53,26 @@
 	    <p><a href="http://mccarrolllab.com/dropseq/">Drop-seq</a> is a technology we developed for highly parallel analysis of RNA expression in thousands of individual cells.  Drop-seq works by encapsulating individual cells into vast numbers of nanoliter-sized droplets, together with DNA-barcoded beads that uniquely identify the droplets.  We described Drop-seq in <a href="http://www.cell.com/abstract/S0092-8674(15)00549-8">a paper in 2015</a>, and subsequent commercial technologies have been built on this approach. We have made Drop-seq open-source, and hundreds of labs have adopted it; detailed protocols and software are available on the <a href="http://mccarrolllab.com/dropseq/">Drop-seq web site</a>.</p>
             <h2 class="featurette-heading">Summary</h2>
 	  <p>
-	      The mammalian brain is composed of a large, unknown
-number of specialized cell types whose complex interactions drive
-behavior. Unbiased, large-scale gene expression profiling in
-individual cells offers an opportunity to systematically characterize
-cellular specialization within the nervous system. We used
-Drop-seq, which enables unbiased assessment of gene
-expression from thousands of individual cells, to generate profiles
-from 690,000 cells in nine tissues of the adult mouse brain: frontal
-cortex (156,000), posterior cortex (99,000), striatum (77,000),
-cerebellum (26,000), hippocampus (113,000), substantia nigra/ventral
-tegmental area (44,000), globus pallidus externus/nucleus basalis
-(66,000), thalamus (89,000), and entopeduncular nucleus (19,000). To
-identify distinct patterns of co-expression, we performed independent
-component analysis (ICA) on each of the nine individual tissue
-datasets. ICA identified both biologically derived signals&mdash;including
-those corresponding to canonical cell type distinctions and those with
-spatially graded patterns&mdash;as well as to technical signals&mdash;including
-those that were highly replicate-dependent, defined cell "doublets",
-or were correlated with tissue processing. We retained 601
-non-technical ICs for use in graph-based clustering,
-partitioning cells into 565 distinct groups. These populations
-encompassed all known major cell classes in the nervous system,
-including neurons, astrocytes, microglia, oligodendrocytes and
-polydendrocytes, endothelial cells, and cells of the choroid plexus.
-Our analysis uncovers numerous undescribed cell types and states
-across the nervous system.
+	    The mammalian brain is composed of diverse, specialized
+	    cell populations. To systematically ascertain and learn
+	    from these cellular specializations, we used Drop-seq to
+	    profile RNA expression in 690,000 individual cells sampled
+	    from 9 regions of the adult mouse brain. We identified 565
+	    transcriptionally distinct groups of cells using
+	    computational approaches developed to distinguish
+	    biological from technical signals. Cross-region analysis
+	    of these 565 cell populations revealed features of brain
+	    organization, including a gene-expression module for
+	    synthesizing axonal and presynaptic components, patterns
+	    in the co-deployment of voltage-gated ion channels,
+	    functional distinctions among the cells of the vasculature
+	    and specialization of glutamatergic neurons across
+	    cortical regions. Systematic neuronal classifications for
+	    two complex basal ganglia nuclei and the striatum revealed
+	    a rare population of spiny projection neurons. This adult
+	    mouse brain cell atlas, accessible through interactive
+	    online software (DropViz), serves as a reference for
+	    development, disease, and evolution.
 </p>
             <div style="display:none" class=citation>
                 <dl><dt>1</dt>Macosko, E. Z. <em>et al.</em>Cell, Volume 161, Issue 5, pp 1202&ndash;1214 (2015).</dl><dt>2</dt>Gierahn, T. M. <em>et al.</em> Seq-Well: portable, low-cost RNA sequencing of single cells at high throughput. Nature methods 14, pp 395&ndash;398, doi:10.1038/nmeth.4179 (2017).</dl>
