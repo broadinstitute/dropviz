@@ -70,7 +70,7 @@
       xy.gg <- (
         if (opt.show.cells) {
           if (opt.tx.alpha) {
-            geom_point(data=xy.data, aes(x=V1,y=V2,color=cx.permute(cx), alpha=alpha), size=opt.xy.cell.size) 
+            geom_point(data=xy.data, aes(x=V1,y=V2,color=cx.permute(cx), alpha=alpha), size=CELL.MIN.SIZE) 
           } else if (opt.tx.heat) {
             geom_point(data=xy.data, aes(x=V1,y=V2,color=heat), alpha=0.25, size=CELL.MIN.SIZE)
           } else {

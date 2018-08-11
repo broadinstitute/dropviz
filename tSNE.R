@@ -499,7 +499,7 @@ output$tsne.global.subcluster.label <- renderImage({
     img.sz <- tsne.image.size(facet1=region.count, facet2=gene.count, display.width=display.width)
     
   } else {
-    tsne.plot <- function(progress) plot.text("Highlight one or more regions, classes or clusters to begin subcluster analysis")
+    tsne.plot <- function(progress) plot.text("Limit to one or more regions, classes or clusters in the 'Query' panel to begin subcluster analysis")
     h <- img.size.round(session$clientData[[glue("output_tsne.global.subcluster.label_height")]])
     img.sz <- list(height=h,width=h)
   } 
@@ -532,7 +532,7 @@ output$tsne.local.label <- renderImage({
     img.sz <- tsne.image.size(facet1=cluster.count, facet2=gene.count, display.width=display.width)
 
   } else {
-    tsne.plot <- function(progress) plot.text("Highlight one or more regions, classes or clusters to begin subcluster analysis")
+    tsne.plot <- function(progress) plot.text("Limit to one or more regions, classes or clusters in the 'Query' panel to begin subcluster analysis")
     h <- img.size.round(session$clientData[[glue("output_tsne.local.label_height")]])
     img.sz <- list(height=h,width=h)
   }
