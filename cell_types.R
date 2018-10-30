@@ -82,7 +82,7 @@ onRestored(function(state) {
   # #36 - fix name for legacy bookmark
   if (!is.null(state$input$tissue)) state$input$tissue <- sub('Ento Peduncular','Entopeduncular', state$input$tissue)
 
-  updateSelectizeInput(session, "user.genes", selected=state$input$user.genes, choices=c("Symbol"="", unique(c(state$input$user.genes, top.genes))), server=TRUE)
+  updateSelectizeInput(session, "user.genes", selected=state$input$user.genes, choices=c("Symbol"="", unique(c(state$input$user.genes, names(gene.dict)))), server=TRUE)
   updateSelectizeInput(session, "tissue", selected=state$input$tissue)
   updateSelectizeInput(session, "cell.class", selected=state$input$cell.class)
   updateSelectizeInput(session, "cell.cluster", selected=state$input$cell.cluster)
@@ -93,7 +93,7 @@ onRestored(function(state) {
   updateSelectizeInput(session, "current.subcluster", selected=state$input$current.subcluster)
   updateSelectizeInput(session, "comparison.subcluster", selected=state$input$comparison.subcluster)
 })
-updateSelectizeInput(session, "user.genes", choices=c("Symbol"="", top.genes), server=TRUE)
+updateSelectizeInput(session, "user.genes", choices=c("Symbol"="", names(gene.dict)), server=TRUE)
 
 #####################################################################################################
 # Cell Type Filter options used to generate the selectizeInputs
