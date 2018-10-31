@@ -73,6 +73,11 @@ if (file.exists(glue("{prep.dir}/markers/top_genes.RDS"))) {
 ## read gene symbols and descriptions
 if (file.exists(glue("{prep.dir}/markers/gene.dict.RDS"))) {
   gene.dict <<- readRDS(glue("{prep.dir}/markers/gene.dict.RDS"))
+  gene.symbols <<- {
+    syms <- names(gene.dict)
+    num <- grepl('^[0-9]|rik$', syms)
+    c(sort(syms[!num]), syms[num])
+  }
 }
 
 # returns empty string for failed matches
